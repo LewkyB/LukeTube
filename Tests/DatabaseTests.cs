@@ -23,8 +23,8 @@ namespace luke_site_mvc
             Assert.NotNull(result);
 
         }
-        public IReadOnlyList<string> GetChatLinks(string chatname)
-        //public IEnumerable<Chatroom> GetChatLinks(string chatname)
+        //public IReadOnlyList<string> GetChatLinks(string chatname)
+        public IEnumerable<Chatroom> GetChatLinks(string chatname)
         {
             // TODO: RELOCATE
             using IDbConnection connection =
@@ -32,7 +32,8 @@ namespace luke_site_mvc
 
             var parameters = new { Chatname = chatname };
             var sql = "SELECT DISTINCT Link FROM Chatrooms WHERE Name LIKE CONCAT('%',@Chatname,'%');";
-            var chatnames = connection.Query<string>(sql, parameters).ToList().AsReadOnly();
+            //var chatnames = connection.Query<string>(sql, parameters).ToList().AsReadOnly();
+            var chatnames = connection.Query<Chatroom>(sql, parameters);
 
             //var list = chatnames.Where(x => x.)
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using luke_site_mvc.Data;
+using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -28,6 +29,7 @@ namespace luke_site_mvc
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<IDataRepository, DataRepository>();
+            services.AddScoped<IChatroomService, ChatroomService>();
 
             services.AddDbContext<DataContext>(cfg =>
             {

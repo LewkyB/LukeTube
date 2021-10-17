@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using luke_site_mvc.Data;
 using luke_site_mvc.Models;
+using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -16,20 +17,22 @@ namespace luke_site_mvc.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IDataRepository _dataRepository;
+        private readonly IChatroomService _chatroomService;
 
-        public HomeController(ILogger<HomeController> logger, IDataRepository dataRepository)
+        public HomeController(IDataRepository dataRepository, IChatroomService chatroomService, ILogger<HomeController> logger)
         {
+            _dataRepository = dataRepository;
+            _chatroomService = chatroomService;
+
             _logger = logger;
             _logger.LogDebug(1, "NLog injected into HomeController");
-
-            _dataRepository = dataRepository;
         }
 
         public IActionResult Index()
         {
             _logger.LogInformation("Hello, this is the index!");
 
-            var result = _dataRepository.GetAllChatnames();
+            var result = _chatroomService.GetAllChatNames();
 
             return View(result);
         }

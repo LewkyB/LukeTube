@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using luke_site_mvc.Data;
+using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -14,22 +15,25 @@ namespace luke_site_mvc.Controllers
     public class ChatroomsController : ControllerBase
     {
         private readonly IDataRepository _dataRepository;
+        private readonly IChatroomService _chatroomService;
         private readonly ILogger<ChatroomsController> _logger;
-        public ChatroomsController(ILogger<ChatroomsController> logger, IDataRepository dataRepository)
+        public ChatroomsController(IDataRepository dataRepository, 
+            IChatroomService chatroomService, ILogger<ChatroomsController> logger)
         {
+            _dataRepository = dataRepository;
+            _chatroomService = chatroomService;
+
             _logger = logger;
             _logger.LogDebug(1, "NLog injected into ChatroomsController");
-
-            _dataRepository = dataRepository;
         }
 
         [HttpGet]
         [Produces("application/json")]
-        public ActionResult<IEnumerable<Chatroom>> Get()
+        public ActionResult<IReadOnlyList<Chatroom>> Get()
         {
             try
             {
-                return Ok(_dataRepository.GetAllLinksDapper());
+                return Ok(_chatroomService.GetAllLinks());
             }
             catch (Exception ex)
             {
@@ -51,9 +55,9 @@ namespace luke_site_mvc.Controllers
             {
                 // TODO: separate to different functions
                 if (chatname.Equals("chatnames")) 
-                    return Ok(_dataRepository.GetAllChatnames());
+                    return Ok(_chatroomService.GetAllChatNames());
                 
-                return Ok(_dataRepository.GetChatLinks(chatname));
+                return Ok(_chatroomService.GetChatLinksByChat(chatname));
             }
             catch (Exception ex)
             {

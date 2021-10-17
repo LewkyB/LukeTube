@@ -13,10 +13,8 @@ namespace luke_site_mvc.Data
     public interface IDataRepository
     {
         IEnumerable<Chatroom> GetAllLinks();
-        IEnumerable<Chatroom> GetLinksByChatroom(string name);
-        IEnumerable<Chatroom> GetAllLinksDapper();
-        IReadOnlyList<string> GetAllChatnames();
-        IReadOnlyList<string> GetChatLinks(string chatname);
+        IEnumerable<string> GetAllChatNames();
+        IEnumerable<string> GetChatLinksByChat(string chatName);
     }
 
     public class DataRepository : IDataRepository
@@ -34,63 +32,41 @@ namespace luke_site_mvc.Data
             _logger.LogDebug(1, "NLog injected into DataRepository");
         }
         
-        public IEnumerable<Chatroom> GetAllLinksDapper()
+        public IEnumerable<Chatroom> GetAllLinks()
         { 
             // TODO: RELOCATE
             using IDbConnection connection =
                 new SqlConnection(_config["ConnectionStrings:DataContextDb"]);
 
-            var links = connection.Query<Chatroom>("SELECT * FROM Chatrooms");
+            IEnumerable<Chatroom> links = connection.Query<Chatroom>("SELECT * FROM Chatrooms");
 
             return links;
         }
-        public IReadOnlyList<string> GetAllChatnames()
+        public IEnumerable<string> GetAllChatNames()
         {
             // TODO: RELOCATE
             using IDbConnection connection =
                 new SqlConnection(_config["ConnectionStrings:DataContextDb"]);
 
-            var chatnames = connection.Query<string>(
-                "SELECT DISTINCT Name FROM Chatrooms WHERE NOT Name=''")
-                .ToList()
-                .AsReadOnly();
+            IEnumerable<string> chatnames = connection.Query<string>(
+                "SELECT DISTINCT Name FROM Chatrooms WHERE NOT Name=''"
+                );
 
             return chatnames;
         }
 
-        public IReadOnlyList<string> GetChatLinks(string chatname)
+        public IEnumerable<string> GetChatLinksByChat(string chatName)
         {
             // TODO: RELOCATE
             using IDbConnection connection =
                 new SqlConnection(_config["ConnectionStrings:DataContextDb"]);
 
-            var parameters = new { Chatname = chatname };
-            var sql = "SELECT DISTINCT Link FROM Chatrooms WHERE Name LIKE CONCAT('%',@Chatname,'%');";
-            var chatnames = connection.Query<string>(sql, parameters).ToList().AsReadOnly();
-
-            return chatnames;
-        }
-
-        // TODO: strip out EF?
-        public IEnumerable<Chatroom> GetAllLinks()
-        {
-            return _dataContext.Chatrooms
-                       .OrderBy(p => p.Id)
-                       .ToList();
-        }
-        // TODO: strip out EF?
-        public IEnumerable<Chatroom> GetLinksByChatroom(string name)
-        {
+            var parameters = new { chatName = chatName };
+            string sql = "SELECT DISTINCT Link FROM Chatrooms WHERE Name LIKE CONCAT('%',@chatName,'%');";
             
-            return _dataContext.Chatrooms
-                       .Where(p => p.Name == name)
-                       .ToList();
-        }
-        // TODO: strip out EF?
-        public int GetLinksCount()
-        {
-            return _dataContext.Chatrooms.Count();
-        }
+            IEnumerable<string> chatnames = connection.Query<string>(sql, parameters);
 
+            return chatnames;
+        }
     }
 }
