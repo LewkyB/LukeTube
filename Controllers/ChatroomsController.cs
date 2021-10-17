@@ -14,13 +14,11 @@ namespace luke_site_mvc.Controllers
     [Produces("application/json")]
     public class ChatroomsController : ControllerBase
     {
-        private readonly IDataRepository _dataRepository;
         private readonly IChatroomService _chatroomService;
         private readonly ILogger<ChatroomsController> _logger;
-        public ChatroomsController(IDataRepository dataRepository, 
-            IChatroomService chatroomService, ILogger<ChatroomsController> logger)
+
+        public ChatroomsController(IChatroomService chatroomService, ILogger<ChatroomsController> logger)
         {
-            _dataRepository = dataRepository;
             _chatroomService = chatroomService;
 
             _logger = logger;

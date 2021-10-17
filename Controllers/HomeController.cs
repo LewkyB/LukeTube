@@ -16,12 +16,10 @@ namespace luke_site_mvc.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly IDataRepository _dataRepository;
         private readonly IChatroomService _chatroomService;
 
-        public HomeController(IDataRepository dataRepository, IChatroomService chatroomService, ILogger<HomeController> logger)
+        public HomeController(IChatroomService chatroomService, ILogger<HomeController> logger)
         {
-            _dataRepository = dataRepository;
             _chatroomService = chatroomService;
 
             _logger = logger;
