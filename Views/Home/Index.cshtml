@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    int counter = 0;
+}
+
+<div class="columns">
+
+    @foreach (string chatroom in Model)
+    {
+        if (counter > 0 && counter % 4 == 0)
+        {
+        @:</div><div class="columns">
+            // close and start new row
+        }
+        <div class="column text-center">
+            @chatroom
+        </div>
+
+        counter++;
+     }
+</div>
