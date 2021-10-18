@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 
 namespace luke_site_mvc
 {
@@ -31,22 +32,18 @@ namespace luke_site_mvc
             services.AddScoped<IDataRepository, DataRepository>();
             services.AddScoped<IChatroomService, ChatroomService>();
 
-            services.AddDbContext<DataContext>(cfg =>
-            {
-                cfg.UseSqlServer();
-            });
-
             services.AddControllersWithViews();
-            services.AddSwaggerGen();
 
-            // TODO: imeplement xml comments for swagger
-/*            services.AddSwaggerGen( c =>
-            {
-                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                c.IncludeXmlComments(xmlPath);
-            });
-*/
+            services.AddSwaggerGen(c =>
+           {
+               c.SwaggerDoc("v1", new OpenApiInfo { Title = "luke_site_mvc", Version = "v1" });
+
+               var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+               var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+               c.IncludeXmlComments(xmlPath);
+           });
+
+            services.AddRazorPages();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,6 +52,8 @@ namespace luke_site_mvc
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "luke_site_mvc v1"));
             }
             else
             {
@@ -65,18 +64,21 @@ namespace luke_site_mvc
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
-            app.UseSwagger();
-            app.UseSwaggerUI();
-
             app.UseRouting();
 
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                //endpoints.MapControllerRoute(
+                //    name: "default",
+                //    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+                endpoints.MapControllerRoute("Fallback",
+                    "{controller}/{action}/{id?}",
+                    new { controller = "Home", action = "Index" });
+
+                endpoints.MapRazorPages();
             });
         }
     }
