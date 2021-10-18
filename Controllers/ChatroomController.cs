@@ -44,6 +44,9 @@ namespace luke_site_mvc.Controllers
                 // TODO: is this a safe way to pass sql parameter?
                 // TODO: how to deal with bad characters that trigger IIS?
                 var links = _chatroomService.GetChatLinksByChat(id);
+
+                ViewBag.Title = id;
+
                 return View(links);
             }
             catch (Exception ex)

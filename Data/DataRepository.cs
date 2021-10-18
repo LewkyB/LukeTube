@@ -50,6 +50,7 @@ namespace luke_site_mvc.Data
                 new SqlConnection(_config["ConnectionStrings:DataContextDb"]);
 
             var parameters = new { chatName = chatName };
+            // TODO: order by newest at top of page
             string sql = "SELECT Link FROM Chatrooms WHERE Name = @chatName;";
 
             return connection.Query<string>(sql, parameters);

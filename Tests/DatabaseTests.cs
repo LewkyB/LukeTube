@@ -4,19 +4,18 @@ using Xunit;
 using System.Data;
 using Dapper;
 using System.Data.SqlClient;
+using System.Linq;
 
 namespace luke_site_mvc
 {
     public class DatabaseTests
     {
+        // TODO: should I inject in service and repository here?
         [Fact]
-        public void GetAllLinksTest()
+        public void GetChatLinks_CheckIfDatabasePopulated()
         {
-            var result = GetChatLinks("#bash");
-            
-
-            Assert.NotNull(result);
-
+            var result = GetChatLinks("bash").AsList().Count();
+            Assert.NotEqual(0, result);
         }
         //public IReadOnlyList<string> GetChatLinks(string chatname)
         public IEnumerable<Chatroom> GetChatLinks(string chatname)
