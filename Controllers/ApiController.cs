@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using luke_site_mvc.Data;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +22,7 @@ namespace luke_site_mvc.Controllers
             _logger = logger;
         }
 
+        // TODO: document in swagger
         [HttpGet]
         [Produces("application/json")]
         public ActionResult<IReadOnlyList<Chatroom>> Get()

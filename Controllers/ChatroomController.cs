@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -31,7 +28,7 @@ namespace luke_site_mvc.Controllers
             }
             catch (Exception ex)
             {
-                // TODO: finish log messages
+                _logger.LogError($"Failed Links(): {ex}");
                 return BadRequest("Links Failed()");
             }
 

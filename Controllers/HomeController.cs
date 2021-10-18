@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using luke_site_mvc.Data;
 using luke_site_mvc.Models;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;

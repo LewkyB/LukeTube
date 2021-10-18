@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using luke_site_mvc.Data;
 using Microsoft.Extensions.Logging;
 
@@ -14,6 +12,7 @@ namespace luke_site_mvc.Services
         IReadOnlyList<string> GetChatLinksByChat(string chatName);
     }
 
+    // TODO: make this have more of a point than just returning readonlylists
     public class ChatroomService : IChatroomService
     {
         private readonly IDataRepository _dataRepository;

@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using luke_site_mvc.Data;
 using Xunit;
-using Microsoft.AspNetCore.Mvc;
 using System.Data;
-using Microsoft.Data.SqlClient;
 using Dapper;
+using System.Data.SqlClient;
 
 namespace luke_site_mvc
 {
