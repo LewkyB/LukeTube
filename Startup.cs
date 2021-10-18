@@ -71,7 +71,7 @@ namespace luke_site_mvc
 
                 endpoints.MapControllerRoute("Fallback",
                     "{controller}/{action}/{id?}",
-                    new { controller = "Home", action = "Index" });
+                    new { controller = "Chatroom", action = "Index" });
 
                 endpoints.MapRazorPages();
             });

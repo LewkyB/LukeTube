@@ -2,6 +2,9 @@
 
 # TO DO
 
+## Improvement
+- [ ] find a way to make embedded links load in faster (caching?)
+
 ## Feature
 - [ ] [cookie authentication for favorites](https://docs.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-5.0)
 - [ ] newsfeed for most recent links
@@ -9,7 +12,7 @@
 
 ## Swagger
 - [x] enable Swagger
-- [ ] enable XML comments
+- [x] enable XML comments
 
 ## Caching
 - [ ] figure out which cache to use
@@ -23,7 +26,7 @@
 
 ## Testing
 - [x] added XUnit
-- [ ] added Moq
+- [x] added Moq
 - [ ] use FluentAssertions?
 
 ## CI/CD

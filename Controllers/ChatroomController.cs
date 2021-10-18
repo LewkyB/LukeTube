@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using luke_site_mvc.Models;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -9,11 +11,29 @@ namespace luke_site_mvc.Controllers
     {
         private readonly IChatroomService _chatroomService;
         private readonly ILogger<ChatroomController> _logger;
+
         public ChatroomController(IChatroomService chatroomService, ILogger<ChatroomController> logger)
         {
             _chatroomService = chatroomService;
 
             _logger = logger;
+        }
+
+        public IActionResult Index()
+        {
+            _logger.LogInformation("Chatroom.Index() Triggered.");
+
+            try
+            {
+                var result = _chatroomService.GetAllChatNames();
+                return View(result);
+            }
+            catch (Exception ex)
+            {
+                // TODO: better log messages
+                _logger.LogError($"Failed Index(): {ex}");
+                return BadRequest("Failed Index()");
+            }
         }
 
         [HttpGet]
@@ -32,6 +52,28 @@ namespace luke_site_mvc.Controllers
                 return BadRequest("Links Failed()");
             }
 
+        }
+
+        public IActionResult Privacy()
+        {
+            _logger.LogInformation("Chatroom.Privacy() Triggered.");
+
+            try
+            {
+                return View();
+            }
+            catch (Exception ex)
+            {
+                // TODO: better log messages
+                _logger.LogError($"Failed Privacy(): {ex}");
+                return BadRequest("Failed Privary()");
+            }
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }
