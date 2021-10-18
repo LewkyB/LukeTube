@@ -28,16 +28,35 @@ namespace luke_site_mvc.Controllers
 
         public IActionResult Index()
         {
-            _logger.LogInformation("Hello, this is the index!");
+            _logger.LogInformation("HomeController.Index() Triggered.");
 
-            var result = _chatroomService.GetAllChatNames();
-
-            return View(result);
+            try
+            {
+                var result = _chatroomService.GetAllChatNames();
+                return View(result);
+            }
+            catch (Exception ex)
+            {
+                // TODO: better log messages
+                _logger.LogError($"Failed Index(): {ex}");
+                return BadRequest("Failed Index()");
+            }
         }
 
         public IActionResult Privacy()
         {
-            return View();
+            _logger.LogInformation("HomeController.Privacy() Triggered.");
+
+            try
+            {
+                return View();
+            }
+            catch (Exception ex)
+            {
+                // TODO: better log messages
+                _logger.LogError($"Failed Privacy(): {ex}");
+                return BadRequest("Failed Privary()");
+            }
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

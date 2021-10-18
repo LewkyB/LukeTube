@@ -29,14 +29,17 @@ namespace luke_site_mvc.Controllers
         [Produces("application/json")]
         public ActionResult<IReadOnlyList<Chatroom>> Get()
         {
+            _logger.LogInformation("ChatroomsController.Get() Triggered.");
+            
             try
             {
                 return Ok(_chatroomService.GetAllLinks());
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to GetAllLinksDapper()");
-                return BadRequest("Failed to GetAllLinksDapper()");
+                // TODO: better log messages
+                _logger.LogError($"Failed to GetAllLinks(): {ex}");
+                return BadRequest("Failed to GetAllLinks()");
             }
         }
         /// <summary>
@@ -47,8 +50,11 @@ namespace luke_site_mvc.Controllers
         /// <returns>JSON list of either all chatnames or chatlinks to associated chatname</returns>
         [HttpGet("{chatname:alpha}")]
         [Produces("application/json")]
+        // TODO: change this overloaded Get to make overloading not required
         public ActionResult<IReadOnlyList<string>> Get(string chatname)
         {
+            _logger.LogInformation("ChatroomsController.Get(string chatname) Triggered.");
+
             try
             {
                 // TODO: separate to different functions
@@ -60,7 +66,7 @@ namespace luke_site_mvc.Controllers
             catch (Exception ex)
             {
                 // TODO: bad logging messages, doesn't reflect actual
-                _logger.LogError($"Failed to GetChatLinks()");
+                _logger.LogError($"Failed to GetChatLinks(): {ex}");
                 return BadRequest("Failed to GetChatLinks()");
             }
         }
