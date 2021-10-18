@@ -2,14 +2,17 @@
 
 # TO DO
 
+## Feature
+- [ ] [cookie authentication for favorites](https://docs.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-5.0)
+- [ ] newsfeed for most recent links
+- [ ] figure out a way to scrape discord servers for chat logs
+
 ## Swagger
 - [x] enable Swagger
 - [ ] enable XML comments
 
 ## Caching
 - [ ] figure out which cache to use
-- [ ] dependency injection w/ dagger 2
-- [ ] replace hide fragment buttons w/ refresh method
 
 ## Logging
 - [x] added NLog

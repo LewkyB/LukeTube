@@ -9,20 +9,19 @@ using Microsoft.Extensions.Logging;
 
 namespace luke_site_mvc.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     [Produces("application/json")]
-    public class ChatroomsController : ControllerBase
+    public class ApiController : ControllerBase
     {
         private readonly IChatroomService _chatroomService;
-        private readonly ILogger<ChatroomsController> _logger;
+        private readonly ILogger<ApiController> _logger;
 
-        public ChatroomsController(IChatroomService chatroomService, ILogger<ChatroomsController> logger)
+        public ApiController(IChatroomService chatroomService, ILogger<ApiController> logger)
         {
             _chatroomService = chatroomService;
 
             _logger = logger;
-            _logger.LogDebug(1, "NLog injected into ChatroomsController");
         }
 
         [HttpGet]

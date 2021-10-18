@@ -11,6 +11,7 @@ using NLog.Web;
 
 namespace luke_site_mvc
 {
+#pragma warning disable CS1591 // used for disabling xml comment warning for swagger
     public class Program
     {
         public static void Main(string[] args)
@@ -60,4 +61,5 @@ namespace luke_site_mvc
 
         }
     }
+#pragma warning restore CS1591 // used for xml comment warning for swagger
 }
