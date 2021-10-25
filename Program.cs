@@ -37,7 +37,6 @@ namespace luke_site_mvc
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration(AddConfiguration) // add custom app config
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
@@ -48,18 +47,6 @@ namespace luke_site_mvc
                     logging.SetMinimumLevel(LogLevel.Trace);
                 })
                 .UseNLog();  // NLog: Setup NLog for Dependency injection
-
-        // set custom config
-        private static void AddConfiguration(HostBuilderContext ctx,
-            IConfigurationBuilder bldr)
-        {
-            bldr.Sources.Clear(); // get rid of app config so that our's takes over
-
-            bldr.SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("config.json")
-                .AddEnvironmentVariables(); 
-
-        }
     }
 #pragma warning restore CS1591 // used for xml comment warning for swagger
 }

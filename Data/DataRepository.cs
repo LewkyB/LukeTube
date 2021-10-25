@@ -30,7 +30,7 @@ namespace luke_site_mvc.Data
         { 
             // TODO: RELOCATE
             using IDbConnection connection =
-                new SqlConnection(_config["ConnectionStrings:DataContextDb"]);
+                new SqlConnection(_config.GetConnectionString("DefaultConnection"));
 
             return connection.Query<Chatroom>("SELECT * FROM Chatrooms");
         }
@@ -38,7 +38,7 @@ namespace luke_site_mvc.Data
         {
             // TODO: RELOCATE
             using IDbConnection connection =
-                new SqlConnection(_config["ConnectionStrings:DataContextDb"]);
+                new SqlConnection(_config.GetConnectionString("DefaultConnection"));
 
             return connection.Query<string>("SELECT DISTINCT Name FROM Chatrooms WHERE NOT Name=''");
         }
@@ -47,7 +47,7 @@ namespace luke_site_mvc.Data
         {
             // TODO: RELOCATE
             using IDbConnection connection =
-                new SqlConnection(_config["ConnectionStrings:DataContextDb"]);
+                new SqlConnection(_config.GetConnectionString("DefaultConnection"));
 
             var parameters = new { chatName = chatName };
             // TODO: order by newest at top of page

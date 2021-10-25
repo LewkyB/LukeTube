@@ -3,6 +3,7 @@ using System.Diagnostics;
 using luke_site_mvc.Models;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace luke_site_mvc.Controllers
@@ -11,12 +12,13 @@ namespace luke_site_mvc.Controllers
     {
         private readonly IChatroomService _chatroomService;
         private readonly ILogger<ChatroomController> _logger;
+        private readonly IDistributedCache _cache;
 
-        public ChatroomController(IChatroomService chatroomService, ILogger<ChatroomController> logger)
+        public ChatroomController(IChatroomService chatroomService, ILogger<ChatroomController> logger, IDistributedCache cache)
         {
             _chatroomService = chatroomService;
-
             _logger = logger;
+            _cache = cache;
         }
 
         public IActionResult Index()
