@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  luke_site_mvc:
+    image: ${DOCKER_REGISTRY-}lukesitemvc
+    build:
+      context: .
+      dockerfile: Dockerfile

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using luke_site_mvc.Data;
 using Microsoft.Extensions.Logging;
 
@@ -7,9 +8,9 @@ namespace luke_site_mvc.Services
 {
     public interface IChatroomService
     {
-        IReadOnlyList<string> GetAllChatNames();
-        IReadOnlyList<Chatroom> GetAllLinks();
-        IReadOnlyList<string> GetChatLinksByChat(string chatName);
+        Task<IReadOnlyList<string>> GetAllChatNames();
+        Task<IReadOnlyList<Chatroom>> GetAllLinks();
+        Task<IReadOnlyList<string>> GetChatLinksByChat(string chatName);
     }
 
     // TODO: make this have more of a point than just returning readonlylists
@@ -26,19 +27,20 @@ namespace luke_site_mvc.Services
             _logger.LogDebug(1, "NLog injected into ChatroomService");
         }
 
-        public IReadOnlyList<string> GetAllChatNames()
+        public async Task<IReadOnlyList<string>> GetAllChatNames()
         {
-            return _dataRepository.GetAllChatNames().ToList();
+            return (await _dataRepository.GetAllChatNames()).ToList();
         }
 
-        public IReadOnlyList<Chatroom> GetAllLinks()
+        public async Task<IReadOnlyList<Chatroom>> GetAllLinks()
         {
-            return _dataRepository.GetAllLinks().ToList();
+            return (await _dataRepository.GetAllLinks()).ToList();
         }
 
-        public IReadOnlyList<string> GetChatLinksByChat(string chatName)
+        public async Task<IReadOnlyList<string>> GetChatLinksByChat(string chatName)
         {
-            return _dataRepository.GetChatLinksByChat(chatName).ToList();
+            return (await _dataRepository.GetChatLinksByChat(chatName)).ToList();
+
         }
 
     }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -11,9 +12,9 @@ namespace luke_site_mvc.Data
 {
     public interface IDataRepository
     {
-        IEnumerable<Chatroom> GetAllLinks();
-        IEnumerable<string> GetAllChatNames();
-        IEnumerable<string> GetChatLinksByChat(string chatName);
+        Task<IEnumerable<Chatroom>> GetAllLinks();
+        Task<IEnumerable<string>> GetAllChatNames();
+        Task<IEnumerable<string>> GetChatLinksByChat(string chatName);
     }
 
     public class DataRepository : IDataRepository
@@ -24,11 +25,10 @@ namespace luke_site_mvc.Data
         public DataRepository(IConfiguration config, ILogger<DataRepository> logger)
         {
             _config = config;
-
             _logger = logger;
         }
         
-        public IEnumerable<Chatroom> GetAllLinks()
+        public async Task<IEnumerable<Chatroom>> GetAllLinks()
         { 
             // TODO: RELOCATE TO BASE REPOSITORY
             using IDbConnection connection = new ProfiledDbConnection(
@@ -36,9 +36,9 @@ namespace luke_site_mvc.Data
                 MiniProfiler.Current
                 );
 
-            return connection.Query<Chatroom>("SELECT * FROM Chatrooms");
+            return await connection.QueryAsync<Chatroom>("SELECT * FROM Chatrooms");
         }
-        public IEnumerable<string> GetAllChatNames()
+        public async Task<IEnumerable<string>> GetAllChatNames()
         {
             // TODO: RELOCATE TO BASE REPOSITORY
             using IDbConnection connection = new ProfiledDbConnection(
@@ -46,10 +46,10 @@ namespace luke_site_mvc.Data
                 MiniProfiler.Current
                 );
 
-            return connection.Query<string>("SELECT DISTINCT Name FROM Chatrooms WHERE NOT Name=''");
+            return await connection.QueryAsync<string>("SELECT DISTINCT Name FROM Chatrooms WHERE NOT Name=''");
         }
 
-        public IEnumerable<string> GetChatLinksByChat(string chatName)
+        public async Task<IEnumerable<string>> GetChatLinksByChat(string chatName)
         {
             // TODO: RELOCATE TO BASE REPOSITORY
             using IDbConnection connection = new ProfiledDbConnection(
@@ -62,7 +62,7 @@ namespace luke_site_mvc.Data
             // order by descending so that most recent videos appear at the top of the page
             string sql = "SELECT Link FROM Chatrooms WHERE Name = @chatName ORDER BY Chatrooms.Id DESC;";
 
-            return connection.Query<string>(sql, parameters);
+            return await connection.QueryAsync<string>(sql, parameters);
         }
     }
 }

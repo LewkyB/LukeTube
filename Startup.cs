@@ -73,6 +73,9 @@ namespace luke_site_mvc
                 // (defaults to "light")
                 options.ColorScheme = StackExchange.Profiling.ColorScheme.Auto;
 
+                options.PopupRenderPosition = StackExchange.Profiling.RenderPosition.BottomLeft;
+                options.EnableServerTimingHeader = true;
+
                 // The below are newer options, available in .NET Core 3.0 and above:
 
                 // (Optional) You can disable MVC filter profiling
@@ -90,13 +93,16 @@ namespace luke_site_mvc
                 // options.MvcViewMinimumSaveMs = 1.0m;
 
                 // (Optional) listen to any errors that occur within MiniProfiler itself
-                // options.OnInternalError = e => MyExceptionLogger(e);
+                 //options.OnInternalError = e => MyExceptionLogger(e);
 
                 // (Optional - not recommended) You can enable a heavy debug mode with stacks and tooltips when using memory storage
                 // It has a lot of overhead vs. normal profiling and should only be used with that in mind
                 // (defaults to false, debug/heavy mode is off)
                 //options.EnableDebugMode = true;
+                options.Storage = new SqlServerStorage(Configuration.GetConnectionString("MiniProfilerLogDbConnection"));
             });
+
+            services.AddResponseCaching();
 
             services.AddRazorPages();
         }
@@ -134,6 +140,9 @@ namespace luke_site_mvc
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
+
+            app.UseResponseCaching();
+
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

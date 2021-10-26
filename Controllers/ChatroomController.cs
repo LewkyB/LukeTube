@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using luke_site_mvc.Models;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -21,13 +22,13 @@ namespace luke_site_mvc.Controllers
             _cache = cache;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             _logger.LogInformation("Chatroom.Index() Triggered.");
 
             try
             {
-                var result = _chatroomService.GetAllChatNames();
+                var result = await _chatroomService.GetAllChatNames();
                 return View(result);
             }
             catch (Exception ex)
@@ -39,13 +40,12 @@ namespace luke_site_mvc.Controllers
         }
 
         [HttpGet]
-        public IActionResult Links(string id)
+        public async Task<IActionResult> Links(string id)
         {
             try
             {
                 // TODO: is this a safe way to pass sql parameter?
-                // TODO: how to deal with bad characters that trigger IIS?
-                var links = _chatroomService.GetChatLinksByChat(id);
+                var links = await _chatroomService.GetChatLinksByChat(id);
 
                 ViewBag.Title = id;
 
