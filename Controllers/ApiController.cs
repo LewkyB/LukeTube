@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using luke_site_mvc.Data;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -25,13 +26,13 @@ namespace luke_site_mvc.Controllers
         // TODO: document in swagger
         [HttpGet]
         [Produces("application/json")]
-        public ActionResult<IReadOnlyList<Chatroom>> Get()
+        public async Task<ActionResult<IReadOnlyList<Chatroom>>> Get()
         {
             _logger.LogInformation("ChatroomsController.Get() Triggered.");
             
             try
             {
-                return Ok(_chatroomService.GetAllLinks());
+                return Ok(await _chatroomService.GetAllLinks());
             }
             catch (Exception ex)
             {
@@ -49,7 +50,7 @@ namespace luke_site_mvc.Controllers
         [HttpGet("{chatname:alpha}")]
         [Produces("application/json")]
         // TODO: change this overloaded Get to make overloading not required
-        public ActionResult<IReadOnlyList<string>> Get(string chatname)
+        public async Task<ActionResult<IReadOnlyList<string>>> Get(string chatname)
         {
             _logger.LogInformation("ChatroomsController.Get(string chatname) Triggered.");
 
@@ -57,9 +58,9 @@ namespace luke_site_mvc.Controllers
             {
                 // TODO: separate to different functions
                 if (chatname.Equals("chatnames")) 
-                    return Ok(_chatroomService.GetAllChatNames());
+                    return Ok(await _chatroomService.GetAllChatNames());
                 
-                return Ok(_chatroomService.GetChatLinksByChat(chatname));
+                return Ok(await _chatroomService.GetChatLinksByChat(chatname));
             }
             catch (Exception ex)
             {

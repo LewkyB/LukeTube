@@ -17,23 +17,10 @@
 - [ ] get views, likes, dislikes, and description from youtube and show on page near video
 - [ ] add button to search HN/reddit for posts about/containing youtube id
 
-## Swagger
-- [x] enable Swagger
-- [x] enable XML comments
-
-## Caching
-- [ ] figure out which cache to use
-
-## Logging
-- [x] added NLog
-- [ ] add sentry?
-
 ## Object Mapping
 - [ ] AutoMapper vs Mapster vs ExpressMapper vs AgileMapper
 
 ## Testing
-- [x] added XUnit
-- [x] added Moq
 - [ ] use FluentAssertions?
 
 ## CI/CD
