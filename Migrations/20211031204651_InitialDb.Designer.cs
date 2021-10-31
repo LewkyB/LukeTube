@@ -9,7 +9,7 @@ using luke_site_mvc.Data;
 namespace luke_site_mvc.Migrations
 {
     [DbContext(typeof(ChatroomContext))]
-    [Migration("20211031035228_InitialDb")]
+    [Migration("20211031204651_InitialDb")]
     partial class InitialDb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

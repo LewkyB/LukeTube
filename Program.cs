@@ -1,49 +1,30 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using luke_site_mvc.Data;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Web;
-using StackExchange.Profiling.Storage;
 
 namespace luke_site_mvc
 {
 #pragma warning disable CS1591 // used for disabling xml comment warning for swagger
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
             try
             {
                 logger.Debug("init main");
 
-                CreateHostBuilder(args).Build().Run();
-                //var host = CreateHostBuilder(args).Build();
+                var host = CreateHostBuilder(args).Build();
 
-                //using (var scope = host.Services.CreateScope())
-                //{
-                //    //var services = scope.ServiceProvider;
-                //    //var seeder = host.Services.GetRequiredService<ISeedDataRepository>();
+                // Seed database with data from json if database is empty
+                await RunSeedingAsync(host);
 
-                //    var seeder = scope.ServiceProvider.GetRequiredService<SeedDataRepository>();
-                //    //var seeder = scope.ServiceProvider.GetRequiredService<ISeedDataRepository>();
-                //    //ISeedDataRepository seedDataRepository = scope.ServiceProvider.GetRequiredService<ISeedDataRepository>();
-                //    //SeedDataRepository seedDataRepository = new SeedDataRepository();
-                //    await seeder.Initialize();
-                //    //await seedDataRepository.Initialize();
-                //}
-                //var seeder = host.Services.CreateScope .GetRequiredService<ISeedDataRepository>();
-                //await seeder.Initialize();
-                //await RunSeedingAsync(host);
-
-                //host.Run();
+                host.Run();
             }
             catch (Exception exception)
             {
@@ -58,16 +39,16 @@ namespace luke_site_mvc
             }
         }
 
+        // TODO: profile the seeding with miniprofiler
         private static async Task RunSeedingAsync(IHost host)
         {
             var scopeFactory = host.Services.GetService<IServiceScopeFactory>();
             using (var scope = scopeFactory.CreateScope())
             {
-                var seeder = scope.ServiceProvider.GetService<SeedDataRepository>();
-                await seeder.Initialize();
+                var seeder = scope.ServiceProvider.GetService<IDatabaseSeeder>();
+                await seeder.InitializeAsync();
             }
         }
-
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
