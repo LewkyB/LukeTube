@@ -4,8 +4,10 @@ using System.Reflection;
 using System.Text;
 using luke_site_mvc.Data;
 using luke_site_mvc.Services;
+using luke_site_mvc.Tests;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,25 +30,44 @@ namespace luke_site_mvc
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHttpClient();
+            services.AddHttpClient<SeedDataRepository>();
+
+            services.AddHttpClient("timeout", client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+            });
+
+            services.AddHttpContextAccessor();
+
             services.AddScoped<IDataRepository, DataRepository>();
             services.AddScoped<IChatroomService, ChatroomService>();
+            //services.AddTransient<ISeedDataRepository, SeedDataRepository>();
 
             services.AddControllersWithViews();
 
-            services.AddStackExchangeRedisCache(c =>
+            services.AddStackExchangeRedisCache(options =>
             {
-                //c.Configuration = Configuration.GetConnectionString("Redis");
-                c.Configuration = Configuration.GetConnectionString("Redis");
-                c.InstanceName = "IRCTube_";
+                options.Configuration = Configuration.GetConnectionString("Redis");
+                options.InstanceName = "IRCTube_";
             });
 
-            services.AddSwaggerGen(c =>
+            services.AddDbContext<ChatroomContext>(options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+                options.EnableSensitiveDataLogging();
+                //options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            });
+            //ServiceLifetime.Transient);
+            //services.AddTransient<SeedDataRepository>();
+
+            services.AddSwaggerGen(options =>
            {
-               c.SwaggerDoc("v1", new OpenApiInfo { Title = "luke_site_mvc", Version = "v1" });
+               options.SwaggerDoc("v1", new OpenApiInfo { Title = "luke_site_mvc", Version = "v1" });
 
                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-               c.IncludeXmlComments(xmlPath);
+               options.IncludeXmlComments(xmlPath);
            });
 
             services.AddMiniProfiler(options =>
@@ -93,14 +114,15 @@ namespace luke_site_mvc
                 // options.MvcViewMinimumSaveMs = 1.0m;
 
                 // (Optional) listen to any errors that occur within MiniProfiler itself
-                 //options.OnInternalError = e => MyExceptionLogger(e);
+                //options.OnInternalError = e => MyExceptionLogger(e);
 
                 // (Optional - not recommended) You can enable a heavy debug mode with stacks and tooltips when using memory storage
                 // It has a lot of overhead vs. normal profiling and should only be used with that in mind
                 // (defaults to false, debug/heavy mode is off)
                 //options.EnableDebugMode = true;
-                options.Storage = new SqlServerStorage(Configuration.GetConnectionString("MiniProfilerLogDbConnection"));
-            });
+                //options.Storage = new SqlServerStorage(Configuration.GetConnectionString("MiniProfilerLogDbConnection"));
+                options.Storage = new SqlServerStorage(Configuration.GetConnectionString("DefaultConnection"));
+            }).AddEntityFramework();
 
             services.AddResponseCaching();
 
@@ -109,7 +131,8 @@ namespace luke_site_mvc
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
-            IHostApplicationLifetime lifetime, IDistributedCache cache)
+            IHostApplicationLifetime lifetime, IDistributedCache cache,
+            ChatroomContext chatroomContext)
         {
             lifetime.ApplicationStarted.Register(() =>
             {
@@ -153,6 +176,9 @@ namespace luke_site_mvc
 
                 endpoints.MapRazorPages();
             });
+
+            // force database seeding to execute
+            chatroomContext.Database.EnsureCreated();
         }
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
+using StackExchange.Profiling.Storage;
 
 namespace luke_site_mvc.Data
 {
@@ -64,5 +65,6 @@ namespace luke_site_mvc.Data
 
             return await connection.QueryAsync<string>(sql, parameters);
         }
+
     }
 }

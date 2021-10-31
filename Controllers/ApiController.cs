@@ -19,7 +19,6 @@ namespace luke_site_mvc.Controllers
         public ApiController(IChatroomService chatroomService, ILogger<ApiController> logger)
         {
             _chatroomService = chatroomService;
-
             _logger = logger;
         }
 

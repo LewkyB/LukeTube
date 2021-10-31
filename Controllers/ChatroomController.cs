@@ -23,13 +23,17 @@ namespace luke_site_mvc.Controllers
         }
 
         public async Task<IActionResult> Index()
+        //public async Task<IActionResult> Index()
         {
             _logger.LogInformation("Chatroom.Index() Triggered.");
 
             try
             {
-                var result = await _chatroomService.GetAllChatNames();
-                return View(result);
+                //await _chatroomService.InitializeDatabase();
+
+                //var result = await _chatroomService.GetAllChatNames();
+                //return View(result);
+                return View();
             }
             catch (Exception ex)
             {

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using luke_site_mvc.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Web;
@@ -21,7 +23,27 @@ namespace luke_site_mvc
             try
             {
                 logger.Debug("init main");
+
                 CreateHostBuilder(args).Build().Run();
+                //var host = CreateHostBuilder(args).Build();
+
+                //using (var scope = host.Services.CreateScope())
+                //{
+                //    //var services = scope.ServiceProvider;
+                //    //var seeder = host.Services.GetRequiredService<ISeedDataRepository>();
+
+                //    var seeder = scope.ServiceProvider.GetRequiredService<SeedDataRepository>();
+                //    //var seeder = scope.ServiceProvider.GetRequiredService<ISeedDataRepository>();
+                //    //ISeedDataRepository seedDataRepository = scope.ServiceProvider.GetRequiredService<ISeedDataRepository>();
+                //    //SeedDataRepository seedDataRepository = new SeedDataRepository();
+                //    await seeder.Initialize();
+                //    //await seedDataRepository.Initialize();
+                //}
+                //var seeder = host.Services.CreateScope .GetRequiredService<ISeedDataRepository>();
+                //await seeder.Initialize();
+                //await RunSeedingAsync(host);
+
+                //host.Run();
             }
             catch (Exception exception)
             {
@@ -35,6 +57,17 @@ namespace luke_site_mvc
                 NLog.LogManager.Shutdown();
             }
         }
+
+        private static async Task RunSeedingAsync(IHost host)
+        {
+            var scopeFactory = host.Services.GetService<IServiceScopeFactory>();
+            using (var scope = scopeFactory.CreateScope())
+            {
+                var seeder = scope.ServiceProvider.GetService<SeedDataRepository>();
+                await seeder.Initialize();
+            }
+        }
+
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
