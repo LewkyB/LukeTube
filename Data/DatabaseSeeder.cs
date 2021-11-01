@@ -24,6 +24,7 @@ namespace luke_site_mvc.Data
         private readonly ChatroomContext _chatroomContext;
         private readonly HttpClient _client;
 
+        // links and chats collected from my weechat irc bouncer in json form
         private readonly string _database_seed_json_url = "https://www.lukebrown.us/database_seed.json/";
 
         public DatabaseSeeder(ChatroomContext chatroomContext, HttpClient client, IConfiguration config, IWebHostEnvironment webHostEnvironment, IServiceProvider serviceProvider)
@@ -34,21 +35,25 @@ namespace luke_site_mvc.Data
 
         public async Task InitializeAsync()
         {
-                _chatroomContext.Database.EnsureCreated();
+            _chatroomContext.Database.EnsureCreated();
 
-                if (!_chatroomContext.Chatrooms.Any())
-                {
-                    var chatrooms = await DownloadJSON();
-                    await _chatroomContext.Chatrooms.AddRangeAsync(chatrooms.ToList());
+            if (!_chatroomContext.Chatrooms.Any())
+            {
+                var chatrooms = await DownloadJSON();
 
-                    await SetupTablesMiniProfiler(_chatroomContext);
+                // load database with data
+                await _chatroomContext.Chatrooms.AddRangeAsync(chatrooms.ToList());
 
-                    await _chatroomContext.SaveChangesAsync();
-                }
+                // create tables that allow MiniProfiler to log to database
+                await SetupTablesMiniProfiler(_chatroomContext);
+
+                await _chatroomContext.SaveChangesAsync();
+            }
         }
 
         public async Task SetupTablesMiniProfiler(DbContext context)
         {
+            // get table creation sql commands from MiniProfiler
             SqlServerStorage sqlServerStorage = new SqlServerStorage("");
             List<string> miniProfilerTableCreationScripts = sqlServerStorage.TableCreationScripts;
 
@@ -60,6 +65,9 @@ namespace luke_site_mvc.Data
 
         public async Task<IEnumerable<Chatroom>> DownloadJSON()
         {
+            // This buffers the entire response into memory so that we don't
+            // end up doing blocking IO when de-serializing the JSON. If the payload
+            // is *HUGE* this could result in large allocations that lead to a Denial Of Service.
             using (var response = await _client.GetAsync(_database_seed_json_url, HttpCompletionOption.ResponseHeadersRead))
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();

@@ -2,7 +2,6 @@
 using luke_site_mvc.Data;
 using Xunit;
 using System.Data;
-using Dapper;
 using System.Data.SqlClient;
 using System.Linq;
 
