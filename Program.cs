@@ -24,7 +24,7 @@ namespace luke_site_mvc
                 // Seed database with data from json if database is empty
                 await RunSeedingAsync(host);
 
-                host.Run();
+                await host.RunAsync();
             }
             catch (Exception exception)
             {

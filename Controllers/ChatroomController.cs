@@ -29,11 +29,9 @@ namespace luke_site_mvc.Controllers
 
             try
             {
-                //await _chatroomService.InitializeDatabase();
-
                 var result = await _chatroomService.GetAllChatNames();
+
                 return View(result);
-                //return View();
             }
             catch (Exception ex)
             {

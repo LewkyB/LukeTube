@@ -46,7 +46,7 @@ namespace luke_site_mvc.Data
             return await _chatroomContext.Chatrooms
                 .OrderByDescending(chatroom => chatroom.Id)
                 .Where(chatroom => chatroom.Name == chatName)
-                .Select(chatroom => chatroom.Name)
+                .Select(chatroom => chatroom.Link)
                 .ToListAsync();
         }
 
