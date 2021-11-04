@@ -27,8 +27,8 @@ namespace luke_site_mvc.Controllers
         [Produces("application/json")]
         public async Task<ActionResult<IReadOnlyList<Chatroom>>> Get()
         {
-            _logger.LogInformation("ChatroomsController.Get() Triggered.");
-            
+            _logger.LogInformation("ChatroomsController.Get()");
+
             try
             {
                 return Ok(await _chatroomService.GetAllLinks());
@@ -56,9 +56,9 @@ namespace luke_site_mvc.Controllers
             try
             {
                 // TODO: separate to different functions
-                if (chatname.Equals("chatnames")) 
+                if (chatname.Equals("chatnames"))
                     return Ok(await _chatroomService.GetAllChatNames());
-                
+
                 return Ok(await _chatroomService.GetChatLinksByChat(chatname));
             }
             catch (Exception ex)

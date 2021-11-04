@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using luke_site_mvc.Data;
 
 namespace luke_site_mvc.Migrations
 {
     [DbContext(typeof(ChatroomContext))]
-    partial class ChatroomContextModelSnapshot : ModelSnapshot
+    [Migration("20211103061954_PushshiftFeature")]
+    partial class PushshiftFeature
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

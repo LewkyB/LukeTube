@@ -40,6 +40,10 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PsawSharp\PsawSharp\PsawSharp.csproj" />
+  </ItemGroup>
+
 
     <!-- https://stackoverflow.com/questions/32201437/dapper-ambiguous-extension-methods -->
 	<Target Name="StrongNameAlias" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">

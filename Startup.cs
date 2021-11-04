@@ -39,6 +39,7 @@ namespace luke_site_mvc
 
             services.AddScoped<IDataRepository, DataRepository>();
             services.AddScoped<IChatroomService, ChatroomService>();
+            services.AddScoped<IPushshiftService, PushshiftService>();
             services.AddTransient<IDatabaseSeeder, DatabaseSeeder>();
 
             services.AddControllersWithViews();

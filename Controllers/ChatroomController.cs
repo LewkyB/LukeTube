@@ -14,14 +14,17 @@ namespace luke_site_mvc.Controllers
         private readonly IChatroomService _chatroomService;
         private readonly ILogger<ChatroomController> _logger;
         private readonly IDistributedCache _cache;
+        private readonly IPushshiftService _pushshiftService;
 
-        public ChatroomController(IChatroomService chatroomService, ILogger<ChatroomController> logger, IDistributedCache cache)
+        public ChatroomController(IChatroomService chatroomService, ILogger<ChatroomController> logger, IDistributedCache cache, IPushshiftService pushshiftService)
         {
             _chatroomService = chatroomService;
             _logger = logger;
             _cache = cache;
+            _pushshiftService = pushshiftService;
         }
 
+        // TODO: rename things from irctube and chatroom to pushshift? catchy name?
         //public IActionResult Index()
         public async Task<IActionResult> Index()
         {
@@ -29,7 +32,14 @@ namespace luke_site_mvc.Controllers
 
             try
             {
-                var result = await _chatroomService.GetAllChatNames();
+                // TODO: feature flag between these two?
+
+                // irctube
+                //var result = await _chatroomService.GetAllChatNames();
+
+                // pushshift
+                var result = await _pushshiftService.GetSubreddits();
+
 
                 return View(result);
             }
@@ -47,11 +57,14 @@ namespace luke_site_mvc.Controllers
             try
             {
                 // TODO: is this a safe way to pass sql parameter?
-                var links = await _chatroomService.GetChatLinksByChat(id);
+                //var links = await _chatroomService.GetChatLinksByChat(id);
+                var links = await _pushshiftService.GetLinksFromCommentsAsync(id);
 
                 ViewBag.Title = id;
+                ViewBag.links = links;
 
-                return View(links);
+                // TODO: figure out why this fails for some pages, but not for others
+                return View("links", links);
             }
             catch (Exception ex)
             {

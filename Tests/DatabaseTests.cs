@@ -1,15 +1,7 @@
-﻿using System.Collections.Generic;
-using luke_site_mvc.Data;
-using Xunit;
-using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
-
-namespace luke_site_mvc
+﻿namespace luke_site_mvc
 {
     public class DatabaseTests
     {
-        // TODO: should I inject in service and repository here?
         //[Fact]
         //public void GetChatLinks_CheckIfDatabasePopulated()
         //{
@@ -19,7 +11,6 @@ namespace luke_site_mvc
         ////public IReadOnlyList<string> GetChatLinks(string chatname)
         //public IEnumerable<Chatroom> GetChatLinks(string chatname)
         //{
-        //    // TODO: RELOCATE
         //    using IDbConnection connection =
         //        new SqlConnection("Data Source=localhost;Initial Catalog=ChatDB;Integrated Security=True;MultipleActiveResultSets = true");
 
