@@ -54,6 +54,7 @@ namespace luke_site_mvc
             {
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
                 options.EnableSensitiveDataLogging();
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             },
             ServiceLifetime.Transient);
 

@@ -6,8 +6,6 @@ using luke_site_mvc.Data;
 using luke_site_mvc.Data.Entities;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using PsawSharp;
-using PsawSharp.Entries;
 using PsawSharp.Requests.Options;
 
 namespace luke_site_mvc.Services
