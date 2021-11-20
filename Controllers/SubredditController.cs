@@ -24,22 +24,13 @@ namespace luke_site_mvc.Controllers
             _pushshiftService = pushshiftService;
         }
 
-        // TODO: rename things from irctube and chatroom to pushshift? catchy name?
-        //public IActionResult Index()
         public async Task<IActionResult> Index()
         {
             _logger.LogInformation("Chatroom.Index() Triggered.");
 
             try
             {
-                // TODO: feature flag between these two?
-
-                // irctube
-                //var result = await _chatroomService.GetAllChatNames();
-
-                // pushshift
                 var result = await _pushshiftService.GetSubreddits();
-
 
                 return View(result);
             }

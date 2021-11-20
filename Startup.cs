@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using luke_site_mvc.Data;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Builder;
@@ -12,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using PsawSharp.Requests;
 using StackExchange.Profiling.Storage;
 
 namespace luke_site_mvc
