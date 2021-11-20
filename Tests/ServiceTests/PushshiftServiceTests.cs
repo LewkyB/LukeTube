@@ -1,10 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net.Http;
+using System.Threading.Tasks;
 using luke_site_mvc.Data;
 using luke_site_mvc.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
+using PsawSharp.Requests;
 using Xunit;
 
 namespace luke_site_mvc.Tests
@@ -15,6 +17,9 @@ namespace luke_site_mvc.Tests
         private readonly Mock<ILogger<PushshiftService>> _loggerMock;
         private readonly SubredditContext _chatroomContext;
 
+        private readonly IPsawService _psawService;
+        private readonly Mock<ILogger<PsawService>> _loggerPsawServiceMock;
+
         public readonly PushshiftService _pushshiftService;
 
         public PushshiftServiceTests()
@@ -22,13 +27,19 @@ namespace luke_site_mvc.Tests
             _cacheMock = new Mock<IDistributedCache>();
             _loggerMock = new Mock<ILogger<PushshiftService>>();
 
+            _loggerPsawServiceMock = new Mock<ILogger<PsawService>>();
+
+            // TODO: should i be mocking this instead?
+            _psawService = new PsawService(new HttpClient(), _loggerPsawServiceMock.Object);
+
             // TODO: i need to mock this instead of using the real thing
             _chatroomContext = new SubredditContext(new DbContextOptions<SubredditContext>());
 
             _pushshiftService = new PushshiftService(
                 _loggerMock.Object,
                 _cacheMock.Object,
-                _chatroomContext);
+                _chatroomContext,
+                _psawService);
         }
 
         [Fact]
@@ -70,8 +81,10 @@ namespace luke_site_mvc.Tests
             var result = await _pushshiftService.GetLinksFromCommentsAsync(subreddit);
 
             // TODO: should check more values?
-            // TODO: what if there isn't more than 0?
-            Assert.True(result[0].Score >= result[1].Score);
+            if (result.Count > 1)
+            {
+                Assert.True(result[0].Score >= result[1].Score);
+            }
         }
 
     }

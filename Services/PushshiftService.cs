@@ -8,6 +8,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using PsawSharp;
 using PsawSharp.Entries;
+using PsawSharp.Requests;
 using PsawSharp.Requests.Options;
 
 namespace luke_site_mvc.Services
@@ -22,13 +23,15 @@ namespace luke_site_mvc.Services
     {
         private readonly ILogger<PushshiftService> _logger;
         private readonly IDistributedCache _cache;
-        private readonly SubredditContext _chatroomContext;
+        private readonly SubredditContext _subredditContext;
+        private readonly IPsawService _psawService;
 
-        public PushshiftService(ILogger<PushshiftService> logger, IDistributedCache distributedCache, SubredditContext chatroomContext)
+        public PushshiftService(ILogger<PushshiftService> logger, IDistributedCache distributedCache, SubredditContext subredditContext, IPsawService psawService)
         {
             _logger = logger;
             _cache = distributedCache;
-            _chatroomContext = chatroomContext;
+            _subredditContext = subredditContext;
+            _psawService = psawService;
         }
         // TODO: not actually async
         public async Task<List<string>> GetSubreddits()
@@ -66,14 +69,15 @@ namespace luke_site_mvc.Services
 
             List<RedditComment> redditComments = new List<RedditComment>();
 
-            var client = new PsawClient();
-            var comments = await client.Search<CommentEntry>(new SearchOptions
+            //var client = new PsawClient();
+            //var comments = await client.Search<CommentEntry>(new SearchOptions
+            var comments = await _psawService.Search<CommentEntry>(new SearchOptions
             {
                 Subreddit = selected_subreddit,
                 Query = "www.youtube.com/watch", // TODO: seperate out the query for the other link and score
                 //Query = "www.youtube.com/watch?&q=youtu.be/", // TODO: seperate out the query for the other link and score
                 Size = 100,
-                //After = "0,0,0,30"  //s,m,h,d
+                After = "30d"  //s,m,h,d
                 //Before = "0,0,0,30"  //s,m,h,d
             });
 
@@ -104,8 +108,8 @@ namespace luke_site_mvc.Services
             // load up the database
             // TODO: need to prevent duplicate entries
             // going to a link, then back, then back to that link, will make 2 entries
-            await _chatroomContext.AddRangeAsync(redditComments);
-            await _chatroomContext.SaveChangesAsync();
+            await _subredditContext.AddRangeAsync(redditComments);
+            await _subredditContext.SaveChangesAsync();
 
             // sort comments so that the highest scored video shows at the top
             List<RedditComment> commentsSorted = new List<RedditComment>();
