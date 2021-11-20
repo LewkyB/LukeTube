@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using PsawSharp.Requests;
 using StackExchange.Profiling.Storage;
 
 namespace luke_site_mvc
@@ -29,6 +30,7 @@ namespace luke_site_mvc
         {
             services.AddHttpClient();
             services.AddHttpClient<IDatabaseSeeder>();
+            services.AddHttpClient<IPsawService>();
 
             services.AddHttpClient("timeout", client =>
             {
@@ -40,6 +42,7 @@ namespace luke_site_mvc
             services.AddScoped<ISubredditRepository, SubredditRepository>();
             services.AddScoped<ISubredditService, SubredditService>();
             services.AddScoped<IPushshiftService, PushshiftService>();
+            services.AddScoped<IPsawService, PsawService>();
             services.AddTransient<IDatabaseSeeder, DatabaseSeeder>();
 
             services.AddControllersWithViews();

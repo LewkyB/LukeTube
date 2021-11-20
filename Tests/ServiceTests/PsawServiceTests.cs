@@ -1,36 +1,42 @@
 ﻿using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Moq;
 using PsawSharp.Entries;
+using PsawSharp.Requests;
 using PsawSharp.Requests.Options;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace PsawSharp.Tests
 {
-    public class PsawClientTests
+    public class PsawServiceTests
     {
-
         private readonly ITestOutputHelper _output;
+        private readonly IPsawService _psawService;
+        private readonly Mock<ILogger<PsawService>> _loggerMock;
 
-        public PsawClientTests(ITestOutputHelper output)
+        public PsawServiceTests(ITestOutputHelper output)
         {
             _output = output;
+
+            _loggerMock = new Mock<ILogger<PsawService>>();
+            _psawService = new PsawService(new HttpClient(), _loggerMock.Object);
         }
 
         [Fact]
         public async Task GetMeta()
         {
-            var client = new PsawClient();
-            var meta = await client.GetMeta();
+            var meta = await _psawService.GetMeta();
             Assert.True(meta.ClientAcceptsJson);
         }
 
         [Fact]
         public async Task GetSubmission()
         {
-            var client = new PsawClient();
-            var submmissions = await client.Search<SubmissionEntry>(new SearchOptions
+            var submmissions = await _psawService.Search<SubmissionEntry>(new SearchOptions
             {
                 Subreddit = "game",
                 Size = 1
@@ -42,8 +48,7 @@ namespace PsawSharp.Tests
         [Fact]
         public async Task GetSubmissions()
         {
-            var client = new PsawClient();
-            var submmissions = await client.Search<SubmissionEntry>(new SearchOptions
+            var submmissions = await _psawService.Search<SubmissionEntry>(new SearchOptions
             {
                 Subreddit = "game",
                 Size = 100
@@ -56,8 +61,7 @@ namespace PsawSharp.Tests
         [Fact]
         public async Task GetSubmissionCommentIds()
         {
-            var client = new PsawClient();
-            string[] ids = await client.GetSubmissionCommentIds("a2df38");
+            string[] ids = await _psawService.GetSubmissionCommentIds("a2df38");
 
             Assert.True(ids.Length > 2000);
         }
@@ -65,8 +69,7 @@ namespace PsawSharp.Tests
         [Fact]
         public async Task GetComments()
         {
-            var client = new PsawClient();
-            var comments = await client.Search<CommentEntry>(new SearchOptions
+            var comments = await _psawService.Search<CommentEntry>(new SearchOptions
             {
                 Subreddit = "game",
                 Size = 100
@@ -81,11 +84,10 @@ namespace PsawSharp.Tests
         {
             const string submissionId = "a2df38";
 
-            var client = new PsawClient();
-            var commentIds = (await client.GetSubmissionCommentIds(submissionId)).Take(500).ToArray();
+            var commentIds = (await _psawService.GetSubmissionCommentIds(submissionId)).Take(500).ToArray();
 
             // Only taking 500 because more would result in a [Request Line is too large (8039 > 4094)] error
-            var comments = await client.Search<CommentEntry>(new SearchOptions
+            var comments = await _psawService.Search<CommentEntry>(new SearchOptions
             {
                 Ids = commentIds
             });
