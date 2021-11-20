@@ -1,12 +1,12 @@
-﻿using System.Diagnostics;
+﻿using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using luke_site_mvc.Models.PsawSearchOptions;
+using luke_site_mvc.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PsawSharp.Entries;
-using PsawSharp.Requests;
-using PsawSharp.Requests.Options;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,16 +14,25 @@ namespace luke_site_mvc.Tests.ServiceTests
 {
     public class PsawServiceTests
     {
+        // TODO: what does this do?
         private readonly ITestOutputHelper _output;
+
         private readonly IPsawService _psawService;
         private readonly Mock<ILogger<PsawService>> _loggerMock;
+        private readonly HttpClient _httpClient;
+
 
         public PsawServiceTests(ITestOutputHelper output)
         {
             _output = output;
 
             _loggerMock = new Mock<ILogger<PsawService>>();
-            _psawService = new PsawService(new HttpClient(), _loggerMock.Object);
+
+            // setup so that it has the same base address as in Startup.cs
+            _httpClient = new HttpClient();
+            _httpClient.BaseAddress = new Uri("https://api.pushshift.io/");
+
+            _psawService = new PsawService(_httpClient, _loggerMock.Object);
         }
 
         [Fact]

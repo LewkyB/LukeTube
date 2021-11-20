@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using luke_site_mvc.Models.PsawSearchOptions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using PsawSharp.Entries;
-using PsawSharp.Requests.Options;
 using RateLimiter;
 
 namespace luke_site_mvc.Services
@@ -44,20 +44,20 @@ namespace luke_site_mvc.Services
         {
             string type = typeof(T).Name.Replace("Entry", "").ToLower();
             string route = string.Format(RequestsConstants.SearchRoute, type);
-            var result = await PerformGet(RequestsConstants.BaseAddress + route, options?.ToArgs());
+            var result = await PerformGet(route, options?.ToArgs());
             return result["data"].ToObject<T[]>();
         }
 
         public async Task<string[]> GetSubmissionCommentIds(string base36SubmissionId)
         {
-            string route = string.Format(RequestsConstants.BaseAddress + RequestsConstants.CommentIdsRoute, base36SubmissionId);
+            string route = string.Format(RequestsConstants.CommentIdsRoute, base36SubmissionId);
             var result = await PerformGet(route);
             return result["data"].ToObject<string[]>();
         }
 
         public async Task<MetaEntry> GetMeta()
         {
-            var result = await PerformGet(RequestsConstants.BaseAddress + "meta");
+            var result = await PerformGet("meta");
             return result.ToObject<MetaEntry>();
         }
 

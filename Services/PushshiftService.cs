@@ -4,12 +4,10 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using luke_site_mvc.Data;
 using luke_site_mvc.Data.Entities;
+using luke_site_mvc.Models.PsawSearchOptions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using PsawSharp;
 using PsawSharp.Entries;
-using PsawSharp.Requests;
-using PsawSharp.Requests.Options;
 
 namespace luke_site_mvc.Services
 {

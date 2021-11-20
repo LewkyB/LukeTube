@@ -28,7 +28,10 @@ namespace luke_site_mvc
         {
             services.AddHttpClient();
             services.AddHttpClient<IDatabaseSeeder>();
-            services.AddHttpClient<IPsawService>();
+            services.AddHttpClient<IPsawService>(client =>
+            {
+                client.BaseAddress = new Uri("https://api.pushshift.io/");
+            });
 
             services.AddHttpClient("timeout", client =>
             {

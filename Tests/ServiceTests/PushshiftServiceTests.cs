@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using luke_site_mvc.Data;
 using luke_site_mvc.Services;
@@ -6,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
-using PsawSharp.Requests;
 using Xunit;
 
 namespace luke_site_mvc.Tests.ServiceTests
@@ -22,15 +22,20 @@ namespace luke_site_mvc.Tests.ServiceTests
 
         public readonly PushshiftService _pushshiftService;
 
+        private readonly HttpClient _httpClient;
+
         public PushshiftServiceTests()
         {
             _cacheMock = new Mock<IDistributedCache>();
             _loggerMock = new Mock<ILogger<PushshiftService>>();
-
             _loggerPsawServiceMock = new Mock<ILogger<PsawService>>();
 
+            // setup so that it has the same base address as in Startup.cs
+            _httpClient = new HttpClient();
+            _httpClient.BaseAddress = new Uri("https://api.pushshift.io/");
+
             // TODO: should i be mocking this instead?
-            _psawService = new PsawService(new HttpClient(), _loggerPsawServiceMock.Object);
+            _psawService = new PsawService(_httpClient, _loggerPsawServiceMock.Object);
 
             // TODO: i need to mock this instead of using the real thing
             _chatroomContext = new SubredditContext(new DbContextOptions<SubredditContext>());
