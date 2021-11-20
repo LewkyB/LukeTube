@@ -1,6 +1,6 @@
 ﻿namespace luke_site_mvc.Tests
 {
-    public class ChatroomServiceTests
+    public class SubredditServiceTests
     {
         //private readonly IChatroomService _chatroomService;
 

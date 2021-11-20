@@ -13,12 +13,12 @@ namespace luke_site_mvc.Controllers
     [Produces("application/json")]
     public class ApiController : ControllerBase
     {
-        private readonly IChatroomService _chatroomService;
+        private readonly ISubredditService _subredditService;
         private readonly ILogger<ApiController> _logger;
 
-        public ApiController(IChatroomService chatroomService, ILogger<ApiController> logger)
+        public ApiController(ISubredditService subredditService, ILogger<ApiController> logger)
         {
-            _chatroomService = chatroomService;
+            _subredditService = subredditService;
             _logger = logger;
         }
 
@@ -31,7 +31,7 @@ namespace luke_site_mvc.Controllers
 
             try
             {
-                return Ok(await _chatroomService.GetAllLinks());
+                return Ok(await _subredditService.GetAllLinks());
             }
             catch (Exception ex)
             {
@@ -57,9 +57,9 @@ namespace luke_site_mvc.Controllers
             {
                 // TODO: separate to different functions
                 if (chatname.Equals("chatnames"))
-                    return Ok(await _chatroomService.GetAllChatNames());
+                    return Ok(await _subredditService.GetAllChatNames());
 
-                return Ok(await _chatroomService.GetChatLinksByChat(chatname));
+                return Ok(await _subredditService.GetChatLinksByChat(chatname));
             }
             catch (Exception ex)
             {

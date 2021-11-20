@@ -7,6 +7,9 @@
 
     @foreach (var link in ViewBag.links)
     {
+        // only load 20 embedded videos
+        if (counter > 1000) break;
+
         if (counter > 0 && counter % 2 == 0)
         {
         @:</div><div class="columns">
@@ -19,6 +22,8 @@
                         frameborder="0" 
                         allow="autoplay; encrypted-media" 
                         allowfullscreen></iframe>
+                <b>@link.Score</b>
+                <b>@link.CreatedUTC</b>
             </div>
 
         counter++;

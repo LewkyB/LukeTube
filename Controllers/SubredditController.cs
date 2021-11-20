@@ -9,14 +9,14 @@ using Microsoft.Extensions.Logging;
 
 namespace luke_site_mvc.Controllers
 {
-    public class ChatroomController : Controller
+    public class SubredditController : Controller
     {
-        private readonly IChatroomService _chatroomService;
-        private readonly ILogger<ChatroomController> _logger;
+        private readonly ISubredditService _chatroomService;
+        private readonly ILogger<SubredditController> _logger;
         private readonly IDistributedCache _cache;
         private readonly IPushshiftService _pushshiftService;
 
-        public ChatroomController(IChatroomService chatroomService, ILogger<ChatroomController> logger, IDistributedCache cache, IPushshiftService pushshiftService)
+        public SubredditController(ISubredditService chatroomService, ILogger<SubredditController> logger, IDistributedCache cache, IPushshiftService pushshiftService)
         {
             _chatroomService = chatroomService;
             _logger = logger;
@@ -52,13 +52,14 @@ namespace luke_site_mvc.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Links(string id)
+        [Route("/Subreddit/{id:alpha}/Links/{order:alpha}")] 
+        public async Task<IActionResult> Links(string id, string order)
         {
             try
             {
                 // TODO: is this a safe way to pass sql parameter?
                 //var links = await _chatroomService.GetChatLinksByChat(id);
-                var links = await _pushshiftService.GetLinksFromCommentsAsync(id);
+                var links = await _pushshiftService.GetLinksFromCommentsAsync(id, order);
 
                 ViewBag.Title = id;
                 ViewBag.links = links;

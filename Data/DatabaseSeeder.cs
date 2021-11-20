@@ -21,33 +21,33 @@ namespace luke_site_mvc.Data
     }
     public class DatabaseSeeder : IDatabaseSeeder
     {
-        private readonly ChatroomContext _chatroomContext;
+        private readonly SubredditContext _subredditContext;
         private readonly HttpClient _client;
 
         // links and chats collected from my weechat irc bouncer in json form
         private readonly string _database_seed_json_url = "https://www.lukebrown.us/database_seed.json/";
 
-        public DatabaseSeeder(ChatroomContext chatroomContext, HttpClient client, IConfiguration config, IWebHostEnvironment webHostEnvironment, IServiceProvider serviceProvider)
+        public DatabaseSeeder(SubredditContext SubredditContext, HttpClient client, IConfiguration config, IWebHostEnvironment webHostEnvironment, IServiceProvider serviceProvider)
         {
-            _chatroomContext = chatroomContext;
+            _subredditContext = SubredditContext;
             _client = client;
         }
 
         public async Task InitializeAsync()
         {
-            _chatroomContext.Database.EnsureCreated();
+            _subredditContext.Database.EnsureCreated();
 
-            if (!_chatroomContext.Chatrooms.Any())
+            if (!_subredditContext.Chatrooms.Any())
             {
                 var chatrooms = await DownloadJSON();
 
                 // load database with data
-                await _chatroomContext.Chatrooms.AddRangeAsync(chatrooms.ToList());
+                await _subredditContext.Chatrooms.AddRangeAsync(chatrooms.ToList());
 
                 // create tables that allow MiniProfiler to log to database
-                await SetupTablesMiniProfiler(_chatroomContext);
+                await SetupTablesMiniProfiler(_subredditContext);
 
-                await _chatroomContext.SaveChangesAsync();
+                await _subredditContext.SaveChangesAsync();
             }
         }
 

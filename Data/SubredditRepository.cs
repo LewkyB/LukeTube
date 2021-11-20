@@ -8,34 +8,34 @@ using Microsoft.Extensions.Logging;
 
 namespace luke_site_mvc.Data
 {
-    public interface IDataRepository
+    public interface ISubredditRepository
     {
         Task<IReadOnlyList<Chatroom>> GetAllLinks();
         Task<IReadOnlyList<string>> GetAllChatNames();
         Task<IReadOnlyList<string>> GetChatLinksByChat(string chatName);
     }
 
-    public class DataRepository : IDataRepository
+    public class SubredditRepository : ISubredditRepository
     {
-        private readonly ILogger<DataRepository> _logger;
+        private readonly ILogger<SubredditRepository> _logger;
         private readonly IConfiguration _config;
-        private readonly ChatroomContext _chatroomContext;
+        private readonly SubredditContext _subredditContext;
 
-        public DataRepository(IConfiguration config, ILogger<DataRepository> logger, ChatroomContext chatroomContext)
+        public SubredditRepository(IConfiguration config, ILogger<SubredditRepository> logger, SubredditContext subredditContext)
         {
             _config = config;
             _logger = logger;
-            _chatroomContext = chatroomContext;
+            _subredditContext = subredditContext;
         }
 
         public async Task<IReadOnlyList<Chatroom>> GetAllLinks()
         {
-            return await _chatroomContext.Chatrooms
+            return await _subredditContext.Chatrooms
                 .ToListAsync();
         }
         public async Task<IReadOnlyList<string>> GetAllChatNames()
         {
-            return await _chatroomContext.Chatrooms
+            return await _subredditContext.Chatrooms
                 .Where(chatroom => chatroom.Name != " ")
                 .Select(chatroom => chatroom.Name).Distinct()
                 .ToListAsync();
@@ -43,7 +43,7 @@ namespace luke_site_mvc.Data
 
         public async Task<IReadOnlyList<string>> GetChatLinksByChat(string chatName)
         {
-            return await _chatroomContext.Chatrooms
+            return await _subredditContext.Chatrooms
                 .OrderByDescending(chatroom => chatroom.Id)
                 .Where(chatroom => chatroom.Name == chatName)
                 .Select(chatroom => chatroom.Link)

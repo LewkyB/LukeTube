@@ -21,7 +21,7 @@ namespace luke_site_mvc
 
                 var host = CreateHostBuilder(args).Build();
 
-                // Seed database with data from json if database is empty
+                // seed database at startup
                 await RunSeedingAsync(host);
 
                 await host.RunAsync();

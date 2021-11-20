@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace luke_site_mvc.Data
 {
-    public class ChatroomContext : DbContext
+    public class SubredditContext : DbContext
     {
-        public ChatroomContext(DbContextOptions<ChatroomContext> options)
+        public SubredditContext(DbContextOptions<SubredditContext> options)
             : base(options)
         {
         }

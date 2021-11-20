@@ -6,6 +6,8 @@ using luke_site_mvc.Data;
 using luke_site_mvc.Data.Entities;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using PsawSharp;
+using PsawSharp.Entries;
 using PsawSharp.Requests.Options;
 
 namespace luke_site_mvc.Services
@@ -13,16 +15,16 @@ namespace luke_site_mvc.Services
     public interface IPushshiftService
     {
         string FindYoutubeId(string commentBody);
-        Task<List<RedditComment>> GetLinksFromCommentsAsync(string selected_subreddit);
+        Task<List<RedditComment>> GetLinksFromCommentsAsync(string selected_subreddit, string order = "desc");
         Task<List<string>> GetSubreddits();
     }
     public class PushshiftService : IPushshiftService
     {
         private readonly ILogger<PushshiftService> _logger;
         private readonly IDistributedCache _cache;
-        private readonly ChatroomContext _chatroomContext;
+        private readonly SubredditContext _chatroomContext;
 
-        public PushshiftService(ILogger<PushshiftService> logger, IDistributedCache distributedCache, ChatroomContext chatroomContext)
+        public PushshiftService(ILogger<PushshiftService> logger, IDistributedCache distributedCache, SubredditContext chatroomContext)
         {
             _logger = logger;
             _cache = distributedCache;
@@ -37,13 +39,29 @@ namespace luke_site_mvc.Services
                 "space",
                 "science",
                 "mealtimevideos",
+                "skookum",
+                "artisanvideos",
+                "AIDKE",
+                "linux",
+                "movies",
+                "dotnet",
+                "csharp",
+                "biology",
+                "astronomy",
+                "photography",
+                "aviation",
+                "lectures",
+                "homebrewing",
+                "fantasy",
+                "homeimprovement",
                 "woodworking"
             };
 
-            return subreddits;
+            // sort the list alphabetically
+            return subreddits.OrderBy(x => x).ToList();
         }
 
-        public async Task<List<RedditComment>> GetLinksFromCommentsAsync(string selected_subreddit)
+        public async Task<List<RedditComment>> GetLinksFromCommentsAsync(string selected_subreddit, string order = "desc")
         {
 
             List<RedditComment> redditComments = new List<RedditComment>();
@@ -52,8 +70,11 @@ namespace luke_site_mvc.Services
             var comments = await client.Search<CommentEntry>(new SearchOptions
             {
                 Subreddit = selected_subreddit,
-                Query = "www.youtube.com/watch?v=", // TODO: are there any types of youtube links with 11 char ids
-                Size = 100
+                Query = "www.youtube.com/watch", // TODO: seperate out the query for the other link and score
+                //Query = "www.youtube.com/watch?&q=youtu.be/", // TODO: seperate out the query for the other link and score
+                Size = 100,
+                //After = "0,0,0,30"  //s,m,h,d
+                //Before = "0,0,0,30"  //s,m,h,d
             });
 
             foreach (var comment in comments)
@@ -87,9 +108,20 @@ namespace luke_site_mvc.Services
             await _chatroomContext.SaveChangesAsync();
 
             // sort comments so that the highest scored video shows at the top
-            List<RedditComment> commentsSortedByScoreDesc = redditComments.OrderByDescending(m => m.Score).ToList();
+            List<RedditComment> commentsSorted = new List<RedditComment>();
 
-            return commentsSortedByScoreDesc;
+            // default is desc
+            if (order.Equals("desc"))
+            {
+                commentsSorted = redditComments.OrderByDescending(m => m.Score).ToList();
+            }
+
+            if (order.Equals("asc"))
+            {
+                commentsSorted = redditComments.OrderBy(m => m.Score).ToList();
+            }
+
+            return commentsSorted;
         }
 
         // TODO: is this worth having outside the function below?

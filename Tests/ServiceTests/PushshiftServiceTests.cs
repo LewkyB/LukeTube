@@ -13,7 +13,7 @@ namespace luke_site_mvc.Tests
     {
         private readonly Mock<IDistributedCache> _cacheMock;
         private readonly Mock<ILogger<PushshiftService>> _loggerMock;
-        private readonly ChatroomContext _chatroomContext;
+        private readonly SubredditContext _chatroomContext;
 
         public readonly PushshiftService _pushshiftService;
 
@@ -23,7 +23,7 @@ namespace luke_site_mvc.Tests
             _loggerMock = new Mock<ILogger<PushshiftService>>();
 
             // TODO: i need to mock this instead of using the real thing
-            _chatroomContext = new ChatroomContext(new DbContextOptions<ChatroomContext>());
+            _chatroomContext = new SubredditContext(new DbContextOptions<SubredditContext>());
 
             _pushshiftService = new PushshiftService(
                 _loggerMock.Object,
