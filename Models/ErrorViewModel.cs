@@ -1,5 +1,3 @@
-using System;
-
 namespace luke_site_mvc.Models
 {
     public class ErrorViewModel

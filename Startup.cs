@@ -37,8 +37,9 @@ namespace luke_site_mvc
 
             services.AddHttpContextAccessor();
 
-            services.AddScoped<IDataRepository, DataRepository>();
-            services.AddScoped<IChatroomService, ChatroomService>();
+            services.AddScoped<ISubredditRepository, SubredditRepository>();
+            services.AddScoped<ISubredditService, SubredditService>();
+            services.AddScoped<IPushshiftService, PushshiftService>();
             services.AddTransient<IDatabaseSeeder, DatabaseSeeder>();
 
             services.AddControllersWithViews();
@@ -49,10 +50,11 @@ namespace luke_site_mvc
                 options.InstanceName = "IRCTube_";
             });
 
-            services.AddDbContext<ChatroomContext>(options =>
+            services.AddDbContext<SubredditContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
                 options.EnableSensitiveDataLogging();
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             },
             ServiceLifetime.Transient);
 
@@ -87,19 +89,19 @@ namespace luke_site_mvc
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
             IHostApplicationLifetime lifetime, IDistributedCache cache,
-            ChatroomContext chatroomContext)
+            SubredditContext chatroomContext)
         {
-            lifetime.ApplicationStarted.Register(() =>
-            {
-                var currentTimeUTC = DateTime.UtcNow.ToString();
+            //lifetime.ApplicationStarted.Register(() =>
+            //{
+            //    var currentTimeUTC = DateTime.UtcNow.ToString();
 
-                byte[] encodedCurrentTimeUTC = Encoding.UTF8.GetBytes(currentTimeUTC);
+            //    byte[] encodedCurrentTimeUTC = Encoding.UTF8.GetBytes(currentTimeUTC);
 
-                var options = new DistributedCacheEntryOptions()
-                    .SetSlidingExpiration(TimeSpan.FromSeconds(20));
+            //    var options = new DistributedCacheEntryOptions()
+            //        .SetSlidingExpiration(TimeSpan.FromSeconds(20));
 
-                cache.Set("cachedTimeUTC", encodedCurrentTimeUTC, options);
-            });
+            //    cache.Set("cachedTimeUTC", encodedCurrentTimeUTC, options);
+            //});
 
             if (env.IsDevelopment())
             {
@@ -127,7 +129,7 @@ namespace luke_site_mvc
             {
                 endpoints.MapControllerRoute("Fallback",
                     "{controller}/{action}/{id?}",
-                    new { controller = "Chatroom", action = "Index" });
+                    new { controller = "Subreddit", action = "Index" });
 
                 endpoints.MapRazorPages();
             });

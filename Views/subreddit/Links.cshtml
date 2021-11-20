@@ -2,10 +2,14 @@
     int counter = 0;
 }
 
+
 <div class="columns">
 
-    @foreach (string link in Model)
+    @foreach (var link in ViewBag.links)
     {
+        // only load 20 embedded videos
+        if (counter > 1000) break;
+
         if (counter > 0 && counter % 2 == 0)
         {
         @:</div><div class="columns">
@@ -14,10 +18,12 @@
             <div class="column text-center">
                 <iframe width="560" 
                         height="315" 
-                        src="https://www.youtube.com/embed/@link" 
+                        src="https://www.youtube.com/embed/@link.YoutubeLinkId" 
                         frameborder="0" 
                         allow="autoplay; encrypted-media" 
                         allowfullscreen></iframe>
+                <b>@link.Score</b>
+                <b>@link.CreatedUTC</b>
             </div>
 
         counter++;

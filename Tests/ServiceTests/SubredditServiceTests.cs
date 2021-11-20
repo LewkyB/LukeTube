@@ -1,19 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using luke_site_mvc.Data;
-using luke_site_mvc.Services;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Xunit;
-
-namespace luke_site_mvc.Tests
+﻿namespace luke_site_mvc.Tests
 {
-    public class ChatroomServiceTests
+    public class SubredditServiceTests
     {
         //private readonly IChatroomService _chatroomService;
 

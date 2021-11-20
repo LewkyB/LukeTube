@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace luke_site_mvc.Services
 {
-    public interface IChatroomService
+    public interface ISubredditService
     {
         Task<IReadOnlyList<string>> GetAllChatNames();
         Task<IReadOnlyList<Chatroom>> GetAllLinks();
@@ -14,12 +14,12 @@ namespace luke_site_mvc.Services
 
     // TODO: make this have more of a point than just returning readonlylists
     // TODO: move repository functions to ChatroomContext and just use that here? point of repository pattern?
-    public class ChatroomService : IChatroomService
+    public class SubredditService : ISubredditService
     {
-        private readonly IDataRepository _dataRepository;
-        private readonly ILogger<ChatroomService> _logger;
+        private readonly ISubredditRepository _dataRepository;
+        private readonly ILogger<SubredditService> _logger;
 
-        public ChatroomService(ILogger<ChatroomService> logger, IDataRepository dataRepository)
+        public SubredditService(ILogger<SubredditService> logger, ISubredditRepository dataRepository)
         {
             _dataRepository = dataRepository;
 
