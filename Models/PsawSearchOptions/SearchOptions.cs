@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace PsawSharp.Requests.Options
+namespace luke_site_mvc.Models.PsawSearchOptions
 {
     public class SearchOptions
     {

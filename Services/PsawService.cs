@@ -9,8 +9,9 @@ using PsawSharp.Entries;
 using PsawSharp.Requests.Options;
 using RateLimiter;
 
-namespace PsawSharp.Requests
+namespace luke_site_mvc.Services
 {
+    // TODO: get rid of this
     public static class RequestsConstants
     {
         public const string BaseAddress = "https://api.pushshift.io/";
@@ -35,9 +36,7 @@ namespace PsawSharp.Requests
         public PsawService(HttpClient httpClient, ILogger<PsawService> logger)
         {
             _timeLimiter = TimeLimiter.GetFromMaxCountByInterval(RequestsConstants.MaxRequestsPerMinute, TimeSpan.FromSeconds(60));
-
             _httpClient = httpClient;
-
             _logger = logger;
         }
 
@@ -67,18 +66,18 @@ namespace PsawSharp.Requests
             return await _timeLimiter.Perform(() => ExecuteGet(route, args));
         }
 
-
         private async Task<JToken> ExecuteGet(string route, List<string> args = null)
         {
-            _logger.LogDebug($"Executing GET request to {nameof(route)} {route}");
+            _logger.LogTrace($"Executing GET request to {nameof(route)} {route}");
 
             // Execute request and ensure it didn't fail
             var response = await _httpClient.GetAsync(ConstructUrl(route, args));
 
-            _logger.LogDebug($"response HTTP {nameof(response.StatusCode)} {response.StatusCode}");
+            _logger.LogTrace($"response HTTP {nameof(response.StatusCode)} {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
             {
+                _logger.LogError("PsawService.ExecuteGet Failure");
                 throw new HttpRequestException($"request to {route} failed", null, response.StatusCode);
             }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using luke_site_mvc.Data;
+using luke_site_mvc.Data.Entities;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -25,13 +26,13 @@ namespace luke_site_mvc.Controllers
         // TODO: document in swagger
         [HttpGet]
         [Produces("application/json")]
-        public async Task<ActionResult<IReadOnlyList<Chatroom>>> Get()
+        public async Task<ActionResult<IReadOnlyList<RedditComment>>> Get()
         {
             _logger.LogInformation("ChatroomsController.Get()");
 
             try
             {
-                return Ok(await _subredditService.GetAllLinks());
+                return Ok(await _subredditService.GetAllYoutubeIDs());
             }
             catch (Exception ex)
             {
@@ -44,22 +45,22 @@ namespace luke_site_mvc.Controllers
         /// return json of all links associated with desired chatname
         /// if you enter chatnames, you will receive all chatnames
         /// </summary>
-        /// <param name="chatname"></param>
+        /// <param name="subredditName"></param>
         /// <returns>JSON list of either all chatnames or chatlinks to associated chatname</returns>
-        [HttpGet("{chatname:alpha}")]
+        [HttpGet("{subredditName:alpha}")]
         [Produces("application/json")]
         // TODO: change this overloaded Get to make overloading not required
-        public async Task<ActionResult<IReadOnlyList<string>>> Get(string chatname)
+        public async Task<ActionResult<IReadOnlyList<string>>> Get(string subredditName)
         {
             _logger.LogInformation("ChatroomsController.Get(string chatname) Triggered.");
 
             try
             {
                 // TODO: separate to different functions
-                if (chatname.Equals("chatnames"))
-                    return Ok(await _subredditService.GetAllChatNames());
+                if (subredditName.Equals("subredditnames"))
+                    return Ok(await _subredditService.GetAllSubredditNames());
 
-                return Ok(await _subredditService.GetChatLinksByChat(chatname));
+                return Ok(await _subredditService.GetYouLinkIDsBySubreddit(subredditName));
             }
             catch (Exception ex)
             {

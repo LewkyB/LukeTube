@@ -1,4 +1,4 @@
-﻿namespace luke_site_mvc.Tests
+﻿namespace luke_site_mvc.Tests.ServiceTests
 {
     public class SubredditServiceTests
     {

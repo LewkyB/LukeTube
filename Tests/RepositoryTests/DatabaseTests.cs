@@ -1,4 +1,4 @@
-﻿namespace luke_site_mvc
+﻿namespace luke_site_mvc.Tests.RepositoryTests
 {
     public class DatabaseTests
     {

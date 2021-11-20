@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace PsawSharp.Requests.Options
+namespace luke_site_mvc.Models.PsawSearchOptions
 {
     public class SubmissionSearchOptions : SearchOptions
     {

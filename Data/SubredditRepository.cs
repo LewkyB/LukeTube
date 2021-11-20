@@ -2,6 +2,7 @@
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using luke_site_mvc.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -10,9 +11,9 @@ namespace luke_site_mvc.Data
 {
     public interface ISubredditRepository
     {
-        Task<IReadOnlyList<Chatroom>> GetAllLinks();
-        Task<IReadOnlyList<string>> GetAllChatNames();
-        Task<IReadOnlyList<string>> GetChatLinksByChat(string chatName);
+        Task<IReadOnlyList<string>> GetAllSubredditNames();
+        Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
+        Task<IReadOnlyList<string>> GetYoutubeIDsBySubreddit(string subredditName);
     }
 
     public class SubredditRepository : ISubredditRepository
@@ -28,25 +29,26 @@ namespace luke_site_mvc.Data
             _subredditContext = subredditContext;
         }
 
-        public async Task<IReadOnlyList<Chatroom>> GetAllLinks()
+        public async Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs()
         {
-            return await _subredditContext.Chatrooms
-                .ToListAsync();
-        }
-        public async Task<IReadOnlyList<string>> GetAllChatNames()
-        {
-            return await _subredditContext.Chatrooms
-                .Where(chatroom => chatroom.Name != " ")
-                .Select(chatroom => chatroom.Name).Distinct()
+            return await _subredditContext.RedditComments
                 .ToListAsync();
         }
 
-        public async Task<IReadOnlyList<string>> GetChatLinksByChat(string chatName)
+        public async Task<IReadOnlyList<string>> GetAllSubredditNames()
         {
-            return await _subredditContext.Chatrooms
-                .OrderByDescending(chatroom => chatroom.Id)
-                .Where(chatroom => chatroom.Name == chatName)
-                .Select(chatroom => chatroom.Link)
+            return await _subredditContext.RedditComments
+                .Where(comment => comment.Subreddit != " ")
+                .Select(comment => comment.Subreddit).Distinct()
+                .ToListAsync();
+        }
+
+        public async Task<IReadOnlyList<string>> GetYoutubeIDsBySubreddit(string subredditName)
+        {
+            return await _subredditContext.RedditComments
+                .OrderByDescending(comment => comment.Id)
+                .Where(comment => comment.Subreddit == subredditName)
+                .Select(comment => comment.YoutubeLinkId)
                 .ToListAsync();
         }
 

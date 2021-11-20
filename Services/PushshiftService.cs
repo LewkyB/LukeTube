@@ -155,6 +155,8 @@ namespace luke_site_mvc.Services
                 // get the regex groups
                 GroupCollection groups = match.Groups;
 
+                if (groups[1].Length < 11) break;
+
                 // trim down id, it should be a maximum of 11 characters
                 return (groups[1].Length > 11) ? groups[1].Value.Remove(11) : groups[1].Value;
             }

@@ -9,7 +9,7 @@ using Moq;
 using PsawSharp.Requests;
 using Xunit;
 
-namespace luke_site_mvc.Tests
+namespace luke_site_mvc.Tests.ServiceTests
 {
     public class PushshiftServiceTests
     {
