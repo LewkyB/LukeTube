@@ -10,7 +10,7 @@ using PsawSharp.Requests.Options;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace PsawSharp.Tests
+namespace luke_site_mvc.Tests.ServiceTests
 {
     public class PsawServiceTests
     {
@@ -118,18 +118,37 @@ namespace PsawSharp.Tests
         //    Assert.True(sw.Elapsed.TotalSeconds > 120);
         //}
 
-        //[Fact]
-        //public async Task ProxyUsage()
-        //{
-        //    var client = new PsawClient(new RequestsManagerOptions
-        //    {
-        //        ProxyAddress = "178.217.194.175:49850"
-        //    });
+        [Fact]
+        public void SearchOptionsToArgs1()
+        {
+            var options = new SearchOptions
+            {
+                Query = "games",
+                Size = 2500
+            };
 
-        //    var meta = await client.GetMeta();
-        //    Assert.Equal("178.217.194.175", meta.SourceIp);
-        //    Assert.Equal("PL", meta.ClientRequestHeaders.CfIpCountry);
-        //}
+            var args = options.ToArgs();
+            Assert.Equal(4, args.Count);
+            Assert.Equal("size=1000", args[1]);
+        }
 
+        [Fact]
+        public void SearchOptionsToArgs2()
+        {
+            var options = new SubmissionSearchOptions
+            {
+                Query = "game",
+                QueryNot = "video",
+                Stickied = true,
+                NumComments = ">100",
+                Fields = new[] { "author", "title", "permalink" },
+                Size = 2500
+            };
+
+            var args = options.ToArgs();
+            Assert.Equal(8, args.Count);
+            Assert.Equal("size=1000", args[1]);
+            Assert.Equal($"fields={string.Join(",", options.Fields)}", args[2]);
+        }
     }
 }

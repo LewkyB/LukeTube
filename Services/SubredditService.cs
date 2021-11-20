@@ -1,46 +1,46 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using luke_site_mvc.Data;
+using luke_site_mvc.Data.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace luke_site_mvc.Services
 {
     public interface ISubredditService
     {
-        Task<IReadOnlyList<string>> GetAllChatNames();
-        Task<IReadOnlyList<Chatroom>> GetAllLinks();
-        Task<IReadOnlyList<string>> GetChatLinksByChat(string chatName);
+        Task<IReadOnlyList<string>> GetAllSubredditNames();
+        Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
+        Task<IReadOnlyList<string>> GetYouLinkIDsBySubreddit(string subredditName);
     }
 
     // TODO: make this have more of a point than just returning readonlylists
     // TODO: move repository functions to ChatroomContext and just use that here? point of repository pattern?
     public class SubredditService : ISubredditService
     {
-        private readonly ISubredditRepository _dataRepository;
+        private readonly ISubredditRepository _subredditRepository;
         private readonly ILogger<SubredditService> _logger;
 
         public SubredditService(ILogger<SubredditService> logger, ISubredditRepository dataRepository)
         {
-            _dataRepository = dataRepository;
+            _subredditRepository = dataRepository;
 
             _logger = logger;
             _logger.LogDebug(1, "NLog injected into ChatroomService");
         }
 
-        public async Task<IReadOnlyList<string>> GetAllChatNames()
+        public async Task<IReadOnlyList<string>> GetAllSubredditNames()
         {
-            return await _dataRepository.GetAllChatNames();
+            return await _subredditRepository.GetAllSubredditNames();
         }
 
-        public async Task<IReadOnlyList<Chatroom>> GetAllLinks()
+        public async Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs()
         {
-            return await _dataRepository.GetAllLinks();
+            return await _subredditRepository.GetAllYoutubeIDs();
         }
 
-        public async Task<IReadOnlyList<string>> GetChatLinksByChat(string chatName)
+        public async Task<IReadOnlyList<string>> GetYouLinkIDsBySubreddit(string subredditName)
         {
-            return await _dataRepository.GetChatLinksByChat(chatName);
-
+            return await _subredditRepository.GetYoutubeIDsBySubreddit(subredditName);
         }
     }
 }

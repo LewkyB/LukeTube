@@ -10,7 +10,6 @@ namespace luke_site_mvc.Data
         {
         }
 
-        public DbSet<Chatroom> Chatrooms { get; set; }
         public DbSet<RedditComment> RedditComments { get; set; }
 
         // TODO: need a way to dynamically change connection string without the need to inject

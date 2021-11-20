@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace PsawSharp.Converters
+namespace luke_site_mvc.Services
 {
     public class UnixTimestampConverter : JsonConverter
     {

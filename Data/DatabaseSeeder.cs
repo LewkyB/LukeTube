@@ -15,7 +15,7 @@ namespace luke_site_mvc.Data
 {
     public interface IDatabaseSeeder
     {
-        Task<IEnumerable<Chatroom>> DownloadJSON();
+        //Task<IEnumerable<Chatroom>> DownloadJSON();
         Task InitializeAsync();
         Task SetupTablesMiniProfiler(DbContext context);
     }
@@ -37,12 +37,12 @@ namespace luke_site_mvc.Data
         {
             _subredditContext.Database.EnsureCreated();
 
-            if (!_subredditContext.Chatrooms.Any())
+            if (!_subredditContext.RedditComments.Any())
             {
-                var chatrooms = await DownloadJSON();
+                //var chatrooms = await DownloadJSON();
 
                 // load database with data
-                await _subredditContext.Chatrooms.AddRangeAsync(chatrooms.ToList());
+                //await _subredditContext.Chatrooms.AddRangeAsync(chatrooms.ToList());
 
                 // create tables that allow MiniProfiler to log to database
                 await SetupTablesMiniProfiler(_subredditContext);
@@ -63,24 +63,24 @@ namespace luke_site_mvc.Data
             await context.Database.ExecuteSqlRawAsync(tableCreateCmd);
         }
 
-        public async Task<IEnumerable<Chatroom>> DownloadJSON()
-        {
-            // This buffers the entire response into memory so that we don't
-            // end up doing blocking IO when de-serializing the JSON. If the payload
-            // is *HUGE* this could result in large allocations that lead to a Denial Of Service.
-            using (var response = await _client.GetAsync(_database_seed_json_url, HttpCompletionOption.ResponseHeadersRead))
-            {
-                var responseStream = await response.Content.ReadAsStreamAsync();
+        //public async Task<IEnumerable<Chatroom>> DownloadJSON()
+        //{
+        //    // This buffers the entire response into memory so that we don't
+        //    // end up doing blocking IO when de-serializing the JSON. If the payload
+        //    // is *HUGE* this could result in large allocations that lead to a Denial Of Service.
+        //    using (var response = await _client.GetAsync(_database_seed_json_url, HttpCompletionOption.ResponseHeadersRead))
+        //    {
+        //        var responseStream = await response.Content.ReadAsStreamAsync();
 
-                var textReader = new StreamReader(responseStream);
-                var reader = new JsonTextReader(textReader);
+        //        var textReader = new StreamReader(responseStream);
+        //        var reader = new JsonTextReader(textReader);
 
-                var serializer = new JsonSerializer();
+        //        var serializer = new JsonSerializer();
 
-                var result = await JToken.ReadFromAsync(reader);
+        //        var result = await JToken.ReadFromAsync(reader);
 
-                return result.ToObject<IEnumerable<Chatroom>>(serializer);
-            }
-        }
+        //        return result.ToObject<IEnumerable<T>>(serializer);
+        //    }
+        //}
     }
 }
