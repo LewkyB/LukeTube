@@ -46,7 +46,7 @@ namespace luke_site_mvc.Data
         public async Task<IReadOnlyList<string>> GetYoutubeIDsBySubreddit(string subredditName)
         {
             return await _subredditContext.RedditComments
-                .OrderByDescending(comment => comment.Id)
+                //.OrderByDescending(comment => comment.Id)
                 .Where(comment => comment.Subreddit == subredditName)
                 .Select(comment => comment.YoutubeLinkId)
                 .ToListAsync();

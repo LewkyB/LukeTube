@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using luke_site_mvc.Data;
 
+#nullable disable
+
 namespace luke_site_mvc.Migrations
 {
     [DbContext(typeof(SubredditContext))]
@@ -15,16 +17,18 @@ namespace luke_site_mvc.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.11")
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                .HasAnnotation("ProductVersion", "6.0.0")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
             modelBuilder.Entity("luke_site_mvc.Data.Entities.RedditComment", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                    b.Property<string>("Subreddit")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("YoutubeLinkId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("CommentLink")
                         .HasColumnType("nvarchar(max)");
@@ -38,13 +42,10 @@ namespace luke_site_mvc.Migrations
                     b.Property<int>("Score")
                         .HasColumnType("int");
 
-                    b.Property<string>("Subreddit")
-                        .HasColumnType("nvarchar(max)");
+                    b.HasKey("Subreddit", "YoutubeLinkId");
 
-                    b.Property<string>("YoutubeLinkId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
+                    b.HasIndex("Subreddit", "YoutubeLinkId")
+                        .IsUnique();
 
                     b.ToTable("RedditComments");
                 });

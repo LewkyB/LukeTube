@@ -2,12 +2,14 @@
 // https://api.pushshift.io/reddit/comment/search/?q=favorite+great+courses&after=2015-01-01
 
 using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace luke_site_mvc.Data.Entities
 {
+    //[Index(nameof(Subreddit), nameof(YoutubeLinkId), IsUnique = true)]
     public class RedditComment
     {
-        public int Id { get; set; } // is there a point to having an id?
+        //public int Id { get; set; } // is there a point to having an id?
 
         // 'subreddit'
         public string Subreddit { get; set; }
@@ -27,8 +29,5 @@ namespace luke_site_mvc.Data.Entities
 
         // 'retrieved_on'
         public DateTime RetrievedUTC { get; set; }
-
-
-
     }
 }

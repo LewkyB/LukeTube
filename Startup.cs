@@ -28,10 +28,7 @@ namespace luke_site_mvc
         {
             services.AddHttpClient();
             services.AddHttpClient<IDatabaseSeeder>();
-            services.AddHttpClient<IPsawService>(client =>
-            {
-                client.BaseAddress = new Uri("https://api.pushshift.io/");
-            });
+            services.AddHttpClient<IPsawService>();
 
             services.AddHttpClient("timeout", client =>
             {
@@ -85,6 +82,8 @@ namespace luke_site_mvc
                 options.Storage = new SqlServerStorage(Configuration.GetConnectionString("DefaultConnection"));
             }).AddEntityFramework();
 
+            services.AddDatabaseDeveloperPageExceptionFilter();
+
             services.AddResponseCaching();
 
             services.AddRazorPages();
@@ -134,6 +133,7 @@ namespace luke_site_mvc
                 endpoints.MapControllerRoute("Fallback",
                     "{controller}/{action}/{id?}",
                     new { controller = "Subreddit", action = "Index" });
+                //endpoints.MapDefaultControllerRoute
 
                 endpoints.MapRazorPages();
             });

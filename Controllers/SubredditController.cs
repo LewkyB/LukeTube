@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace luke_site_mvc.Controllers
 {
+    [Controller]
     public class SubredditController : Controller
     {
         private readonly ISubredditService _chatroomService;
@@ -36,7 +37,6 @@ namespace luke_site_mvc.Controllers
             }
             catch (Exception ex)
             {
-                // TODO: better log messages
                 _logger.LogError($"Failed Index(): {ex}");
                 return BadRequest("Failed Index()");
             }
@@ -48,14 +48,11 @@ namespace luke_site_mvc.Controllers
         {
             try
             {
-                // TODO: is this a safe way to pass sql parameter?
-                //var links = await _chatroomService.GetChatLinksByChat(id);
                 var links = await _pushshiftService.GetLinksFromCommentsAsync(id, order);
 
                 ViewBag.Title = id;
                 ViewBag.links = links;
 
-                // TODO: figure out why this fails for some pages, but not for others
                 return View("links", links);
             }
             catch (Exception ex)
@@ -76,7 +73,6 @@ namespace luke_site_mvc.Controllers
             }
             catch (Exception ex)
             {
-                // TODO: better log messages
                 _logger.LogError($"Failed Privacy(): {ex}");
                 return BadRequest("Failed Privary()");
             }

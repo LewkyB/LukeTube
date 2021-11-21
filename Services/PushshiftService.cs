@@ -31,7 +31,6 @@ namespace luke_site_mvc.Services
             _subredditContext = subredditContext;
             _psawService = psawService;
         }
-        // TODO: not actually async
         public async Task<List<string>> GetSubreddits()
         {
             // TODO: provide a better list of subreddits
@@ -62,10 +61,14 @@ namespace luke_site_mvc.Services
             return subreddits.OrderBy(x => x).ToList();
         }
 
+        // TODO: try to move all of the database calls into a repository
         public async Task<List<RedditComment>> GetLinksFromCommentsAsync(string selected_subreddit, string order = "desc")
         {
 
             List<RedditComment> redditComments = new List<RedditComment>();
+
+            // used to hold remaining comments after duplicate entries are filtered out
+            //List<RedditComment> redditCommentsNoDuplicateEntries = new List<RedditComment>();
 
             //var client = new PsawClient();
             //var comments = await client.Search<CommentEntry>(new SearchOptions
@@ -74,8 +77,8 @@ namespace luke_site_mvc.Services
                 Subreddit = selected_subreddit,
                 Query = "www.youtube.com/watch", // TODO: seperate out the query for the other link and score
                 //Query = "www.youtube.com/watch?&q=youtu.be/", // TODO: seperate out the query for the other link and score
-                Size = 100,
-                After = "30d"  //s,m,h,d
+                Size = 100
+                //After = "30d"  //s,m,h,d
                 //Before = "0,0,0,30"  //s,m,h,d
             });
 
@@ -101,12 +104,27 @@ namespace luke_site_mvc.Services
                 };
 
                 redditComments.Add(redditComment);
+
+                await _subredditContext.AddAsync(redditComment);
             }
 
+
+            // TODO: can i make this more efficient? i tried using unique composite index and it would crash on second page load
+            // filter out any entries that are already in the database 
+            // that have the same Subreddit and YoutubeLinkId combination
+            //foreach (var comment in redditComments)
+            //{
+            //    if (!_subredditContext.RedditComments.Any(
+            //        c => c.Subreddit == comment.Subreddit && c.YoutubeLinkId == comment.YoutubeLinkId))
+            //    {
+            //        redditCommentsNoDuplicateEntries.Add(comment);
+            //    }
+            //}
+
             // load up the database
-            // TODO: need to prevent duplicate entries
-            // going to a link, then back, then back to that link, will make 2 entries
-            await _subredditContext.AddRangeAsync(redditComments);
+            //await _subredditContext.AddRangeAsync(redditCommentsNoDuplicateEntries);
+            //await _subredditContext.AddRangeAsync(redditComments);
+
             await _subredditContext.SaveChangesAsync();
 
             // sort comments so that the highest scored video shows at the top

@@ -30,9 +30,7 @@ namespace luke_site_mvc.Tests.ServiceTests
             _loggerMock = new Mock<ILogger<PushshiftService>>();
             _loggerPsawServiceMock = new Mock<ILogger<PsawService>>();
 
-            // setup so that it has the same base address as in Startup.cs
             _httpClient = new HttpClient();
-            _httpClient.BaseAddress = new Uri("https://api.pushshift.io/");
 
             // TODO: should i be mocking this instead?
             _psawService = new PsawService(_httpClient, _loggerPsawServiceMock.Object);

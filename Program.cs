@@ -39,8 +39,7 @@ namespace luke_site_mvc
             }
         }
 
-        // TODO: profile the seeding with miniprofiler
-        // TODO: right now this isn't used to do any seeding of data, it is only setting up tables
+        // right now this isn't used to do any seeding of data, it is only setting up tables
         private static async Task RunSeedingAsync(IHost host)
         {
             var scopeFactory = host.Services.GetService<IServiceScopeFactory>();

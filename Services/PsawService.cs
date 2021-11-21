@@ -43,21 +43,21 @@ namespace luke_site_mvc.Services
         public async Task<T[]> Search<T>(SearchOptions options = null) where T : IEntry
         {
             string type = typeof(T).Name.Replace("Entry", "").ToLower();
-            string route = string.Format(RequestsConstants.SearchRoute, type);
+            string route = string.Format(RequestsConstants.BaseAddress + RequestsConstants.SearchRoute, type);
             var result = await PerformGet(route, options?.ToArgs());
             return result["data"].ToObject<T[]>();
         }
 
         public async Task<string[]> GetSubmissionCommentIds(string base36SubmissionId)
         {
-            string route = string.Format(RequestsConstants.CommentIdsRoute, base36SubmissionId);
+            string route = string.Format(RequestsConstants.BaseAddress + RequestsConstants.CommentIdsRoute, base36SubmissionId);
             var result = await PerformGet(route);
             return result["data"].ToObject<string[]>();
         }
 
         public async Task<MetaEntry> GetMeta()
         {
-            var result = await PerformGet("meta");
+            var result = await PerformGet(RequestsConstants.BaseAddress + "meta");
             return result.ToObject<MetaEntry>();
         }
 
@@ -66,18 +66,21 @@ namespace luke_site_mvc.Services
             return await _timeLimiter.Perform(() => ExecuteGet(route, args));
         }
 
+        // TODO: clean up exceptions and logging in ExecuteGet
         private async Task<JToken> ExecuteGet(string route, List<string> args = null)
         {
             _logger.LogTrace($"Executing GET request to {nameof(route)} {route}");
+            _logger.LogTrace($"HTTP request URI: {ConstructUrl(route, args)}");
 
             // Execute request and ensure it didn't fail
-            var response = await _httpClient.GetAsync(ConstructUrl(route, args));
 
+            var response = await _httpClient.GetAsync(ConstructUrl(route, args));
             _logger.LogTrace($"response HTTP {nameof(response.StatusCode)} {response.StatusCode}");
 
+            // TODO: make this throw an exception on the asp.net page
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("PsawService.ExecuteGet Failure");
+                _logger.LogError($"HTTP request to {route} FAILED. Reponse StatusCode: {response.StatusCode}");
                 throw new HttpRequestException($"request to {route} failed", null, response.StatusCode);
             }
 
