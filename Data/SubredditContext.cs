@@ -14,25 +14,16 @@ namespace luke_site_mvc.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // TODO: is this worth while? how can i make indexes make my stuff work better
             //modelBuilder.Entity<RedditComment>()
-            //    .Property<string>("Subreddit");
-
-            //modelBuilder.Entity<RedditComment>()
-            //    .Property<string>("YoutubeLinkId");
-
-            //modelBuilder.Entity<RedditComment>()
-            //    .HasKey("Subreddit", "YoutubeLinkId");
-            modelBuilder.Entity<RedditComment>()
-                .HasKey(c => new { c.Subreddit, c.YoutubeLinkId });
-            modelBuilder.Entity<RedditComment>()
-                .HasIndex(c => new { c.Subreddit, c.YoutubeLinkId }).IsUnique();
+            //    .HasIndex(c => new { c.Subreddit, c.YoutubeLinkId }).IsUnique();
         }
 
         // TODO: need a way to dynamically change connection string without the need to inject
         // used to enable newing up DbContext, but
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        //{
-        //    optionsBuilder.UseSqlServer("Data Source=localhost;Initial Catalog=ChatDB;Trusted_Connection=True;MultipleActiveResultSets=true");
-        //}
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer("Data Source=localhost;Initial Catalog=ChatDB;Trusted_Connection=True;MultipleActiveResultSets=true");
+        }
     }
 }

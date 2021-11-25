@@ -1,6 +1,6 @@
-﻿using System;
-using luke_site_mvc.Services;
+﻿using luke_site_mvc.Services;
 using Newtonsoft.Json;
+using System;
 
 namespace PsawSharp.Entries
 {

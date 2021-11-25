@@ -1,14 +1,15 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using luke_site_mvc.Models;
+﻿using luke_site_mvc.Models;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace luke_site_mvc.Controllers
 {
+    [ApiExplorerSettings(IgnoreApi = true)] // prevent this controller from showing up on swagger
     [Controller]
     public class SubredditController : Controller
     {
@@ -37,13 +38,14 @@ namespace luke_site_mvc.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed Index(): {ex}");
-                return BadRequest("Failed Index()");
+                // TODO: figure out better way to view exceptions, shouldn't the dev page show it when sql throws exception? 
+                _logger.LogError($"Failed Index():\n {ex}");
+                return BadRequest($"Failed Index()\n {ex}");
             }
         }
 
         [HttpGet]
-        [Route("/Subreddit/{id:alpha}/Links/{order:alpha}")] 
+        [Route("/Subreddit/{id:alpha}/Links/{order:alpha}")]
         public async Task<IActionResult> Links(string id, string order)
         {
             try
@@ -57,8 +59,9 @@ namespace luke_site_mvc.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed Links(): {ex}");
-                return BadRequest("Links Failed()");
+                // TODO: figure out better way to view exceptions, shouldn't the dev page show it when sql throws exception? 
+                _logger.LogError($"Failed Links():\n {ex}");
+                return BadRequest($"Links Failed()\n {ex}");
             }
 
         }

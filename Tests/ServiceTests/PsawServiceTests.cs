@@ -1,12 +1,11 @@
-﻿using System;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using luke_site_mvc.Models.PsawSearchOptions;
+﻿using luke_site_mvc.Models.PsawSearchOptions;
 using luke_site_mvc.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 using PsawSharp.Entries;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 

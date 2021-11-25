@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using luke_site_mvc.Data;
+﻿using luke_site_mvc.Data;
 using luke_site_mvc.Data.Entities;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace luke_site_mvc.Services
 {

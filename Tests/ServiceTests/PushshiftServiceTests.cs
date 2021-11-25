@@ -1,12 +1,11 @@
-﻿using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-using luke_site_mvc.Data;
+﻿using luke_site_mvc.Data;
 using luke_site_mvc.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace luke_site_mvc.Tests.ServiceTests

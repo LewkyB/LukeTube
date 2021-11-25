@@ -1,11 +1,11 @@
-using System;
-using System.Threading.Tasks;
 using luke_site_mvc.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Web;
+using System;
+using System.Threading.Tasks;
 
 namespace luke_site_mvc
 {
