@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Profiling.Storage;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace luke_site_mvc.Data
 {
@@ -21,9 +20,6 @@ namespace luke_site_mvc.Data
     {
         private readonly SubredditContext _subredditContext;
         private readonly HttpClient _client;
-
-        // links and chats collected from my weechat irc bouncer in json form
-        private readonly string _database_seed_json_url = "https://www.lukebrown.us/database_seed.json/";
 
         public DatabaseSeeder(SubredditContext SubredditContext, HttpClient client, IConfiguration config, IWebHostEnvironment webHostEnvironment, IServiceProvider serviceProvider)
         {
@@ -49,6 +45,7 @@ namespace luke_site_mvc.Data
             }
         }
 
+        // TODO: add check to see if table already exists and if it does do not create
         public async Task SetupTablesMiniProfiler(DbContext context)
         {
             // get table creation sql commands from MiniProfiler

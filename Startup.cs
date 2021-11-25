@@ -1,17 +1,22 @@
-using System;
-using System.IO;
-using System.Reflection;
 using luke_site_mvc.Data;
 using luke_site_mvc.Services;
+using luke_site_mvc.Services.BackgroundServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Polly;
+using Polly.Extensions.Http;
 using StackExchange.Profiling.Storage;
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Reflection;
 
 namespace luke_site_mvc
 {
@@ -24,14 +29,23 @@ namespace luke_site_mvc
 
         public IConfiguration Configuration { get; }
 
+        public static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+        {
+            return HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
+                .WaitAndRetryAsync(6, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2,
+                                                                            retryAttempt)));
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHttpClient();
             services.AddHttpClient<IDatabaseSeeder>();
-            services.AddHttpClient<IPsawService>(client =>
-            {
-                client.BaseAddress = new Uri("https://api.pushshift.io/");
-            });
+
+            // figure out how to rate limit calls to pushshift to 120/min
+            services.AddHttpClient<IPsawService>()
+                .SetHandlerLifetime(TimeSpan.FromMinutes(2)).AddPolicyHandler(GetRetryPolicy());
 
             services.AddHttpClient("timeout", client =>
             {
@@ -45,6 +59,9 @@ namespace luke_site_mvc
             services.AddScoped<IPushshiftService, PushshiftService>();
             services.AddScoped<IPsawService, PsawService>();
             services.AddTransient<IDatabaseSeeder, DatabaseSeeder>();
+
+            // TODO: add a feature toggle for this
+            services.AddHostedService<PushshiftBackgroundService>();
 
             services.AddControllersWithViews();
 
@@ -85,12 +102,24 @@ namespace luke_site_mvc
                 options.Storage = new SqlServerStorage(Configuration.GetConnectionString("DefaultConnection"));
             }).AddEntityFramework();
 
+            services.AddW3CLogging(logging =>
+            {
+                logging.LoggingFields = W3CLoggingFields.All;
+
+                logging.FileSizeLimit = 5 * 1024 * 1024;
+                logging.RetainedFileCountLimit = 2;
+                logging.FileName = "MyLogFile";
+                logging.LogDirectory = @"C:\logs";
+                logging.FlushInterval = TimeSpan.FromSeconds(2);
+            });
+
             services.AddResponseCaching();
+
+            services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddRazorPages();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
             IHostApplicationLifetime lifetime, IDistributedCache cache,
             SubredditContext chatroomContext)
@@ -113,6 +142,10 @@ namespace luke_site_mvc
                 app.UseSwagger();
 
                 app.UseMiniProfiler();
+
+                app.UseW3CLogging();
+
+                app.UseStatusCodePages();
             }
             else
             {

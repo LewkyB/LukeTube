@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using luke_site_mvc.Data;
+﻿using luke_site_mvc.Data;
 using luke_site_mvc.Data.Entities;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace luke_site_mvc.Services
 {
@@ -10,7 +10,7 @@ namespace luke_site_mvc.Services
     {
         Task<IReadOnlyList<string>> GetAllSubredditNames();
         Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
-        Task<IReadOnlyList<string>> GetYouLinkIDsBySubreddit(string subredditName);
+        Task<IReadOnlyList<RedditComment>> GetYouLinkIDsBySubreddit(string subredditName);
     }
 
     // TODO: make this have more of a point than just returning readonlylists
@@ -38,7 +38,7 @@ namespace luke_site_mvc.Services
             return await _subredditRepository.GetAllYoutubeIDs();
         }
 
-        public async Task<IReadOnlyList<string>> GetYouLinkIDsBySubreddit(string subredditName)
+        public async Task<IReadOnlyList<RedditComment>> GetYouLinkIDsBySubreddit(string subredditName)
         {
             return await _subredditRepository.GetYoutubeIDsBySubreddit(subredditName);
         }

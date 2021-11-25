@@ -1,12 +1,11 @@
-﻿using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-using luke_site_mvc.Data;
+﻿using luke_site_mvc.Data;
 using luke_site_mvc.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace luke_site_mvc.Tests.ServiceTests
@@ -30,9 +29,7 @@ namespace luke_site_mvc.Tests.ServiceTests
             _loggerMock = new Mock<ILogger<PushshiftService>>();
             _loggerPsawServiceMock = new Mock<ILogger<PsawService>>();
 
-            // setup so that it has the same base address as in Startup.cs
             _httpClient = new HttpClient();
-            _httpClient.BaseAddress = new Uri("https://api.pushshift.io/");
 
             // TODO: should i be mocking this instead?
             _psawService = new PsawService(_httpClient, _loggerPsawServiceMock.Object);
@@ -68,29 +65,28 @@ namespace luke_site_mvc.Tests.ServiceTests
             Assert.NotNull(result);
         }
 
-        [Fact]
-        public async Task GetLinksFromCommentsAsync_NotNull()
-        {
-            string subreddit = "videos";
-            var result = await _pushshiftService.GetLinksFromCommentsAsync(subreddit);
+        //[Fact]
+        //public async Task GetLinksFromCommentsAsync_NotNull()
+        //{
+        //    string subreddit = "videos";
+        //    var result = await _pushshiftService.GetLinksFromCommentsAsync(subreddit);
 
-            Assert.NotNull(result);
-        }
+        //    Assert.NotNull(result);
+        //}
 
-        [Fact]
         // checks to make sure comments links are ordered by highest score
         // sometimes all the comments will have a score of 1, hence the >=
-        public async Task GetLinksFromCommentsAsync_EnsureOrderedByScoreDesc()
-        {
-            string subreddit = "videos";
-            var result = await _pushshiftService.GetLinksFromCommentsAsync(subreddit);
+        //[Fact]
+        //public async Task GetLinksFromCommentsAsync_EnsureOrderedByScoreDesc()
+        //{
+        //    string subreddit = "videos";
+        //    var result = await _pushshiftService.GetLinksFromCommentsAsync(subreddit);
 
-            // TODO: should check more values?
-            if (result.Count > 1)
-            {
-                Assert.True(result[0].Score >= result[1].Score);
-            }
-        }
-
+        //    // TODO: should check more values?
+        //    if (result.Count > 1)
+        //    {
+        //        Assert.True(result[0].Score >= result[1].Score);
+        //    }
+        //}
     }
 }

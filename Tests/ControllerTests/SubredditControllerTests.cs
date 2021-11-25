@@ -2,6 +2,6 @@
 {
     public class SubredditControllerTests
     {
-        // TODO: TEST ChatroomController - should I DI the controller? should I use mocks or is it small enough?
+        // TODO: https://docs.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-6.0
     }
 }

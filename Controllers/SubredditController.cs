@@ -1,24 +1,26 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using luke_site_mvc.Models;
+﻿using luke_site_mvc.Models;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace luke_site_mvc.Controllers
 {
+    [ApiExplorerSettings(IgnoreApi = true)] // prevent this controller from showing up on swagger
+    [Controller]
     public class SubredditController : Controller
     {
-        private readonly ISubredditService _chatroomService;
+        private readonly ISubredditService _subredditService;
         private readonly ILogger<SubredditController> _logger;
         private readonly IDistributedCache _cache;
         private readonly IPushshiftService _pushshiftService;
 
-        public SubredditController(ISubredditService chatroomService, ILogger<SubredditController> logger, IDistributedCache cache, IPushshiftService pushshiftService)
+        public SubredditController(ISubredditService subredditService, ILogger<SubredditController> logger, IDistributedCache cache, IPushshiftService pushshiftService)
         {
-            _chatroomService = chatroomService;
+            _subredditService = subredditService;
             _logger = logger;
             _cache = cache;
             _pushshiftService = pushshiftService;
@@ -30,38 +32,39 @@ namespace luke_site_mvc.Controllers
 
             try
             {
-                var result = await _pushshiftService.GetSubreddits();
+                var result = _pushshiftService.GetSubreddits();
 
                 return View(result);
             }
             catch (Exception ex)
             {
-                // TODO: better log messages
-                _logger.LogError($"Failed Index(): {ex}");
-                return BadRequest("Failed Index()");
+                // TODO: figure out better way to view exceptions, shouldn't the dev page show it when sql throws exception? 
+                _logger.LogError($"Failed Index():\n {ex}");
+                return BadRequest($"Failed Index()\n {ex}");
             }
         }
-
+        
+        // TODO: fix url for this page, order is no longer required
         [HttpGet]
-        [Route("/Subreddit/{id:alpha}/Links/{order:alpha}")] 
+        [Route("/Subreddit/{id:alpha}/Links/{order:alpha}")]
         public async Task<IActionResult> Links(string id, string order)
         {
             try
             {
-                // TODO: is this a safe way to pass sql parameter?
-                //var links = await _chatroomService.GetChatLinksByChat(id);
-                var links = await _pushshiftService.GetLinksFromCommentsAsync(id, order);
+                var links = await _subredditService.GetYouLinkIDsBySubreddit(id);
+
+                var sortedLinks =
 
                 ViewBag.Title = id;
                 ViewBag.links = links;
 
-                // TODO: figure out why this fails for some pages, but not for others
                 return View("links", links);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed Links(): {ex}");
-                return BadRequest("Links Failed()");
+                // TODO: figure out better way to view exceptions, shouldn't the dev page show it when sql throws exception? 
+                _logger.LogError($"Failed Links():\n {ex}");
+                return BadRequest($"Links Failed()\n {ex}");
             }
 
         }
@@ -76,7 +79,6 @@ namespace luke_site_mvc.Controllers
             }
             catch (Exception ex)
             {
-                // TODO: better log messages
                 _logger.LogError($"Failed Privacy(): {ex}");
                 return BadRequest("Failed Privary()");
             }

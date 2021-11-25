@@ -8,7 +8,7 @@
     @foreach (var link in ViewBag.links)
     {
         // only load 20 embedded videos
-        if (counter > 1000) break;
+        if (counter > 20) break;
 
         if (counter > 0 && counter % 2 == 0)
         {
@@ -18,7 +18,7 @@
             <div class="column text-center">
                 <iframe width="560" 
                         height="315" 
-                        src="https://www.youtube.com/embed/@link.YoutubeLinkId" 
+                        src="https://www.youtube.com/embed/@link" 
                         frameborder="0" 
                         allow="autoplay; encrypted-media" 
                         allowfullscreen></iframe>

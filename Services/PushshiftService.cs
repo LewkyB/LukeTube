@@ -1,21 +1,24 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using luke_site_mvc.Data;
+﻿using luke_site_mvc.Data;
 using luke_site_mvc.Data.Entities;
 using luke_site_mvc.Models.PsawSearchOptions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using PsawSharp.Entries;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace luke_site_mvc.Services
 {
     public interface IPushshiftService
     {
         string FindYoutubeId(string commentBody);
-        Task<List<RedditComment>> GetLinksFromCommentsAsync(string selected_subreddit, string order = "desc");
-        Task<List<string>> GetSubreddits();
+        Task GetLinksFromCommentsAsync();
+        List<string> GetSubreddits();
+        Task<List<RedditComment>> GetUniqueRedditComments(List<string> subreddits, int daysToGet);
+        List<RedditComment> RemoveEntriesFoundInDatabase(List<RedditComment> redditComments);
     }
     public class PushshiftService : IPushshiftService
     {
@@ -31,12 +34,11 @@ namespace luke_site_mvc.Services
             _subredditContext = subredditContext;
             _psawService = psawService;
         }
-        // TODO: not actually async
-        public async Task<List<string>> GetSubreddits()
+
+        // TODO: provide a better list of subreddits
+        // avoid magic strings
+        private readonly List<string> subreddits = new List<string>()
         {
-            // TODO: provide a better list of subreddits
-            List<string> subreddits = new List<string>()
-            {
                 "space",
                 "science",
                 "mealtimevideos",
@@ -56,110 +58,131 @@ namespace luke_site_mvc.Services
                 "fantasy",
                 "homeimprovement",
                 "woodworking"
-            };
+        };
 
-            // sort the list alphabetically
-            return subreddits.OrderBy(x => x).ToList();
-        }
-
-        public async Task<List<RedditComment>> GetLinksFromCommentsAsync(string selected_subreddit, string order = "desc")
+        public List<string> GetSubreddits()
         {
-
-            List<RedditComment> redditComments = new List<RedditComment>();
-
-            //var client = new PsawClient();
-            //var comments = await client.Search<CommentEntry>(new SearchOptions
-            var comments = await _psawService.Search<CommentEntry>(new SearchOptions
-            {
-                Subreddit = selected_subreddit,
-                Query = "www.youtube.com/watch", // TODO: seperate out the query for the other link and score
-                //Query = "www.youtube.com/watch?&q=youtu.be/", // TODO: seperate out the query for the other link and score
-                Size = 100,
-                After = "30d"  //s,m,h,d
-                //Before = "0,0,0,30"  //s,m,h,d
-            });
-
-            foreach (var comment in comments)
-            {
-                var validated_link = FindYoutubeId(comment.Body);
-
-                // if the link is empty do not include it
-                if (validated_link.Equals("") || validated_link is null)
-                {
-                    _logger.LogDebug("invalid link, breaking loop");
-                    break;
-                }
-
-                RedditComment redditComment = new RedditComment
-                {
-                    Subreddit = comment.Subreddit,
-                    YoutubeLinkId = FindYoutubeId(comment.Body),
-                    CommentLink = comment.LinkId, // TODO: not sure if this is what i think it is
-                    CreatedUTC = comment.CreatedUtc,
-                    Score = comment.Score,
-                    RetrievedUTC = comment.RetrievedOn
-                };
-
-                redditComments.Add(redditComment);
-            }
-
-            // load up the database
-            // TODO: need to prevent duplicate entries
-            // going to a link, then back, then back to that link, will make 2 entries
-            await _subredditContext.AddRangeAsync(redditComments);
-            await _subredditContext.SaveChangesAsync();
-
-            // sort comments so that the highest scored video shows at the top
-            List<RedditComment> commentsSorted = new List<RedditComment>();
-
-            // default is desc
-            if (order.Equals("desc"))
-            {
-                commentsSorted = redditComments.OrderByDescending(m => m.Score).ToList();
-            }
-
-            if (order.Equals("asc"))
-            {
-                commentsSorted = redditComments.OrderBy(m => m.Score).ToList();
-            }
-
-            return commentsSorted;
+            return subreddits.OrderBy(x => x).ToList(); // sort the list alphabetically
         }
 
-        // TODO: is this worth having outside the function below?
-        const string link_pattern = @"http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\]*)(&(amp;)?[\w\?‌​=]*)?";
-        Regex link_regex = new Regex(link_pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        // TODO: try to move all of the database calls into a repository
+        public async Task GetLinksFromCommentsAsync()
+        {
+            var redditComments = await GetUniqueRedditComments(GetSubreddits(), daysToGet: 30);
+
+            // remove any duplicants from the list of RedditComments
+            // used to hold remaining RedditComments after duplicate entries are filtered out
+            List<RedditComment> redditCommentsNoDuplicateEntries = RemoveEntriesFoundInDatabase(redditComments);
+
+            // load up the database with the new data and save
+            await _subredditContext.AddRangeAsync(redditCommentsNoDuplicateEntries);
+            await _subredditContext.SaveChangesAsync();
+        }
+
+        public async Task<List<RedditComment>> GetUniqueRedditComments(List<string> subreddits, int daysToGet)
+        {
+            if (subreddits is null) throw new NullReferenceException(nameof(subreddits));
+
+            var redditComments = new List<RedditComment>();
+
+            // to get a specific day, like the 25th
+            var beforeBoundary = DateTime.Now.AddDays(1); // before the 26th
+            var afterBoundary = DateTime.Now.AddDays(-1); // after the 24th
+
+            for (int i = 0; i < daysToGet; i++)
+            {
+                foreach (var subreddit in subreddits)
+                {
+                    var rawComments = await _psawService.Search<CommentEntry>(new SearchOptions
+                    {
+                        Subreddit = subreddit,
+                        Query = "www.youtube.com/watch", // TODO: seperate out the query for the other link and score
+                        Before = beforeBoundary.AddDays( -i ).ToString("yyyy-MM-dd"),
+                        After = afterBoundary.AddDays( -i ).ToString("yyyy-MM-dd"),
+                        //Before = "2021-05-05",
+                        //After = "2021-01-01",
+                        Size = 5
+                    });
+
+                    foreach (var comment in rawComments)
+                    {
+                        // check to make sure comment body has a valid YoutubeLinkId in it
+                        var validated_link = FindYoutubeId(comment.Body);
+
+                        // if not valid YoutubeLinkId then do not continue
+                        if (String.IsNullOrEmpty(validated_link)) break;
+
+                        // load up RedditComment with data from the API response
+                        RedditComment redditComment = new RedditComment
+                        {
+                            Subreddit = comment.Subreddit,
+                            YoutubeLinkId = FindYoutubeId(comment.Body), // use regex to pull youtubeId from comment body
+                            CreatedUTC = comment.CreatedUtc,
+                            Score = comment.Score,
+                            RetrievedUTC = comment.RetrievedOn
+                        };
+
+                        redditComments.Add(redditComment);
+                    }
+                }
+            }
+
+            // remove any duplicate comments
+            return redditComments.Distinct().ToList();
+        }
+
+        // TODO: good candidate for repository
+        public List<RedditComment> RemoveEntriesFoundInDatabase(List<RedditComment> redditComments)
+        {
+            if (redditComments is null) throw new ArgumentNullException(nameof(redditComments));
+            if (redditComments.Count() < 1) throw new ArgumentException(nameof(redditComments));
+
+            var redditCommentsNoDuplicateEntries = new List<RedditComment>();
+
+            // filter out any entries that are already in the database 
+            // that have the same Subreddit and YoutubeLinkId combination
+            foreach (var comment in redditComments)
+            {
+                if (!_subredditContext.RedditComments.Any(c => c.Subreddit == comment.Subreddit && c.YoutubeLinkId == comment.YoutubeLinkId))
+                {
+                    redditCommentsNoDuplicateEntries.Add(comment);
+                }
+            }
+
+            return redditCommentsNoDuplicateEntries;
+        }
+
+        static readonly string youtubeLinkIdRegexPattern = @"http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\]*)(&(amp;)?[\w\?‌​=]*)?";
+
+        // worth compiling because this regex is used so heavily
+        Regex youtubeLinkIdRegex = new Regex(youtubeLinkIdRegexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         // should this return multiples? do i need to change youtube linkid to be an array
         // TODO: worried about performance on the regex here?
         public string FindYoutubeId(string commentBody)
         {
-            MatchCollection link_matches;
-            link_matches = link_regex.Matches(commentBody);
+            if (String.IsNullOrEmpty(commentBody)) return String.Empty;
 
-            // TODO: can this ever be null?
-            if (link_matches is null)
-            {
-                return "";
-            }
+            MatchCollection link_matches;
+            link_matches = youtubeLinkIdRegex.Matches(commentBody);
 
             // TODO: what happens when there is multiple youtube links in a body? is there something to do with that
             foreach (Match match in link_matches)
             {
                 if (match is null || match.Equals(""))
                 {
+                    // TODO: how to get method name in log message?
+                    _logger.LogTrace("FindYoutubeId(string commentBody) | invalid link, breaking loop");
                     return "";
                 }
 
-                // get the regex groups
-                GroupCollection groups = match.Groups;
-
-                if (groups[1].Length < 11) break;
+                if (match.Groups[1].Length < 11) return String.Empty;
 
                 // trim down id, it should be a maximum of 11 characters
-                return (groups[1].Length > 11) ? groups[1].Value.Remove(11) : groups[1].Value;
+                return (match.Groups[1].Length > 11) ? match.Groups[1].Value.Remove(11) : match.Groups[1].Value;
             }
 
-            return "";
+            return String.Empty;
         }
     }
 }

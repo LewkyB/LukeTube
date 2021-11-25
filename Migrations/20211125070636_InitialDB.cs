@@ -1,9 +1,11 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
+#nullable disable
+
 namespace luke_site_mvc.Migrations
 {
-    public partial class InitialDb : Migration
+    public partial class InitialDB : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -16,7 +18,6 @@ namespace luke_site_mvc.Migrations
                     Subreddit = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     YoutubeLinkId = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Score = table.Column<int>(type: "int", nullable: false),
-                    CommentLink = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedUTC = table.Column<DateTime>(type: "datetime2", nullable: false),
                     RetrievedUTC = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },

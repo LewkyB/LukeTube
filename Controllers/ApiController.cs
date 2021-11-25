@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using luke_site_mvc.Data.Entities;
+﻿using luke_site_mvc.Data.Entities;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace luke_site_mvc.Controllers
 {
@@ -49,6 +49,9 @@ namespace luke_site_mvc.Controllers
         [HttpGet("{subredditName:alpha}")]
         [Produces("application/json")]
         // TODO: change this overloaded Get to make overloading not required
+        //
+        // TODO: this is broke, this returns List<string> but it calls
+        // GetYoutubeLinkIDsBySubreddit and that returns List<RedditComment>
         public async Task<ActionResult<IReadOnlyList<string>>> Get(string subredditName)
         {
             _logger.LogInformation("ChatroomsController.Get(string chatname) Triggered.");
