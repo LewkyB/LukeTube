@@ -13,7 +13,7 @@ namespace luke_site_mvc.Data
     {
         Task<IReadOnlyList<string>> GetAllSubredditNames();
         Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
-        Task<IReadOnlyList<string>> GetYoutubeIDsBySubreddit(string subredditName);
+        Task<IReadOnlyList<RedditComment>> GetYoutubeIDsBySubreddit(string subredditName);
     }
 
     public class SubredditRepository : ISubredditRepository
@@ -43,12 +43,13 @@ namespace luke_site_mvc.Data
                 .ToListAsync();
         }
 
-        public async Task<IReadOnlyList<string>> GetYoutubeIDsBySubreddit(string subredditName)
+        // TODO: adding sorting logic here or in service layer
+        public async Task<IReadOnlyList<RedditComment>> GetYoutubeIDsBySubreddit(string subredditName)
         {
             return await _subredditContext.RedditComments
-                //.OrderByDescending(comment => comment.Id)
+                .OrderByDescending(comment => comment.Score)
                 .Where(comment => comment.Subreddit == subredditName)
-                .Select(comment => comment.YoutubeLinkId)
+                .Select(comment => comment)
                 .ToListAsync();
         }
 

@@ -13,14 +13,14 @@ namespace luke_site_mvc.Controllers
     [Controller]
     public class SubredditController : Controller
     {
-        private readonly ISubredditService _chatroomService;
+        private readonly ISubredditService _subredditService;
         private readonly ILogger<SubredditController> _logger;
         private readonly IDistributedCache _cache;
         private readonly IPushshiftService _pushshiftService;
 
-        public SubredditController(ISubredditService chatroomService, ILogger<SubredditController> logger, IDistributedCache cache, IPushshiftService pushshiftService)
+        public SubredditController(ISubredditService subredditService, ILogger<SubredditController> logger, IDistributedCache cache, IPushshiftService pushshiftService)
         {
-            _chatroomService = chatroomService;
+            _subredditService = subredditService;
             _logger = logger;
             _cache = cache;
             _pushshiftService = pushshiftService;
@@ -32,7 +32,7 @@ namespace luke_site_mvc.Controllers
 
             try
             {
-                var result = await _pushshiftService.GetSubreddits();
+                var result = _pushshiftService.GetSubreddits();
 
                 return View(result);
             }
@@ -43,14 +43,17 @@ namespace luke_site_mvc.Controllers
                 return BadRequest($"Failed Index()\n {ex}");
             }
         }
-
+        
+        // TODO: fix url for this page, order is no longer required
         [HttpGet]
         [Route("/Subreddit/{id:alpha}/Links/{order:alpha}")]
         public async Task<IActionResult> Links(string id, string order)
         {
             try
             {
-                var links = await _pushshiftService.GetLinksFromCommentsAsync(id, order);
+                var links = await _subredditService.GetYouLinkIDsBySubreddit(id);
+
+                var sortedLinks =
 
                 ViewBag.Title = id;
                 ViewBag.links = links;

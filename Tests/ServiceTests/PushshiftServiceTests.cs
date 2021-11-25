@@ -65,29 +65,28 @@ namespace luke_site_mvc.Tests.ServiceTests
             Assert.NotNull(result);
         }
 
-        [Fact]
-        public async Task GetLinksFromCommentsAsync_NotNull()
-        {
-            string subreddit = "videos";
-            var result = await _pushshiftService.GetLinksFromCommentsAsync(subreddit);
+        //[Fact]
+        //public async Task GetLinksFromCommentsAsync_NotNull()
+        //{
+        //    string subreddit = "videos";
+        //    var result = await _pushshiftService.GetLinksFromCommentsAsync(subreddit);
 
-            Assert.NotNull(result);
-        }
+        //    Assert.NotNull(result);
+        //}
 
-        [Fact]
         // checks to make sure comments links are ordered by highest score
         // sometimes all the comments will have a score of 1, hence the >=
-        public async Task GetLinksFromCommentsAsync_EnsureOrderedByScoreDesc()
-        {
-            string subreddit = "videos";
-            var result = await _pushshiftService.GetLinksFromCommentsAsync(subreddit);
+        //[Fact]
+        //public async Task GetLinksFromCommentsAsync_EnsureOrderedByScoreDesc()
+        //{
+        //    string subreddit = "videos";
+        //    var result = await _pushshiftService.GetLinksFromCommentsAsync(subreddit);
 
-            // TODO: should check more values?
-            if (result.Count > 1)
-            {
-                Assert.True(result[0].Score >= result[1].Score);
-            }
-        }
-
+        //    // TODO: should check more values?
+        //    if (result.Count > 1)
+        //    {
+        //        Assert.True(result[0].Score >= result[1].Score);
+        //    }
+        //}
     }
 }

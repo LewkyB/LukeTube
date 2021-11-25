@@ -12,7 +12,7 @@ using luke_site_mvc.Data;
 namespace luke_site_mvc.Migrations
 {
     [DbContext(typeof(SubredditContext))]
-    [Migration("20211122002333_InitialDB")]
+    [Migration("20211125070636_InitialDB")]
     partial class InitialDB
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

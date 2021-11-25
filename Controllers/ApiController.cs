@@ -49,6 +49,9 @@ namespace luke_site_mvc.Controllers
         [HttpGet("{subredditName:alpha}")]
         [Produces("application/json")]
         // TODO: change this overloaded Get to make overloading not required
+        //
+        // TODO: this is broke, this returns List<string> but it calls
+        // GetYoutubeLinkIDsBySubreddit and that returns List<RedditComment>
         public async Task<ActionResult<IReadOnlyList<string>>> Get(string subredditName)
         {
             _logger.LogInformation("ChatroomsController.Get(string chatname) Triggered.");

@@ -1,5 +1,6 @@
 using luke_site_mvc.Data;
 using luke_site_mvc.Services;
+using luke_site_mvc.Services.BackgroundServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpLogging;
@@ -58,6 +59,9 @@ namespace luke_site_mvc
             services.AddScoped<IPushshiftService, PushshiftService>();
             services.AddScoped<IPsawService, PsawService>();
             services.AddTransient<IDatabaseSeeder, DatabaseSeeder>();
+
+            // TODO: add a feature toggle for this
+            services.AddHostedService<PushshiftBackgroundService>();
 
             services.AddControllersWithViews();
 
