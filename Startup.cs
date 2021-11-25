@@ -43,8 +43,8 @@ namespace luke_site_mvc
             services.AddHttpClient<IDatabaseSeeder>();
 
             // figure out how to rate limit calls to pushshift to 120/min
-            services.AddHttpClient<IPsawService>();
-            //.SetHandlerLifetime(TimeSpan.FromMinutes(2)).AddPolicyHandler(GetRetryPolicy());
+            services.AddHttpClient<IPsawService>()
+                .SetHandlerLifetime(TimeSpan.FromMinutes(2)).AddPolicyHandler(GetRetryPolicy());
 
             services.AddHttpClient("timeout", client =>
             {
