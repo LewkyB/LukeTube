@@ -22,6 +22,15 @@ namespace luke_site_mvc.Services.BackgroundServices
         // with data from Pushshift's API
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation($"{nameof(PushshiftBackgroundService)} is running.");
+
+            await DoWorkAsync(stoppingToken);
+        }
+
+        private async Task DoWorkAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation($"{nameof(PushshiftBackgroundService)} is working.");
+
             // in order to use a scoped service in a background service you must create it's own scope
             using (var scope = _serviceProvider.CreateScope())
             {
@@ -29,7 +38,13 @@ namespace luke_site_mvc.Services.BackgroundServices
 
                 await pushshiftService.GetLinksFromCommentsAsync();
             }
+        }
 
+        public override async Task StopAsync(CancellationToken stoppingToken)
+        {
+            _logger.LogInformation($"{nameof(PushshiftBackgroundService)} is stopping.");
+
+            await base.StopAsync(stoppingToken);
         }
     }
 }

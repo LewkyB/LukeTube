@@ -12,7 +12,7 @@ using luke_site_mvc.Data;
 namespace luke_site_mvc.Migrations
 {
     [DbContext(typeof(SubredditContext))]
-    [Migration("20211125070636_InitialDB")]
+    [Migration("20211128170613_InitialDB")]
     partial class InitialDB
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -42,12 +42,16 @@ namespace luke_site_mvc.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Subreddit")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("YoutubeLinkId")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Subreddit", "YoutubeLinkId")
+                        .IsUnique()
+                        .HasFilter("[Subreddit] IS NOT NULL AND [YoutubeLinkId] IS NOT NULL");
 
                     b.ToTable("RedditComments");
                 });
