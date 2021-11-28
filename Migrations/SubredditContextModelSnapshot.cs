@@ -40,12 +40,16 @@ namespace luke_site_mvc.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Subreddit")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("YoutubeLinkId")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Subreddit", "YoutubeLinkId")
+                        .IsUnique()
+                        .HasFilter("[Subreddit] IS NOT NULL AND [YoutubeLinkId] IS NOT NULL");
 
                     b.ToTable("RedditComments");
                 });

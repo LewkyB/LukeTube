@@ -17,22 +17,21 @@ namespace luke_site_mvc.Services
         string FindYoutubeId(string commentBody);
         Task GetLinksFromCommentsAsync();
         List<string> GetSubreddits();
-        Task<List<RedditComment>> GetUniqueRedditComments(List<string> subreddits, int daysToGet);
-        List<RedditComment> RemoveEntriesFoundInDatabase(List<RedditComment> redditComments);
+        Task<List<RedditComment>> GetUniqueRedditComments(string subreddit, int daysToGet, int numEntriesPerDay);
     }
     public class PushshiftService : IPushshiftService
     {
         private readonly ILogger<PushshiftService> _logger;
         private readonly IDistributedCache _cache;
-        private readonly SubredditContext _subredditContext;
         private readonly IPsawService _psawService;
+        private readonly ISubredditRepository _subredditRepository;
 
-        public PushshiftService(ILogger<PushshiftService> logger, IDistributedCache distributedCache, SubredditContext subredditContext, IPsawService psawService)
+        public PushshiftService(ILogger<PushshiftService> logger, IDistributedCache distributedCache, IPsawService psawService, ISubredditRepository subredditRepository)
         {
             _logger = logger;
             _cache = distributedCache;
-            _subredditContext = subredditContext;
             _psawService = psawService;
+            _subredditRepository = subredditRepository;
         }
 
         // TODO: provide a better list of subreddits
@@ -57,31 +56,43 @@ namespace luke_site_mvc.Services
                 "homebrewing",
                 "fantasy",
                 "homeimprovement",
-                "woodworking"
+                "woodworking",
+                "medicine",
+                "ultralight",
+                "travel",
+                "askHistorians",
+                "askculinary"
         };
+
+        //private readonly List<string> subreddits = new List<string>()
+        //{
+        //        "homeimprovement",
+        //        "woodworking",
+        //        "medicine",
+        //        "ultralight",
+        //        "travel",
+        //        "askHistorians",
+        //        "askculinary"
+        //};
 
         public List<string> GetSubreddits()
         {
             return subreddits.OrderBy(x => x).ToList(); // sort the list alphabetically
         }
 
-        // TODO: try to move all of the database calls into a repository
         public async Task GetLinksFromCommentsAsync()
         {
-            var redditComments = await GetUniqueRedditComments(GetSubreddits(), daysToGet: 30);
+            foreach(var subreddit in subreddits)
+            {
+                var redditComments = await GetUniqueRedditComments(subreddit, daysToGet: 1, numEntriesPerDay: 10);
 
-            // remove any duplicants from the list of RedditComments
-            // used to hold remaining RedditComments after duplicate entries are filtered out
-            List<RedditComment> redditCommentsNoDuplicateEntries = RemoveEntriesFoundInDatabase(redditComments);
-
-            // load up the database with the new data and save
-            await _subredditContext.AddRangeAsync(redditCommentsNoDuplicateEntries);
-            await _subredditContext.SaveChangesAsync();
+                _subredditRepository.SaveUniqueComments(redditComments);
+            }
         }
 
-        public async Task<List<RedditComment>> GetUniqueRedditComments(List<string> subreddits, int daysToGet)
+        public async Task<List<RedditComment>> GetUniqueRedditComments(string subreddit, int daysToGet, int numEntriesPerDay)
         {
-            if (subreddits is null) throw new NullReferenceException(nameof(subreddits));
+            if (String.IsNullOrEmpty(subreddit)) throw new NullReferenceException(nameof(subreddit));
 
             var redditComments = new List<RedditComment>();
 
@@ -91,65 +102,39 @@ namespace luke_site_mvc.Services
 
             for (int i = 0; i < daysToGet; i++)
             {
-                foreach (var subreddit in subreddits)
+                var rawComments = await _psawService.Search<CommentEntry>(new SearchOptions
                 {
-                    var rawComments = await _psawService.Search<CommentEntry>(new SearchOptions
+                    Subreddit = subreddit,
+                    Query = "www.youtube.com/watch", // TODO: seperate out the query for the other link and score
+                    Before = beforeBoundary.AddDays( -i ).ToString("yyyy-MM-dd"),
+                    After = afterBoundary.AddDays( -i ).ToString("yyyy-MM-dd"),
+                    Size = numEntriesPerDay
+                });
+
+                foreach (var comment in rawComments)
+                {
+                    // check to make sure comment body has a valid YoutubeLinkId in it
+                    var validated_link = FindYoutubeId(comment.Body);
+
+                    // if not valid YoutubeLinkId then do not continue
+                    if (String.IsNullOrEmpty(validated_link)) break;
+
+                    // load up RedditComment with data from the API response
+                    RedditComment redditComment = new RedditComment
                     {
-                        Subreddit = subreddit,
-                        Query = "www.youtube.com/watch", // TODO: seperate out the query for the other link and score
-                        Before = beforeBoundary.AddDays( -i ).ToString("yyyy-MM-dd"),
-                        After = afterBoundary.AddDays( -i ).ToString("yyyy-MM-dd"),
-                        //Before = "2021-05-05",
-                        //After = "2021-01-01",
-                        Size = 5
-                    });
+                        Subreddit = comment.Subreddit,
+                        YoutubeLinkId = FindYoutubeId(comment.Body), // use regex to pull youtubeId from comment body
+                        CreatedUTC = comment.CreatedUtc,
+                        Score = comment.Score,
+                        RetrievedUTC = comment.RetrievedOn
+                    };
 
-                    foreach (var comment in rawComments)
-                    {
-                        // check to make sure comment body has a valid YoutubeLinkId in it
-                        var validated_link = FindYoutubeId(comment.Body);
-
-                        // if not valid YoutubeLinkId then do not continue
-                        if (String.IsNullOrEmpty(validated_link)) break;
-
-                        // load up RedditComment with data from the API response
-                        RedditComment redditComment = new RedditComment
-                        {
-                            Subreddit = comment.Subreddit,
-                            YoutubeLinkId = FindYoutubeId(comment.Body), // use regex to pull youtubeId from comment body
-                            CreatedUTC = comment.CreatedUtc,
-                            Score = comment.Score,
-                            RetrievedUTC = comment.RetrievedOn
-                        };
-
-                        redditComments.Add(redditComment);
-                    }
+                    redditComments.Add(redditComment);
                 }
             }
 
             // remove any duplicate comments
             return redditComments.Distinct().ToList();
-        }
-
-        // TODO: good candidate for repository
-        public List<RedditComment> RemoveEntriesFoundInDatabase(List<RedditComment> redditComments)
-        {
-            if (redditComments is null) throw new ArgumentNullException(nameof(redditComments));
-            if (redditComments.Count() < 1) throw new ArgumentException(nameof(redditComments));
-
-            var redditCommentsNoDuplicateEntries = new List<RedditComment>();
-
-            // filter out any entries that are already in the database 
-            // that have the same Subreddit and YoutubeLinkId combination
-            foreach (var comment in redditComments)
-            {
-                if (!_subredditContext.RedditComments.Any(c => c.Subreddit == comment.Subreddit && c.YoutubeLinkId == comment.YoutubeLinkId))
-                {
-                    redditCommentsNoDuplicateEntries.Add(comment);
-                }
-            }
-
-            return redditCommentsNoDuplicateEntries;
         }
 
         static readonly string youtubeLinkIdRegexPattern = @"http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\]*)(&(amp;)?[\w\?‌​=]*)?";
@@ -175,11 +160,12 @@ namespace luke_site_mvc.Services
                     _logger.LogTrace("FindYoutubeId(string commentBody) | invalid link, breaking loop");
                     return "";
                 }
+                GroupCollection groups = match.Groups;
 
                 if (match.Groups[1].Length < 11) return String.Empty;
 
                 // trim down id, it should be a maximum of 11 characters
-                return (match.Groups[1].Length > 11) ? match.Groups[1].Value.Remove(11) : match.Groups[1].Value;
+                return (groups[1].Length > 11) ? groups[1].Value.Remove(11) : groups[1].Value;
             }
 
             return String.Empty;

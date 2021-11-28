@@ -2,46 +2,54 @@
 using luke_site_mvc.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Net.Http;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace luke_site_mvc.Tests.ServiceTests
 {
     public class PushshiftServiceTests
     {
-        private readonly Mock<IDistributedCache> _cacheMock;
-        private readonly Mock<ILogger<PushshiftService>> _loggerMock;
+        // SubredditRepository
+        private readonly Mock<IConfiguration> _configMock;
+        private readonly Mock<ILogger<SubredditRepository>> _repoLoggerMock;
         private readonly SubredditContext _chatroomContext;
+        private readonly ISubredditRepository _subredditRepository;
 
+        // PsawService
         private readonly IPsawService _psawService;
         private readonly Mock<ILogger<PsawService>> _loggerPsawServiceMock;
 
+        // PushshiftService
+        private readonly Mock<IDistributedCache> _cacheMock;
+        private readonly Mock<ILogger<PushshiftService>> _loggerMock;
         public readonly PushshiftService _pushshiftService;
 
         private readonly HttpClient _httpClient;
 
         public PushshiftServiceTests()
         {
-            _cacheMock = new Mock<IDistributedCache>();
-            _loggerMock = new Mock<ILogger<PushshiftService>>();
-            _loggerPsawServiceMock = new Mock<ILogger<PsawService>>();
-
             _httpClient = new HttpClient();
 
-            // TODO: should i be mocking this instead?
+            _loggerPsawServiceMock = new Mock<ILogger<PsawService>>();
             _psawService = new PsawService(_httpClient, _loggerPsawServiceMock.Object);
 
-            // TODO: i need to mock this instead of using the real thing
+            // TODO: do I need to mock this instead of use the real thing?
+            _configMock = new Mock<IConfiguration>();
+            _repoLoggerMock = new Mock<ILogger<SubredditRepository>>();
             _chatroomContext = new SubredditContext(new DbContextOptions<SubredditContext>());
+            _subredditRepository = new SubredditRepository(_configMock.Object, _repoLoggerMock.Object, _chatroomContext);
+
+            _cacheMock = new Mock<IDistributedCache>();
+            _loggerMock = new Mock<ILogger<PushshiftService>>();
 
             _pushshiftService = new PushshiftService(
                 _loggerMock.Object,
                 _cacheMock.Object,
-                _chatroomContext,
-                _psawService);
+                _psawService,
+                _subredditRepository);
         }
 
         [Fact]
@@ -65,6 +73,7 @@ namespace luke_site_mvc.Tests.ServiceTests
             Assert.NotNull(result);
         }
 
+        // TODO: fix broken tests
         //[Fact]
         //public async Task GetLinksFromCommentsAsync_NotNull()
         //{

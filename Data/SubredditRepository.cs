@@ -14,6 +14,7 @@ namespace luke_site_mvc.Data
         Task<IReadOnlyList<string>> GetAllSubredditNames();
         Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
         Task<IReadOnlyList<RedditComment>> GetYoutubeIDsBySubreddit(string subredditName);
+        void SaveUniqueComments(List<RedditComment> redditComments);
     }
 
     public class SubredditRepository : ISubredditRepository
@@ -51,6 +52,19 @@ namespace luke_site_mvc.Data
                 .Where(comment => comment.Subreddit == subredditName)
                 .Select(comment => comment)
                 .ToListAsync();
+        }
+
+        // TODO: get async database calls to work w/o concurrency issues
+        public void SaveUniqueComments(List<RedditComment> redditComments)
+        {
+            foreach (var comment in redditComments)
+            {
+                if (!_subredditContext.RedditComments.Any(c => c.Subreddit == comment.Subreddit && c.YoutubeLinkId == comment.YoutubeLinkId))
+                {
+                    _subredditContext.RedditComments.Add(comment);
+                    _subredditContext.SaveChanges();
+                }
+            }
         }
 
     }

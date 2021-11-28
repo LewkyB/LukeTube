@@ -64,7 +64,7 @@ namespace luke_site_mvc.Services
         // TODO: clean up exceptions and logging in ExecuteGet
         private async Task<JToken> ExecuteGet(string route, List<string> args = null)
         {
-            _logger.LogTrace($"Making HTTP request to URI: {ConstructUrl(route, args)}");
+            _logger.LogTrace($"Making HTTP request to URI: {route}");
 
             // get rate limiting policy for HttpClient
             var resilencyStrategy = DefineAndRetrieveResiliencyStrategy();
@@ -118,7 +118,7 @@ namespace luke_site_mvc.Services
                                                                                   //attempt => TimeSpan.FromSeconds(6), // Wait 6 seconds between retries
                     (exception, calculatedWaitDuration) =>
                     {
-                        _logger.LogInformation($"Computer Vision API server is throttling our requests. Automatically delaying for {calculatedWaitDuration.TotalMilliseconds}ms");
+                        _logger.LogInformation($"API server is throttling our requests. Automatically delaying for {calculatedWaitDuration.TotalMilliseconds}ms");
                     }
                 );
 
