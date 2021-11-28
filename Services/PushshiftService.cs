@@ -113,7 +113,7 @@ namespace luke_site_mvc.Services
 
                 foreach (var comment in rawComments)
                 {
-                    // check to make sure comment body has a valid YoutubeLinkId in it
+                    // check to make sure comment body has a valid YoutubeLinkId
                     var validated_link = FindYoutubeId(comment.Body);
 
                     // if not valid YoutubeLinkId then do not continue

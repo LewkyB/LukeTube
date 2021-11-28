@@ -55,6 +55,9 @@ namespace luke_site_mvc.Data
         }
 
         // TODO: get async database calls to work w/o concurrency issues
+        // makes sure that there isn't a duplicate entry that has the same
+        // Subreddit and YoutubeLinkId combination in the database before
+        // inserting a new record
         public void SaveUniqueComments(List<RedditComment> redditComments)
         {
             foreach (var comment in redditComments)
@@ -66,6 +69,5 @@ namespace luke_site_mvc.Data
                 }
             }
         }
-
     }
 }

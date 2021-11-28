@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace luke_site_mvc.Tests.ServiceTests
@@ -19,6 +20,7 @@ namespace luke_site_mvc.Tests.ServiceTests
         private readonly ISubredditRepository _subredditRepository;
 
         // PsawService
+        private readonly HttpClient _httpClient;
         private readonly IPsawService _psawService;
         private readonly Mock<ILogger<PsawService>> _loggerPsawServiceMock;
 
@@ -27,21 +29,21 @@ namespace luke_site_mvc.Tests.ServiceTests
         private readonly Mock<ILogger<PushshiftService>> _loggerMock;
         public readonly PushshiftService _pushshiftService;
 
-        private readonly HttpClient _httpClient;
-
         public PushshiftServiceTests()
         {
+            // PsawService
             _httpClient = new HttpClient();
-
             _loggerPsawServiceMock = new Mock<ILogger<PsawService>>();
             _psawService = new PsawService(_httpClient, _loggerPsawServiceMock.Object);
 
-            // TODO: do I need to mock this instead of use the real thing?
+            // TODO: mock SubredditRepository so that this becomes more of a unit test
+            // SubredditRepository
             _configMock = new Mock<IConfiguration>();
             _repoLoggerMock = new Mock<ILogger<SubredditRepository>>();
             _chatroomContext = new SubredditContext(new DbContextOptions<SubredditContext>());
             _subredditRepository = new SubredditRepository(_configMock.Object, _repoLoggerMock.Object, _chatroomContext);
 
+            // PushshiftService
             _cacheMock = new Mock<IDistributedCache>();
             _loggerMock = new Mock<ILogger<PushshiftService>>();
 
@@ -73,29 +75,13 @@ namespace luke_site_mvc.Tests.ServiceTests
             Assert.NotNull(result);
         }
 
-        // TODO: fix broken tests
-        //[Fact]
-        //public async Task GetLinksFromCommentsAsync_NotNull()
-        //{
-        //    string subreddit = "videos";
-        //    var result = await _pushshiftService.GetLinksFromCommentsAsync(subreddit);
+        [Fact]
+        public async Task GetLinksFromCommentsAsync_NotNull()
+        {
+            string subreddit = "videos";
+            var result = await _pushshiftService.GetUniqueRedditComments(subreddit, daysToGet: 5, numEntriesPerDay: 10);
 
-        //    Assert.NotNull(result);
-        //}
-
-        // checks to make sure comments links are ordered by highest score
-        // sometimes all the comments will have a score of 1, hence the >=
-        //[Fact]
-        //public async Task GetLinksFromCommentsAsync_EnsureOrderedByScoreDesc()
-        //{
-        //    string subreddit = "videos";
-        //    var result = await _pushshiftService.GetLinksFromCommentsAsync(subreddit);
-
-        //    // TODO: should check more values?
-        //    if (result.Count > 1)
-        //    {
-        //        Assert.True(result[0].Score >= result[1].Score);
-        //    }
-        //}
+            Assert.NotNull(result[0]);
+        }
     }
 }

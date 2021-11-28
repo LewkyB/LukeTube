@@ -14,7 +14,6 @@ namespace luke_site_mvc.Services
     }
 
     // TODO: make this have more of a point than just returning readonlylists
-    // TODO: move repository functions to ChatroomContext and just use that here? point of repository pattern?
     public class SubredditService : ISubredditService
     {
         private readonly ISubredditRepository _subredditRepository;
