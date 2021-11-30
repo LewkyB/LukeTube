@@ -15,5 +15,7 @@ namespace luke_site_mvc.Data.Entities
         public DateTime CreatedUTC { get; set; }
 
         public DateTime RetrievedUTC { get; set; }
+
+        public string Permalink { get; set; }
     }
 }

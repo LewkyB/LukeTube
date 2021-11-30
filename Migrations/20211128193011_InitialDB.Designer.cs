@@ -12,7 +12,7 @@ using luke_site_mvc.Data;
 namespace luke_site_mvc.Migrations
 {
     [DbContext(typeof(SubredditContext))]
-    [Migration("20211128170613_InitialDB")]
+    [Migration("20211128193011_InitialDB")]
     partial class InitialDB
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,6 +34,9 @@ namespace luke_site_mvc.Migrations
 
                     b.Property<DateTime>("CreatedUTC")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Permalink")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("RetrievedUTC")
                         .HasColumnType("datetime2");

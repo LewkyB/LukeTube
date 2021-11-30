@@ -18,11 +18,5 @@ namespace luke_site_mvc.Data
                 .HasIndex(c => new { c.Subreddit, c.YoutubeLinkId })
                 .IsUnique();
         }
-
-        // TODO: need a way to dynamically change connection string without the need to inject, without this tests break
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer("Data Source=localhost;Initial Catalog=ChatDB;Trusted_Connection=True;MultipleActiveResultSets=true");
-        }
     }
 }

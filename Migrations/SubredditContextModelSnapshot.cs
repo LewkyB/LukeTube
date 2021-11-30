@@ -33,6 +33,9 @@ namespace luke_site_mvc.Migrations
                     b.Property<DateTime>("CreatedUTC")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Permalink")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("RetrievedUTC")
                         .HasColumnType("datetime2");
 

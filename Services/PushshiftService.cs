@@ -36,36 +36,25 @@ namespace luke_site_mvc.Services
 
         // TODO: provide a better list of subreddits
         // avoid magic strings
-        private readonly List<string> subreddits = new List<string>()
-        {
-                "space",
-                "science",
-                "mealtimevideos",
-                "skookum",
-                "artisanvideos",
-                "AIDKE",
-                "linux",
-                "movies",
-                "dotnet",
-                "csharp",
-                "biology",
-                "astronomy",
-                "photography",
-                "aviation",
-                "lectures",
-                "homebrewing",
-                "fantasy",
-                "homeimprovement",
-                "woodworking",
-                "medicine",
-                "ultralight",
-                "travel",
-                "askHistorians",
-                "askculinary"
-        };
-
         //private readonly List<string> subreddits = new List<string>()
         //{
+        //        "space",
+        //        "science",
+        //        "mealtimevideos",
+        //        "skookum",
+        //        "artisanvideos",
+        //        "AIDKE",
+        //        "linux",
+        //        "movies",
+        //        "dotnet",
+        //        "csharp",
+        //        "biology",
+        //        "astronomy",
+        //        "photography",
+        //        "aviation",
+        //        "lectures",
+        //        "homebrewing",
+        //        "fantasy",
         //        "homeimprovement",
         //        "woodworking",
         //        "medicine",
@@ -74,6 +63,17 @@ namespace luke_site_mvc.Services
         //        "askHistorians",
         //        "askculinary"
         //};
+
+        private readonly List<string> subreddits = new List<string>()
+        {
+                "homeimprovement",
+                "woodworking",
+                "medicine",
+                "ultralight",
+                "travel",
+                "askHistorians",
+                "askculinary"
+        };
 
         public List<string> GetSubreddits()
         {
@@ -84,7 +84,7 @@ namespace luke_site_mvc.Services
         {
             foreach(var subreddit in subreddits)
             {
-                var redditComments = await GetUniqueRedditComments(subreddit, daysToGet: 1, numEntriesPerDay: 10);
+                var redditComments = await GetUniqueRedditComments(subreddit, daysToGet: 1, numEntriesPerDay: 5);
 
                 _subredditRepository.SaveUniqueComments(redditComments);
             }
@@ -126,7 +126,8 @@ namespace luke_site_mvc.Services
                         YoutubeLinkId = FindYoutubeId(comment.Body), // use regex to pull youtubeId from comment body
                         CreatedUTC = comment.CreatedUtc,
                         Score = comment.Score,
-                        RetrievedUTC = comment.RetrievedOn
+                        RetrievedUTC = comment.RetrievedOn,
+                        Permalink = comment.Permalink
                     };
 
                     redditComments.Add(redditComment);

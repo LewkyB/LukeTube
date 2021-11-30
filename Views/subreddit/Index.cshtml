@@ -5,7 +5,7 @@
 
 <div class="columns">
 
-    @foreach (string chatroom in Model)
+    @foreach (string subreddit in Model)
     {
         if (counter > 0 && counter % 4 == 0)
         {
@@ -13,8 +13,8 @@
             // close and start new row
         }
         <div class="column text-center">
-            @*TODO: how to get rid of chatroom and just make it default*@
-            <a href="~/Subreddit/@chatroom/Links/desc">@chatroom</a>
+            @*TODO: how to get rid of subreddit and just make it default*@
+            <a href="~/Subreddit/@subreddit/Links/desc">@subreddit</a>
         </div>
 
         counter++;

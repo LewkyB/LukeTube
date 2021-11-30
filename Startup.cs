@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
+using System.Text;
 
 namespace luke_site_mvc
 {
@@ -40,10 +41,6 @@ namespace luke_site_mvc
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHttpClient();
-            services.AddHttpClient<IDatabaseSeeder>();
-
-            // figure out how to rate limit calls to pushshift to 120/min
             services.AddHttpClient<IPsawService>()
                 .SetHandlerLifetime(TimeSpan.FromMinutes(2)).AddPolicyHandler(GetRetryPolicy());
 
@@ -73,7 +70,7 @@ namespace luke_site_mvc
 
             services.AddDbContext<SubredditContext>(options =>
             {
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+                options.UseSqlServer(Configuration.GetConnectionString("SqlServer"));
                 options.EnableSensitiveDataLogging();
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             },
@@ -99,7 +96,12 @@ namespace luke_site_mvc
                 options.EnableServerTimingHeader = true;
                 options.EnableMvcFilterProfiling = true;
                 options.EnableMvcViewProfiling = true;
-                options.Storage = new SqlServerStorage(Configuration.GetConnectionString("DefaultConnection"));
+                options.Storage = new SqlServerStorage(Configuration.GetConnectionString("SqlServer"));
+
+                // including these is not useful
+                options.IgnoredPaths.Add("/js/");
+                options.IgnoredPaths.Add("/css/");
+                options.IgnoredPaths.Add("/lib/");
             }).AddEntityFramework();
 
             services.AddW3CLogging(logging =>
@@ -124,17 +126,18 @@ namespace luke_site_mvc
             IHostApplicationLifetime lifetime, IDistributedCache cache,
             SubredditContext chatroomContext)
         {
-            //lifetime.ApplicationStarted.Register(() =>
-            //{
-            //    var currentTimeUTC = DateTime.UtcNow.ToString();
+            lifetime.ApplicationStarted.Register(() =>
+            {
+                var currentTimeUTC = DateTime.UtcNow.ToString();
 
-            //    byte[] encodedCurrentTimeUTC = Encoding.UTF8.GetBytes(currentTimeUTC);
+                byte[] encodedCurrentTimeUTC = Encoding.UTF8.GetBytes(currentTimeUTC);
 
-            //    var options = new DistributedCacheEntryOptions()
-            //        .SetSlidingExpiration(TimeSpan.FromSeconds(20));
+                var options = new DistributedCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromSeconds(20));
 
-            //    cache.Set("cachedTimeUTC", encodedCurrentTimeUTC, options);
-            //});
+                // TODO: why is this broken?
+                //cache.Set("cachedTimeUTC", encodedCurrentTimeUTC, options);
+            });
 
             if (env.IsDevelopment())
             {

@@ -19,7 +19,8 @@ namespace luke_site_mvc.Migrations
                     YoutubeLinkId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     Score = table.Column<int>(type: "int", nullable: false),
                     CreatedUTC = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    RetrievedUTC = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    RetrievedUTC = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Permalink = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {

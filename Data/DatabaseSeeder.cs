@@ -1,11 +1,8 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
 using StackExchange.Profiling.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace luke_site_mvc.Data
@@ -18,12 +15,10 @@ namespace luke_site_mvc.Data
     public class DatabaseSeeder : IDatabaseSeeder
     {
         private readonly SubredditContext _subredditContext;
-        private readonly HttpClient _client;
 
-        public DatabaseSeeder(SubredditContext SubredditContext, HttpClient client, IConfiguration config, IWebHostEnvironment webHostEnvironment, IServiceProvider serviceProvider)
+        public DatabaseSeeder(SubredditContext SubredditContext)
         {
             _subredditContext = SubredditContext;
-            _client = client;
         }
 
         public async Task InitializeAsync()

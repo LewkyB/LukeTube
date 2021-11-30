@@ -8,7 +8,7 @@
     @foreach (var link in ViewBag.links)
     {
         // only load 20 embedded videos
-        if (counter > 20) break;
+        if (counter > 1000) break;
 
         if (counter > 0 && counter % 2 == 0)
         {
@@ -22,8 +22,16 @@
                         frameborder="0" 
                         allow="autoplay; encrypted-media" 
                         allowfullscreen></iframe>
-                <b>@link.Score</b>
-                <b>@link.CreatedUTC</b>
+                <b></b>
+
+            @{
+                string permalink = "https://www.reddit.com" + link.Permalink;
+
+                    <p><b><a href=@permalink>permalink</a></b></p>
+
+                }
+                <p><b>Created</b> @link.CreatedUTC.ToShortDateString()</p>
+                <p><b>Score</b> @link.Score</p>
             </div>
 
         counter++;

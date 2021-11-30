@@ -4,7 +4,6 @@
 
 ## Improvement
 - [ ] find a way to make embedded links load in faster (caching? pagination? BOTH???)
-- [ ] figure out how to DI the sqlconnection
 - [ ] explore different database options
 - [ ] load in json links from python project
 - [ ] make database seeder available
