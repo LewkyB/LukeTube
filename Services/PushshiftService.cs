@@ -61,9 +61,38 @@ namespace luke_site_mvc.Services
         //        "ultralight",
         //        "travel",
         //        "askHistorians",
+        //        "camping",
+        //        "cats",
+        //        "cpp",
+        //        "chemistry",
+        //        "beer",
+        //        "whisky",
+        //        "games",
+        //        "moviesuggestions",
+        //        "utarlington",
+        //        "docker",
+        //        "dotnetcore",
+        //        "math",
+        //        "askculinary",
+        //        "tesla",
+        //        "nintendoswitch",
+        //        "diy",
+        //        "aww",
+        //        "history",
+        //        "youtube",
+        //        "askscience",
+        //        "dallas",
+        //        "galveston",
+        //        "arlington",
+        //        "programming",
+        //        "arch",
+        //        "buildapcsales",
+        //        "cooking",
+        //        "hunting",
         //        "askculinary"
         //};
 
+        // shorter list while dealing with rate limit problems
         private readonly List<string> subreddits = new List<string>()
         {
                 "homeimprovement",
@@ -71,8 +100,21 @@ namespace luke_site_mvc.Services
                 "medicine",
                 "ultralight",
                 "travel",
-                "askHistorians",
-                "askculinary"
+                "askculinary",
+                "space",
+                "skookum",
+                "AIDKE",
+                "linux",
+                "dotnet",
+                "csharp",
+                "biology",
+                "aviation",
+                "homebrewing",
+                "fantasy",
+                "whisky",
+                "docker",
+                "math",
+                "history"
         };
 
         public List<string> GetSubreddits()
@@ -84,7 +126,7 @@ namespace luke_site_mvc.Services
         {
             foreach(var subreddit in subreddits)
             {
-                var redditComments = await GetUniqueRedditComments(subreddit, daysToGet: 1, numEntriesPerDay: 5);
+                var redditComments = await GetUniqueRedditComments(subreddit, daysToGet: 30, numEntriesPerDay: 100);
 
                 _subredditRepository.SaveUniqueComments(redditComments);
             }

@@ -41,8 +41,8 @@ namespace luke_site_mvc.Data
             await context.Database.ExecuteSqlRawAsync(dropTablesCmd);
 
             // get table creation sql commands from MiniProfiler
-            SqlServerStorage sqlServerStorage = new SqlServerStorage("");
-            List<string> miniProfilerTableCreationScripts = sqlServerStorage.TableCreationScripts;
+            PostgreSqlStorage postgreSqlStorage = new PostgreSqlStorage("");
+            List<string> miniProfilerTableCreationScripts = postgreSqlStorage.TableCreationScripts;
 
             // list of commands needs to be made into a single string
             var tableCreateCmd = String.Join(" ", miniProfilerTableCreationScripts);

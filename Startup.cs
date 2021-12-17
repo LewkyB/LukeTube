@@ -70,7 +70,7 @@ namespace luke_site_mvc
 
             services.AddDbContext<SubredditContext>(options =>
             {
-                options.UseSqlServer(Configuration.GetConnectionString("SqlServer"));
+                options.UseNpgsql(Configuration.GetConnectionString("PostgreSQL"));
                 options.EnableSensitiveDataLogging();
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             },
@@ -96,7 +96,7 @@ namespace luke_site_mvc
                 options.EnableServerTimingHeader = true;
                 options.EnableMvcFilterProfiling = true;
                 options.EnableMvcViewProfiling = true;
-                options.Storage = new SqlServerStorage(Configuration.GetConnectionString("SqlServer"));
+                options.Storage = new PostgreSqlStorage(Configuration.GetConnectionString("SqlServer"));
 
                 // including these is not useful
                 options.IgnoredPaths.Add("/js/");
@@ -104,16 +104,17 @@ namespace luke_site_mvc
                 options.IgnoredPaths.Add("/lib/");
             }).AddEntityFramework();
 
-            services.AddW3CLogging(logging =>
-            {
-                logging.LoggingFields = W3CLoggingFields.All;
+            // TODO: not sure what this is yet
+            //services.AddW3CLogging(logging =>
+            //{
+            //    logging.LoggingFields = W3CLoggingFields.All;
 
-                logging.FileSizeLimit = 5 * 1024 * 1024;
-                logging.RetainedFileCountLimit = 2;
-                logging.FileName = "MyLogFile";
-                logging.LogDirectory = @"C:\logs";
-                logging.FlushInterval = TimeSpan.FromSeconds(2);
-            });
+            //    logging.FileSizeLimit = 5 * 1024 * 1024;
+            //    logging.RetainedFileCountLimit = 2;
+            //    logging.FileName = "MyLogFile";
+            //    logging.LogDirectory = @"C:\logs";
+            //    logging.FlushInterval = TimeSpan.FromSeconds(2);
+            //});
 
             services.AddResponseCaching();
 
@@ -135,8 +136,7 @@ namespace luke_site_mvc
                 var options = new DistributedCacheEntryOptions()
                     .SetSlidingExpiration(TimeSpan.FromSeconds(20));
 
-                // TODO: why is this broken?
-                //cache.Set("cachedTimeUTC", encodedCurrentTimeUTC, options);
+                cache.Set("cachedTimeUTC", encodedCurrentTimeUTC, options);
             });
 
             if (env.IsDevelopment())
@@ -146,7 +146,8 @@ namespace luke_site_mvc
 
                 app.UseMiniProfiler();
 
-                app.UseW3CLogging();
+                // TODO: not sure what this is yet
+                //app.UseW3CLogging();
 
                 app.UseStatusCodePages();
             }

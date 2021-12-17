@@ -1,29 +1,27 @@
 ﻿# IRCTube
 
-# TO DO
+This is a ASP.NET Core web application that uses the Pushshift API to provide youtube video links from comments written in specific subreddits.
 
-## Improvement
-- [ ] find a way to make embedded links load in faster (caching? pagination? BOTH???)
-- [ ] explore different database options
-- [ ] load in json links from python project
-- [ ] make database seeder available
+## stack
+- sql server 2019
+- dotnet sdk 6
+- asp.net core
+- teamcity
 
-## Feature
-- [ ] [cookie authentication for favorites](https://docs.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-5.0)
-- [ ] newsfeed for most recent links
-- [ ] figure out a way to scrape discord servers for chat logs
-- [ ] give videos an upvote and download arrow
-- [ ] get views, likes, dislikes, and description from youtube and show on page near video
-- [ ] add button to search HN/reddit for posts about/containing youtube id
+## requirements
+- git
+- docker compose
 
-## Object Mapping
-- [ ] AutoMapper vs Mapster vs ExpressMapper vs AgileMapper
+## instructions
 
-## Testing
-- [ ] use FluentAssertions?
+`git clone https://github.com/LewkyB/IRCTube-ASPNETCore.git`
+`cd IRCTube-ASPNETCore`
+`docker-compose up -d`
 
-## CI/CD
-- [ ] where to even start?
+TODO: add instructions for setting up HTTPS
+
+## Troubleshooting
+If you fail with building on a Raspberry Pi 4 check out https://github.com/dotnet/dotnet-docker/issues/3253#issuecomment-956378676 for a fix
 
 # Credit
 https://github.com/zHaytam/PsawSharp
