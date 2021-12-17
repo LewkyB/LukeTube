@@ -2,21 +2,21 @@
 
 This is a ASP.NET Core web application that uses the Pushshift API to provide youtube video links from comments written in specific subreddits.
 
-## stack
+## Stack
 - sql server 2019
 - dotnet sdk 6
 - asp.net core
 - teamcity
 
-## requirements
+## Requirements
 - git
 - docker compose
 
-## instructions
+## Instructions
 
-`git clone https://github.com/LewkyB/IRCTube-ASPNETCore.git`
-`cd IRCTube-ASPNETCore`
-`docker-compose up -d`
+1. `git clone https://github.com/LewkyB/IRCTube-ASPNETCore.git`
+2. `cd IRCTube-ASPNETCore`
+3. `docker-compose up -d`
 
 TODO: add instructions for setting up HTTPS
 
