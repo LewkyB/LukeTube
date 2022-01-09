@@ -16,14 +16,14 @@ namespace luke_site_mvc.Data
     {
         private readonly SubredditContext _subredditContext;
 
-        public DatabaseSeeder(SubredditContext SubredditContext)
+        public DatabaseSeeder(SubredditContext subredditContext)
         {
-            _subredditContext = SubredditContext;
+            _subredditContext = subredditContext;
         }
 
         public async Task InitializeAsync()
         {
-            _subredditContext.Database.EnsureCreated();
+            await _subredditContext.Database.EnsureCreatedAsync();
 
             if (!_subredditContext.RedditComments.Any())
             {

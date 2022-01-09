@@ -3,12 +3,12 @@ using luke_site_mvc.Data.Entities;
 using luke_site_mvc.Models.PsawSearchOptions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using PsawSharp.Entries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using luke_site_mvc.Data.Entities.PsawEntries;
 
 namespace luke_site_mvc.Services
 {
@@ -93,7 +93,7 @@ namespace luke_site_mvc.Services
         //};
 
         // shorter list while dealing with rate limit problems
-        private readonly List<string> subreddits = new List<string>()
+        private readonly List<string> _subreddits = new()
         {
                 "homeimprovement",
                 "woodworking",
@@ -119,12 +119,12 @@ namespace luke_site_mvc.Services
 
         public List<string> GetSubreddits()
         {
-            return subreddits.OrderBy(x => x).ToList(); // sort the list alphabetically
+            return _subreddits.OrderBy(x => x).ToList(); // sort the list alphabetically
         }
 
         public async Task GetLinksFromCommentsAsync()
         {
-            foreach(var subreddit in subreddits)
+            foreach(var subreddit in _subreddits)
             {
                 var redditComments = await GetUniqueRedditComments(subreddit, daysToGet: 30, numEntriesPerDay: 100);
 
@@ -134,7 +134,7 @@ namespace luke_site_mvc.Services
 
         public async Task<List<RedditComment>> GetUniqueRedditComments(string subreddit, int daysToGet, int numEntriesPerDay)
         {
-            if (String.IsNullOrEmpty(subreddit)) throw new NullReferenceException(nameof(subreddit));
+            if (string.IsNullOrEmpty(subreddit)) throw new NullReferenceException(nameof(subreddit));
 
             var redditComments = new List<RedditComment>();
 
@@ -142,7 +142,7 @@ namespace luke_site_mvc.Services
             var beforeBoundary = DateTime.Now.AddDays(1); // before the 26th
             var afterBoundary = DateTime.Now.AddDays(-1); // after the 24th
 
-            for (int i = 0; i < daysToGet; i++)
+            for (var i = 0; i < daysToGet; i++)
             {
                 var rawComments = await _psawService.Search<CommentEntry>(new SearchOptions
                 {
@@ -156,13 +156,13 @@ namespace luke_site_mvc.Services
                 foreach (var comment in rawComments)
                 {
                     // check to make sure comment body has a valid YoutubeLinkId
-                    var validated_link = FindYoutubeId(comment.Body);
+                    var validatedLink = FindYoutubeId(comment.Body);
 
                     // if not valid YoutubeLinkId then do not continue
-                    if (String.IsNullOrEmpty(validated_link)) break;
+                    if (string.IsNullOrEmpty(validatedLink)) break;
 
                     // load up RedditComment with data from the API response
-                    RedditComment redditComment = new RedditComment
+                    var redditComment = new RedditComment
                     {
                         Subreddit = comment.Subreddit,
                         YoutubeLinkId = FindYoutubeId(comment.Body), // use regex to pull youtubeId from comment body
@@ -180,22 +180,21 @@ namespace luke_site_mvc.Services
             return redditComments.Distinct().ToList();
         }
 
-        static readonly string youtubeLinkIdRegexPattern = @"http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\]*)(&(amp;)?[\w\?‌​=]*)?";
+        private const string YoutubeLinkIdRegexPattern = @"http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\]*)(&(amp;)?[\w\?‌​=]*)?";
 
         // worth compiling because this regex is used so heavily
-        Regex youtubeLinkIdRegex = new Regex(youtubeLinkIdRegexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _youtubeLinkIdRegex = new(YoutubeLinkIdRegexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // should this return multiples? do i need to change youtube linkid to be an array
         // TODO: worried about performance on the regex here?
         public string FindYoutubeId(string commentBody)
         {
-            if (String.IsNullOrEmpty(commentBody)) return String.Empty;
+            if (string.IsNullOrEmpty(commentBody)) return string.Empty;
 
-            MatchCollection link_matches;
-            link_matches = youtubeLinkIdRegex.Matches(commentBody);
+            var linkMatches = _youtubeLinkIdRegex.Matches(commentBody);
 
             // TODO: what happens when there is multiple youtube links in a body? is there something to do with that
-            foreach (Match match in link_matches)
+            foreach (Match match in linkMatches)
             {
                 if (match is null || match.Equals(""))
                 {
@@ -205,13 +204,13 @@ namespace luke_site_mvc.Services
                 }
                 GroupCollection groups = match.Groups;
 
-                if (match.Groups[1].Length < 11) return String.Empty;
+                if (match.Groups[1].Length < 11) return string.Empty;
 
                 // trim down id, it should be a maximum of 11 characters
                 return (groups[1].Length > 11) ? groups[1].Value.Remove(11) : groups[1].Value;
             }
 
-            return String.Empty;
+            return string.Empty;
         }
     }
 }

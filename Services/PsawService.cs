@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Polly;
-using PsawSharp.Entries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +9,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
+using luke_site_mvc.Data.Entities.PsawEntries;
 
 namespace luke_site_mvc.Services
 {
@@ -42,15 +42,15 @@ namespace luke_site_mvc.Services
 
         public async Task<T[]> Search<T>(SearchOptions options = null) where T : IEntry
         {
-            string type = typeof(T).Name.Replace("Entry", "").ToLower();
-            string route = string.Format(RequestsConstants.BaseAddress + RequestsConstants.SearchRoute, type);
+            var type = typeof(T).Name.Replace("Entry", "").ToLower();
+            var route = string.Format(RequestsConstants.BaseAddress + RequestsConstants.SearchRoute, type);
             var result = await ExecuteGet(route, options?.ToArgs());
             return result["data"].ToObject<T[]>();
         }
 
         public async Task<string[]> GetSubmissionCommentIds(string base36SubmissionId)
         {
-            string route = string.Format(RequestsConstants.BaseAddress + RequestsConstants.CommentIdsRoute, base36SubmissionId);
+            var route = string.Format(RequestsConstants.BaseAddress + RequestsConstants.CommentIdsRoute, base36SubmissionId);
             var result = await ExecuteGet(route);
             return result["data"].ToObject<string[]>();
         }
@@ -62,7 +62,7 @@ namespace luke_site_mvc.Services
         }
 
         // TODO: clean up exceptions and logging in ExecuteGet
-        private async Task<JToken> ExecuteGet(string route, List<string> args = null)
+        private async Task<JToken> ExecuteGet(string route, IReadOnlyCollection<string> args = null)
         {
             _logger.LogTrace($"Making HTTP request to URI: {route}");
 
@@ -84,13 +84,13 @@ namespace luke_site_mvc.Services
             response.EnsureSuccessStatusCode();
 
             // Convert response to json
-            string result = await response.Content.ReadAsStringAsync();
+            var result = await response.Content.ReadAsStringAsync();
             return JToken.Parse(result);
         }
 
-        private string ConstructUrl(string route, List<string> args) => args == null ? route : $"{route}?{ArgsToString(args)}";
+        private static string ConstructUrl(string route, IReadOnlyCollection<string> args) => args == null ? route : $"{route}?{ArgsToString(args)}";
 
-        private static string ArgsToString(List<string> args) => args.Aggregate((x, y) => $"{x}&{y}");
+        private static string ArgsToString(IEnumerable<string> args) => args.Aggregate((x, y) => $"{x}&{y}");
 
         // TODO: unit test polly policy https://github.com/App-vNext/Polly/wiki/Unit-testing-with-Polly
         /// <summary>
@@ -111,8 +111,7 @@ namespace luke_site_mvc.Services
 
             // Define our waitAndRetry policy: retry n times with an exponential backoff in case the Computer Vision API throttles us for too many requests.
             var waitAndRetryPolicy = Policy
-                .HandleResult<HttpResponseMessage>(e => e.StatusCode == HttpStatusCode.ServiceUnavailable ||
-                    e.StatusCode == (System.Net.HttpStatusCode)429)
+                .HandleResult<HttpResponseMessage>(e => e.StatusCode is HttpStatusCode.ServiceUnavailable or (System.Net.HttpStatusCode)429)
                 .WaitAndRetryAsync(10, // Retry 10 times with a delay between retries before ultimately giving up
                     attempt => TimeSpan.FromSeconds(0.25 * Math.Pow(2, attempt)), // Back off!  2, 4, 8, 16 etc times 1/4-second
                                                                                   //attempt => TimeSpan.FromSeconds(6), // Wait 6 seconds between retries

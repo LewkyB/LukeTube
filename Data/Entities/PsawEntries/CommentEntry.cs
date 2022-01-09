@@ -1,8 +1,8 @@
-﻿using luke_site_mvc.Services;
+﻿using System;
+using luke_site_mvc.Services;
 using Newtonsoft.Json;
-using System;
 
-namespace PsawSharp.Entries
+namespace luke_site_mvc.Data.Entities.PsawEntries
 {
     public class CommentEntry : IEntry
     {

@@ -26,7 +26,7 @@ namespace luke_site_mvc.Controllers
             _pushshiftService = pushshiftService;
         }
 
-        public async Task<IActionResult> Index()
+        public Task<IActionResult> Index()
         {
             _logger.LogInformation("Chatroom.Index() Triggered.");
 
@@ -34,13 +34,13 @@ namespace luke_site_mvc.Controllers
             {
                 var result = _pushshiftService.GetSubreddits();
 
-                return View(result);
+                return Task.FromResult<IActionResult>(View(result));
             }
             catch (Exception ex)
             {
                 // TODO: figure out better way to view exceptions, shouldn't the dev page show it when sql throws exception? 
                 _logger.LogError($"Failed Index():\n {ex}");
-                return BadRequest($"Failed Index()\n {ex}");
+                return Task.FromResult<IActionResult>(BadRequest($"Failed Index()\n {ex}"));
             }
         }
         

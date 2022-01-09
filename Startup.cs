@@ -9,6 +9,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi.Models;
 using Polly;
 using Polly.Extensions.Http;
@@ -129,14 +130,14 @@ namespace luke_site_mvc
         {
             lifetime.ApplicationStarted.Register(() =>
             {
-                var currentTimeUTC = DateTime.UtcNow.ToString();
+                var currentTimeUtc = DateTime.UtcNow.ToString();
 
-                byte[] encodedCurrentTimeUTC = Encoding.UTF8.GetBytes(currentTimeUTC);
+                var encodedCurrentTimeUtc = Encoding.UTF8.GetBytes(currentTimeUtc);
 
                 var options = new DistributedCacheEntryOptions()
                     .SetSlidingExpiration(TimeSpan.FromSeconds(20));
 
-                cache.Set("cachedTimeUTC", encodedCurrentTimeUTC, options);
+                cache.Set("cachedTimeUTC", encodedCurrentTimeUtc, options);
             });
 
             if (env.IsDevelopment())
@@ -156,6 +157,11 @@ namespace luke_site_mvc
                 app.UseExceptionHandler("/Home/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
+
+                app.UseForwardedHeaders(new ForwardedHeadersOptions
+                {
+                    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+                });
             }
 
             app.UseHttpsRedirection();

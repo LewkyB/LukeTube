@@ -32,12 +32,10 @@ namespace luke_site_mvc.Services.BackgroundServices
             _logger.LogInformation($"{nameof(PushshiftBackgroundService)} is working.");
 
             // in order to use a scoped service in a background service you must create it's own scope
-            using (var scope = _serviceProvider.CreateScope())
-            {
-                var pushshiftService = scope.ServiceProvider.GetService<IPushshiftService>();
+            using var scope = _serviceProvider.CreateScope();
+            var pushshiftService = scope.ServiceProvider.GetService<IPushshiftService>();
 
-                await pushshiftService.GetLinksFromCommentsAsync();
-            }
+            if (pushshiftService != null) await pushshiftService.GetLinksFromCommentsAsync();
         }
 
         public override async Task StopAsync(CancellationToken stoppingToken)

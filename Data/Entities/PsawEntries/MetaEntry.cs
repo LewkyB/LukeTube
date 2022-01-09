@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace PsawSharp.Entries
+namespace luke_site_mvc.Data.Entities.PsawEntries
 {
     public class MetaEntry
     {
