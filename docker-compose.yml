@@ -10,6 +10,10 @@ services:
       - db
       - redis
     restart: always
+    environment:
+      - LETSENCRYPT_HOST=localhost
+      - VIRTUAL_HOST=localhost
+      - VIRTUAL_PORT=80
 
   db:
     image: postgres:14.1
@@ -26,3 +30,37 @@ services:
     ports:
       - 6379:6379
     restart: always
+
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:0.10.0-alpine
+    container_name: nginx-proxy
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./.nginx/html/:/usr/share/nginx/html
+      - ./.nginx/certs/:/etc/nginx/certs
+      - ./.nginx/vhost/:/etc/nginx/vhost.d
+    environment:
+      - DEFAULT_HOST=localhost
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - luke_site_mvc
+    labels:
+      - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy"
+
+  acme-companion:
+    image: nginxproxy/acme-companion:2.1.2
+    container_name: acme-companion
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./.nginx/html/:/usr/share/nginx/html
+      - ./.nginx/certs/:/etc/nginx/certs
+      - ./.nginx/vhost/:/etc/nginx/vhost.d
+      - ./.nginx/acme/:/etc/acme.sh
+    env_file:
+      - ./.env.acme-companion
+    depends_on:
+      - nginx-proxy

@@ -3,7 +3,7 @@ version: '3.9'
 services:
   luke_site_mvc:
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
     ports:
       - "80"
