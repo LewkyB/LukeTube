@@ -97,7 +97,7 @@ namespace luke_site_mvc
                 options.EnableServerTimingHeader = true;
                 options.EnableMvcFilterProfiling = true;
                 options.EnableMvcViewProfiling = true;
-                options.Storage = new PostgreSqlStorage(Configuration.GetConnectionString("SqlServer"));
+                options.Storage = new PostgreSqlStorage(Configuration.GetConnectionString("PostgreSQL"));
 
                 // including these is not useful
                 options.IgnoredPaths.Add("/js/");
