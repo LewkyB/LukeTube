@@ -1,10 +1,12 @@
-﻿using luke_site_mvc.Models;
+﻿using luke_site_mvc.Data.Entities;
+using luke_site_mvc.Models;
 using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace luke_site_mvc.Controllers
@@ -43,22 +45,45 @@ namespace luke_site_mvc.Controllers
                 return Task.FromResult<IActionResult>(BadRequest($"Failed Index()\n {ex}"));
             }
         }
-        
-        // TODO: fix url for this page, order is no longer required
+
         [HttpGet]
-        [Route("/Subreddit/{id:alpha}/Links/{order:alpha}")]
-        public async Task<IActionResult> Links(string id, string order)
+        [Route("/Subreddit/{subreddit:alpha}/Links")]
+        public async Task<IActionResult> Links(
+            string sortOrder,
+            int? pageNumber,
+            string subreddit)
         {
             try
             {
-                var links = await _subredditService.GetYouLinkIDsBySubreddit(id);
+                var links = _subredditService.GetYouLinkIDsBySubreddit(subreddit);
 
-                var sortedLinks =
+                ViewData["CurrentSort"] = sortOrder;
+                ViewData["LinkSortParm"] = String.IsNullOrEmpty(sortOrder) ? "score_asc" : "";
+                ViewData["DateSortParm"] = sortOrder == "date" ? "date_desc" : "date";
 
-                ViewBag.Title = id;
-                ViewBag.links = links;
 
-                return View("links", links);
+                ViewBag.Title = subreddit;
+                ViewBag.count = links.Count();
+
+                switch (sortOrder)
+                {
+                    case "score_asc":
+                        links = links.OrderBy(link => link.Score);
+                        break;
+                    case "date":
+                        links = links.OrderBy(link => link.CreatedUTC);
+                        break;
+                    case "date_desc":
+                        links = links.OrderByDescending(link => link.CreatedUTC);
+                        break;
+                    default:
+                        links = links.OrderByDescending(link => link.Score);
+                        break;
+                }
+
+                //return View("links", links);
+                int pageSize = 4;
+                return View(await PaginatedList<RedditComment>.CreateAsync(links, pageNumber ?? 1, pageSize));
             }
             catch (Exception ex)
             {
@@ -66,7 +91,6 @@ namespace luke_site_mvc.Controllers
                 _logger.LogError($"Failed Links():\n {ex}");
                 return BadRequest($"Links Failed()\n {ex}");
             }
-
         }
 
         public IActionResult Privacy()

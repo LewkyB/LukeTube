@@ -62,7 +62,7 @@ namespace luke_site_mvc.Controllers
                 if (subredditName.Equals("subredditnames"))
                     return Ok(await _subredditService.GetAllSubredditNames());
 
-                return Ok(await _subredditService.GetYouLinkIDsBySubreddit(subredditName));
+                return Ok(_subredditService.GetYouLinkIDsBySubreddit(subredditName));
             }
             catch (Exception ex)
             {
