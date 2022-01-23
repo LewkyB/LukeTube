@@ -1,6 +1,6 @@
 ﻿# LukeTube
 
-This is a ASP.NET Core web application that uses the Pushshift API to provide youtube video links from comments written in specific subreddits.
+This is a containerized ASP.NET Core web application that uses the Pushshift API to provide youtube video links from comments written in specific subreddits. Uses [nginx-proxy](https://github.com/nginx-proxy/nginx-proxy) to automate nginx and https certifications. 
 
 ## Requirements
 - git
@@ -18,5 +18,7 @@ This is a ASP.NET Core web application that uses the Pushshift API to provide yo
 If you fail with building on a Raspberry Pi 4 check out [this](https://github.com/dotnet/dotnet-docker/issues/3253#issuecomment-956378676) for a fix
 
 # Credit
-- https://github.com/zHaytam/PsawSharp
-- https://github.com/pushshift/api
+- [Pushshift](https://github.com/pushshift/api)
+- [PsawSharp](https://github.com/zHaytam/PsawSharp)
+- [nginx-proxy](https://github.com/nginx-proxy/nginx-proxy)
+- [heckingoodboys](https://github.com/pawl/heckingoodboys/) (for nginx-proxy docker-compose configuration example)
