@@ -46,13 +46,11 @@ namespace luke_site_mvc.Data
         }
 
         // TODO: adding sorting logic here or in service layer
-        public async Task<IReadOnlyList<RedditComment>> GetYoutubeIDsBySubreddit(string subredditName)
+        public IQueryable<RedditComment> GetYoutubeIDsBySubreddit(string subredditName)
         {
-            return await _subredditContext.RedditComments
-                .OrderByDescending(comment => comment.Score)
+            return _subredditContext.RedditComments
                 .Where(comment => comment.Subreddit == subredditName)
-                .Select(comment => comment)
-                .ToListAsync();
+                .Select(comment => comment);
         }
 
         public int GetSubredditLinkCount(string subredditName)

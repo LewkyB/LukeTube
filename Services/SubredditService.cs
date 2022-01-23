@@ -2,6 +2,7 @@
 using luke_site_mvc.Data.Entities;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace luke_site_mvc.Services
@@ -38,9 +39,9 @@ namespace luke_site_mvc.Services
             return await _subredditRepository.GetAllYoutubeIDs();
         }
 
-        public async Task<IReadOnlyList<RedditComment>> GetYouLinkIDsBySubreddit(string subredditName)
+        public IQueryable<RedditComment> GetYouLinkIDsBySubreddit(string subredditName)
         {
-            return await _subredditRepository.GetYoutubeIDsBySubreddit(subredditName);
+            return _subredditRepository.GetYoutubeIDsBySubreddit(subredditName);
         }
 
         public int GetSubredditLinkCount(string subredditName)

@@ -1,11 +1,50 @@
-﻿@{
+﻿@model PaginatedList<luke_site_mvc.Data.Entities.RedditComment>
+
+@{
     int counter = 0;
+    var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.HasNextPage ? "disabled" : "";
 }
 
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                <a asp-action="Links" asp-route-sortOrder="@ViewData["ScoreSortParm"]">Score</a>
+            </th>
+            <th>
+                <a asp-action="Links" asp-route-sortOrder="@ViewData["DateSortParm"]">Date</a>
+            </th>
+            <th>
+                link count: @ViewBag.count
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+</table>
+
+<a asp-action="Links"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(1)"
+   class="btn btn-default">
+    First
+</a>
+<a asp-action="Links"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(Model.PageIndex - 1)"
+   class="btn btn-default @prevDisabled">
+    Previous
+</a>
+<a asp-action="Links"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(Model.PageIndex + 1)"
+   class="btn btn-default @nextDisabled">
+    Next
+</a>
 
 <div class="columns">
 
-    @foreach (var link in ViewBag.links)
+    @foreach (var link in Model)
     {
         // only load 20 embedded videos
         if (counter > 1000) break;
@@ -15,6 +54,7 @@
         @:</div><div class="columns">
             // close and start new row
         }
+
             <div class="column text-center">
                 <iframe width="560" 
                         height="315" 
@@ -37,3 +77,22 @@
         counter++;
      }
 </div>
+
+<a asp-action="Links"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(1)"
+   class="btn btn-default">
+    First
+</a>
+<a asp-action="Links"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(Model.PageIndex - 1)"
+   class="btn btn-default @prevDisabled">
+    Previous
+</a>
+<a asp-action="Links"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(Model.PageIndex + 1)"
+   class="btn btn-default @nextDisabled">
+    Next
+</a>
