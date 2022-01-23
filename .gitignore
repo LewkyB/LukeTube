@@ -15,6 +15,7 @@ config.json
 
 # nginx-proxy
 .env.acme-companion
+.env.acme-companion-example
 .nginx
 
 # User-specific files (MonoDevelop/Xamarin Studio)
