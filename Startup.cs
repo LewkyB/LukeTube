@@ -3,7 +3,6 @@ using luke_site_mvc.Services;
 using luke_site_mvc.Services.BackgroundServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
@@ -66,7 +65,7 @@ namespace luke_site_mvc
             services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = Configuration.GetConnectionString("Redis");
-                options.InstanceName = "IRCTube_";
+                options.InstanceName = "LukeTube_";
             });
 
             services.AddDbContext<SubredditContext>(options =>
@@ -105,18 +104,6 @@ namespace luke_site_mvc
                 options.IgnoredPaths.Add("/lib/");
             }).AddEntityFramework();
 
-            // TODO: not sure what this is yet
-            //services.AddW3CLogging(logging =>
-            //{
-            //    logging.LoggingFields = W3CLoggingFields.All;
-
-            //    logging.FileSizeLimit = 5 * 1024 * 1024;
-            //    logging.RetainedFileCountLimit = 2;
-            //    logging.FileName = "MyLogFile";
-            //    logging.LogDirectory = @"C:\logs";
-            //    logging.FlushInterval = TimeSpan.FromSeconds(2);
-            //});
-
             services.AddResponseCaching();
 
             services.AddDatabaseDeveloperPageExceptionFilter();
@@ -147,9 +134,6 @@ namespace luke_site_mvc
 
                 app.UseMiniProfiler();
 
-                // TODO: not sure what this is yet
-                //app.UseW3CLogging();
-
                 app.UseStatusCodePages();
             }
             else
@@ -158,6 +142,7 @@ namespace luke_site_mvc
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
 
+                // not sure if this is needed since nginx is handling https
                 app.UseForwardedHeaders(new ForwardedHeadersOptions
                 {
                     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto

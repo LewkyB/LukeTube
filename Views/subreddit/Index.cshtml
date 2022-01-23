@@ -5,7 +5,7 @@
 
 <div class="columns">
 
-    @foreach (string subreddit in Model)
+    @foreach (var subreddit in Model)
     {
         if (counter > 0 && counter % 4 == 0)
         {
@@ -14,7 +14,7 @@
         }
         <div class="column text-center">
             @*TODO: how to get rid of subreddit and just make it default*@
-            <a href="~/Subreddit/@subreddit/Links/desc">@subreddit</a>
+            <a href="~/Subreddit/@subreddit/Links">@subreddit</a>
         </div>
 
         counter++;

@@ -1,6 +1,5 @@
 using luke_site_mvc.Data;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -40,7 +39,7 @@ namespace luke_site_mvc
             }
         }
 
-        // right now this isn't used to do any seeding of data, it is only setting up tables
+        // right now this isn't used to do any seeding of data, it is only setting up tables for miniprofiler
         private static async Task RunSeedingAsync(IHost host)
         {
             var scopeFactory = host.Services.GetService<IServiceScopeFactory>();

@@ -13,6 +13,10 @@ config.json
 *.userosscache
 *.sln.docstates
 
+# nginx-proxy
+.env.acme-companion
+.nginx
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -455,3 +459,4 @@ $RECYCLE.BIN/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+/Dockerfile.original
