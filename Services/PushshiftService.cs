@@ -36,97 +36,122 @@ namespace luke_site_mvc.Services
 
         // TODO: provide a better list of subreddits
         // avoid magic strings
-        private readonly List<string> _subreddits = new()
-        {
-                "space",
-                "science",
-                "mealtimevideos",
-                "skookum",
-                "artisanvideos",
-                "AIDKE",
-                "linux",
-                "movies",
-                "dotnet",
-                "csharp",
-                "biology",
-                "astronomy",
-                "photography",
-                "aviation",
-                "lectures",
-                "homebrewing",
-                "fantasy",
-                "homeimprovement",
-                "woodworking",
-                "medicine",
-                "ultralight",
-                "travel",
-                "askHistorians",
-                "camping",
-                "cats",
-                "cpp",
-                "chemistry",
-                "beer",
-                "whisky",
-                "games",
-                "moviesuggestions",
-                "utarlington",
-                "docker",
-                "dotnetcore",
-                "math",
-                "askculinary",
-                "tesla",
-                "nintendoswitch",
-                "diy",
-                "aww",
-                "history",
-                "youtube",
-                "askscience",
-                "dallas",
-                "galveston",
-                "arlington",
-                "programming",
-                "arch",
-                "buildapcsales",
-                "cooking",
-                "hunting",
-                "askculinary"
-        };
-
-        // shorter list while dealing with rate limit problems
         //private readonly List<string> _subreddits = new()
         //{
-        //        "homeimprovement",
-        //        "woodworking",
-        //        "medicine",
-        //        "ultralight",
-        //        "travel",
-        //        "askculinary",
-        //        "space",
-        //        "skookum",
-        //        "AIDKE",
-        //        "linux",
-        //        "dotnet",
-        //        "csharp",
-        //        "biology",
-        //        "aviation",
-        //        "homebrewing",
-        //        "fantasy",
-        //        "whisky",
-        //        "docker",
-        //        "math",
-        //        "history"
+        //    "space",
+        //    "science",
+        //    "mealtimevideos",
+        //    "skookum",
+        //    "artisanvideos",
+        //    "AIDKE",
+        //    "linux",
+        //    "movies",
+        //    "dotnet",
+        //    "csharp",
+        //    "biology",
+        //    "astronomy",
+        //    "photography",
+        //    "aviation",
+        //    "lectures",
+        //    "homebrewing",
+        //    "fantasy",
+        //    "homeimprovement",
+        //    "woodworking",
+        //    "medicine",
+        //    "ultralight",
+        //    "travel",
+        //    "askHistorians",
+        //    "camping",
+        //    "cats",
+        //    "cpp",
+        //    "chemistry",
+        //    "beer",
+        //    "whisky",
+        //    "games",
+        //    "moviesuggestions",
+        //    "utarlington",
+        //    "docker",
+        //    "dotnetcore",
+        //    "math",
+        //    "askculinary",
+        //    "tesla",
+        //    "nintendoswitch",
+        //    "diy",
+        //    "aww",
+        //    "history",
+        //    "youtube",
+        //    "askscience",
+        //    "dallas",
+        //    "galveston",
+        //    "arlington",
+        //    "programming",
+        //    "arch",
+        //    "buildapcsales",
+        //    "cooking",
+        //    "hunting",
+        //    "askculinary",
+        //    "blender",
+        //    "CC0Textures",
+        //    "DigitalArt",
+        //    "blenderTutorials",
+        //    "computergraphics",
+        //    "3Dmodeling",
+        //    "blenderhelp",
+        //    "cgiMemes",
+        //    "learnblender",
+        //    "blenderpython",
+        //    "low_poly",
         //};
+
+        // shorter list while dealing with rate limit problems
+        private readonly List<string> _subreddits = new()
+        {
+            "homeimprovement",
+            "woodworking",
+            "medicine",
+            "ultralight",
+            "travel",
+            "askculinary",
+            "space",
+            "skookum",
+            "AIDKE",
+            "linux",
+            "dotnet",
+            "csharp",
+            "biology",
+            "aviation",
+            "homebrewing",
+            "fantasy",
+            "whisky",
+            "docker",
+            "math",
+            "history",
+            "mealtimevideos",
+            "movies",
+            "gaming",
+            "youtube",
+        };
 
         public List<string> GetSubreddits()
         {
-            return _subreddits.OrderBy(x => x).ToList(); // sort the list alphabetically
+            var validSubreddits = new List<string>();
+
+            // only return subreddits that have any content
+            foreach (var subreddit in _subreddits)
+            {
+                if (_subredditRepository.GetSubredditLinkCount(subreddit) > 0)
+                    validSubreddits.Add(subreddit);
+            }
+
+            // return list in alphabetical order
+            return validSubreddits.OrderBy(x => x).ToList();
         }
 
         public async Task GetLinksFromCommentsAsync()
         {
             foreach(var subreddit in _subreddits)
             {
-                var redditComments = await GetUniqueRedditComments(subreddit, daysToGet: 365, numEntriesPerDay: 100);
+                var redditComments = await GetUniqueRedditComments(subreddit, daysToGet: 5, numEntriesPerDay: 100);
 
                 _subredditRepository.SaveUniqueComments(redditComments);
             }

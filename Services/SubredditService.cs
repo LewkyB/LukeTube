@@ -10,7 +10,8 @@ namespace luke_site_mvc.Services
     {
         Task<IReadOnlyList<string>> GetAllSubredditNames();
         Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
-        Task<IReadOnlyList<RedditComment>> GetYouLinkIDsBySubreddit(string subredditName);
+        int GetSubredditLinkCount(string subredditName);
+        IQueryable<RedditComment> GetYouLinkIDsBySubreddit(string subredditName);
     }
 
     // TODO: make this have more of a point than just returning readonlylists
@@ -40,6 +41,11 @@ namespace luke_site_mvc.Services
         public async Task<IReadOnlyList<RedditComment>> GetYouLinkIDsBySubreddit(string subredditName)
         {
             return await _subredditRepository.GetYoutubeIDsBySubreddit(subredditName);
+        }
+
+        public int GetSubredditLinkCount(string subredditName)
+        {
+            return _subredditRepository.GetSubredditLinkCount(subredditName);
         }
     }
 }

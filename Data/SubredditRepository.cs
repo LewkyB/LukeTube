@@ -13,7 +13,8 @@ namespace luke_site_mvc.Data
     {
         Task<IReadOnlyList<string>> GetAllSubredditNames();
         Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
-        Task<IReadOnlyList<RedditComment>> GetYoutubeIDsBySubreddit(string subredditName);
+        int GetSubredditLinkCount(string subredditName);
+        IQueryable<RedditComment> GetYoutubeIDsBySubreddit(string subredditName);
         void SaveUniqueComments(List<RedditComment> redditComments);
     }
 
@@ -52,6 +53,14 @@ namespace luke_site_mvc.Data
                 .Where(comment => comment.Subreddit == subredditName)
                 .Select(comment => comment)
                 .ToListAsync();
+        }
+
+        public int GetSubredditLinkCount(string subredditName)
+        {
+            return _subredditContext.RedditComments
+                .Where(comment => comment.Subreddit == subredditName)
+                .Select(comment => comment)
+                .Count();
         }
 
         // TODO: get async database calls to work w/o concurrency issues
