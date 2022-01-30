@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using luke_site_mvc.Data.Entities.PsawEntries;
 using Xunit;
 using Xunit.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+using luke_site_mvc.Services.PollyPolicies;
+using System;
 
 namespace luke_site_mvc.Tests.ServiceTests
 {
@@ -16,20 +19,22 @@ namespace luke_site_mvc.Tests.ServiceTests
         // TODO: what does this do?
         private readonly ITestOutputHelper _output;
 
-        private readonly IPsawService _psawService;
         private readonly Mock<ILogger<PsawService>> _loggerMock;
-        private readonly HttpClient _httpClient;
-
+        private readonly IPsawService _psawService;
 
         public PsawServiceTests(ITestOutputHelper output)
         {
+            IServiceCollection services = new ServiceCollection();
+            services.AddHttpClient("PushshiftClient")
+                .SetHandlerLifetime(TimeSpan.FromMinutes(2))
+                .AddPolicyHandler(PushshiftPolicies.GetWaitAndRetryPolicy())
+                .AddPolicyHandler(PushshiftPolicies.GetRateLimitPolicy());
             _output = output;
 
             _loggerMock = new Mock<ILogger<PsawService>>();
+            IHttpClientFactory _httpClientFactory = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
 
-            _httpClient = new HttpClient();
-
-            _psawService = new PsawService(_httpClient, _loggerMock.Object);
+            _psawService = new PsawService(_loggerMock.Object, _httpClientFactory);
         }
 
         [Fact]
