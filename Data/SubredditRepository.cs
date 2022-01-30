@@ -14,6 +14,7 @@ namespace luke_site_mvc.Data
         Task<IReadOnlyList<string>> GetAllSubredditNames();
         Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
         int GetSubredditLinkCount(string subredditName);
+        int GetTotalRedditComments();
         IQueryable<RedditComment> GetYoutubeIDsBySubreddit(string subredditName);
         void SaveUniqueComments(List<RedditComment> redditComments);
     }
@@ -75,6 +76,11 @@ namespace luke_site_mvc.Data
                     _subredditContext.SaveChanges();
                 }
             }
+        }
+
+        public int GetTotalRedditComments()
+        {
+            return _subredditContext.RedditComments.Count();
         }
     }
 }

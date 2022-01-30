@@ -17,7 +17,7 @@ namespace luke_site_mvc.Services
         string FindYoutubeId(string commentBody);
         Task GetLinksFromCommentsAsync();
         List<string> GetSubreddits();
-        Task<List<RedditComment>> GetUniqueRedditComments(string subreddit, int daysToGet, int numEntriesPerDay);
+        Task GetUniqueRedditComments(List<string> subreddit, int daysToGet, int numEntriesPerDay);
     }
     public class PushshiftService : IPushshiftService
     {
@@ -148,35 +148,33 @@ namespace luke_site_mvc.Services
         }
 
         public async Task GetLinksFromCommentsAsync()
-        {
-            foreach(var subreddit in _subreddits)
-            {
-                var redditComments = await GetUniqueRedditComments(subreddit, daysToGet: 365, numEntriesPerDay: 100);
+            => await GetUniqueRedditComments(_subreddits, daysToGet: 365, numEntriesPerDay: 100);
 
-                _subredditRepository.SaveUniqueComments(redditComments);
-            }
-        }
-
-        public async Task<List<RedditComment>> GetUniqueRedditComments(string subreddit, int daysToGet, int numEntriesPerDay)
+        public async Task GetUniqueRedditComments(List<string> subreddit, int daysToGet, int numEntriesPerDay)
         {
-            if (string.IsNullOrEmpty(subreddit)) throw new NullReferenceException(nameof(subreddit));
+            if (subreddit is null) throw new NullReferenceException(nameof(subreddit));
 
             var redditComments = new List<RedditComment>();
 
-            // to get a specific day, like the 25th
-            var beforeBoundary = DateTime.Now.AddDays(1); // before the 26th
-            var afterBoundary = DateTime.Now.AddDays(-1); // after the 24th
+            var subredditCsv = String.Join(",", subreddit.Select(x => x).ToArray());
 
-            for (var i = 0; i < daysToGet; i++)
+            // going by hour gets more detailed results
+            var daysToGetInHours = daysToGet * 24;
+            for (var i = 0; i < daysToGetInHours; i++)
             {
+                string before = ((daysToGetInHours - i)).ToString() + "h";
+                string after = ((daysToGetInHours + 1) - i).ToString() + "h";
+
                 var rawComments = await _psawService.Search<CommentEntry>(new SearchOptions
                 {
-                    Subreddit = subreddit,
+                    Subreddit = subredditCsv,
                     Query = "www.youtube.com/watch", // TODO: seperate out the query for the other link and score
-                    Before = beforeBoundary.AddDays( -i ).ToString("yyyy-MM-dd"),
-                    After = afterBoundary.AddDays( -i ).ToString("yyyy-MM-dd"),
+                    Before = before,
+                    After = after,
                     Size = numEntriesPerDay
                 });
+
+                _logger.LogInformation($"{i} out of {daysToGetInHours}\tFetched {rawComments.Count()}\tBefore:{daysToGetInHours - i} After:{(daysToGetInHours + 1) - i}");
 
                 foreach (var comment in rawComments)
                 {
@@ -199,10 +197,12 @@ namespace luke_site_mvc.Services
 
                     redditComments.Add(redditComment);
                 }
-            }
 
-            // remove any duplicate comments
-            return redditComments.Distinct().ToList();
+                _subredditRepository.SaveUniqueComments(redditComments.Distinct().ToList());
+
+                // clear the list to avoid keeping too much in memory
+                redditComments.Clear();
+            }
         }
 
         private const string YoutubeLinkIdRegexPattern = @"http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\]*)(&(amp;)?[\w\?‌​=]*)?";

@@ -12,6 +12,7 @@ namespace luke_site_mvc.Services
         Task<IReadOnlyList<string>> GetAllSubredditNames();
         Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
         int GetSubredditLinkCount(string subredditName);
+        int GetTotalRedditComments();
         IQueryable<RedditComment> GetYouLinkIDsBySubreddit(string subredditName);
     }
 
@@ -48,5 +49,8 @@ namespace luke_site_mvc.Services
         {
             return _subredditRepository.GetSubredditLinkCount(subredditName);
         }
+
+        public int GetTotalRedditComments()
+            => _subredditRepository.GetTotalRedditComments();
     }
 }

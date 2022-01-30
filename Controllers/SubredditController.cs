@@ -4,7 +4,9 @@ using luke_site_mvc.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -34,13 +36,55 @@ namespace luke_site_mvc.Controllers
 
             try
             {
-                var result = _pushshiftService.GetSubreddits();
+                var result = new List<string>();
+
+                var subredditCacheResult = _cache.GetString("cachedSubreddits");
+
+                if (subredditCacheResult is null)
+                {
+                    result = _pushshiftService.GetSubreddits();
+
+                    var options = new DistributedCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromSeconds(30))
+                        .SetAbsoluteExpiration(TimeSpan.FromSeconds(120));
+
+                    var jsonData = JsonConvert.SerializeObject(result);
+
+                    _cache.SetString("cachedSubreddits", jsonData, options);
+                }
+                else
+                {
+                    result = JsonConvert.DeserializeObject<List<string>>(subredditCacheResult);
+                }
+
+                var cachedTotalRedditComments = _cache.GetString("cachedTotalRedditComments");
+
+                if (cachedTotalRedditComments is null)
+                {
+                    int totalRedditComments = _subredditService.GetTotalRedditComments();
+
+                    var options = new DistributedCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromSeconds(30))
+                        .SetAbsoluteExpiration(TimeSpan.FromSeconds(120));
+
+                    var jsonData = JsonConvert.SerializeObject(totalRedditComments);
+
+                    _cache.SetString("cachedTotalRedditComments", jsonData, options);
+
+                    ViewData["TotalLinkCount"] = totalRedditComments;
+                    ViewData["IsCachedPage"] = "no";
+                }
+                else
+                {
+                    ViewData["IsCachedPage"] = "yes";
+                    ViewData["TotalLinkCount"] = JsonConvert.DeserializeObject(cachedTotalRedditComments);
+                }
 
                 return Task.FromResult<IActionResult>(View(result));
             }
             catch (Exception ex)
             {
-                // TODO: figure out better way to view exceptions, shouldn't the dev page show it when sql throws exception? 
+                // TODO: figure out better way to view exceptions, shouldn't the dev page show it when sql throws exception?
                 _logger.LogError($"Failed Index():\n {ex}");
                 return Task.FromResult<IActionResult>(BadRequest($"Failed Index()\n {ex}"));
             }
@@ -48,14 +92,35 @@ namespace luke_site_mvc.Controllers
 
         [HttpGet]
         [Route("/Subreddit/{subreddit:alpha}/Links")]
-        public async Task<IActionResult> Links(
+        public IActionResult Links(
             string sortOrder,
             int? pageNumber,
             string subreddit)
         {
             try
             {
-                var links = _subredditService.GetYouLinkIDsBySubreddit(subreddit);
+                var cachedSubredditLinks = _cache.GetString($"{subreddit}_cachedSubredditLinks");
+
+                var links = new List<RedditComment>();
+
+                if (cachedSubredditLinks is null)
+                {
+                    links = _subredditService.GetYouLinkIDsBySubreddit(subreddit).ToList();
+
+                    var options = new DistributedCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromSeconds(30))
+                        .SetAbsoluteExpiration(TimeSpan.FromSeconds(120));
+
+                    var jsonData = JsonConvert.SerializeObject(links);
+
+                    _cache.SetString($"{subreddit}_cachedSubredditLinks", jsonData, options);
+                    ViewData["LinksIsCached"] = "no";
+                }
+                else
+                {
+                    links = JsonConvert.DeserializeObject<List<RedditComment>>(cachedSubredditLinks);
+                    ViewData["LinksIsCached"] = "yes";
+                }
 
                 ViewData["CurrentSort"] = sortOrder;
                 ViewData["LinkSortParm"] = String.IsNullOrEmpty(sortOrder) ? "score_asc" : "";
@@ -63,31 +128,32 @@ namespace luke_site_mvc.Controllers
 
 
                 ViewBag.Title = subreddit;
-                ViewBag.count = links.Count();
+                ViewBag.count = links.Count;
 
                 switch (sortOrder)
                 {
                     case "score_asc":
-                        links = links.OrderBy(link => link.Score);
+                        links = links.OrderBy(link => link.Score).ToList();
                         break;
                     case "date":
-                        links = links.OrderBy(link => link.CreatedUTC);
+                        links = links.OrderBy(link => link.CreatedUTC).ToList();
                         break;
                     case "date_desc":
-                        links = links.OrderByDescending(link => link.CreatedUTC);
+                        links = links.OrderByDescending(link => link.CreatedUTC).ToList();
                         break;
                     default:
-                        links = links.OrderByDescending(link => link.Score);
+                        links = links.OrderByDescending(link => link.Score).ToList();
                         break;
                 }
 
-                //return View("links", links);
                 int pageSize = 4;
-                return View(await PaginatedList<RedditComment>.CreateAsync(links, pageNumber ?? 1, pageSize));
+                var paginatedList = PaginatedList<RedditComment>.Create(links, pageNumber ?? 1, pageSize);
+
+                return View(paginatedList);
             }
             catch (Exception ex)
             {
-                // TODO: figure out better way to view exceptions, shouldn't the dev page show it when sql throws exception? 
+                // TODO: figure out better way to view exceptions, shouldn't the dev page show it when sql throws exception?
                 _logger.LogError($"Failed Links():\n {ex}");
                 return BadRequest($"Links Failed()\n {ex}");
             }

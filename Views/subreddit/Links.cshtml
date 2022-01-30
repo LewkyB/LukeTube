@@ -42,13 +42,11 @@
     Next
 </a>
 
+<h1>Is this page from the cache? @ViewData["LinksIsCached"]</h1>
 <div class="columns">
 
     @foreach (var link in Model)
     {
-        // only load 20 embedded videos
-        if (counter > 1000) break;
-
         if (counter > 0 && counter % 2 == 0)
         {
         @:</div><div class="columns">
