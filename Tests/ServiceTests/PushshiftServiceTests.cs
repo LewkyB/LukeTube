@@ -1,10 +1,13 @@
 ﻿using luke_site_mvc.Data;
 using luke_site_mvc.Services;
+using luke_site_mvc.Services.PollyPolicies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
@@ -20,7 +23,6 @@ namespace luke_site_mvc.Tests.ServiceTests
         private readonly ISubredditRepository _subredditRepository;
 
         // PsawService
-        private readonly HttpClient _httpClient;
         private readonly IPsawService _psawService;
         private readonly Mock<ILogger<PsawService>> _loggerPsawServiceMock;
 
@@ -32,9 +34,15 @@ namespace luke_site_mvc.Tests.ServiceTests
         public PushshiftServiceTests()
         {
             // PsawService
-            _httpClient = new HttpClient();
+            IServiceCollection services = new ServiceCollection();
+            services.AddHttpClient("PushshiftClient")
+                .SetHandlerLifetime(TimeSpan.FromMinutes(2))
+                .AddPolicyHandler(PushshiftPolicies.GetWaitAndRetryPolicy())
+                .AddPolicyHandler(PushshiftPolicies.GetRateLimitPolicy());
+
+            IHttpClientFactory _httpClientFactory = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
             _loggerPsawServiceMock = new Mock<ILogger<PsawService>>();
-            _psawService = new PsawService(_httpClient, _loggerPsawServiceMock.Object);
+            _psawService = new PsawService(_loggerPsawServiceMock.Object, _httpClientFactory);
 
             // TODO: mock SubredditRepository so that this becomes more of a unit test
             // SubredditRepository

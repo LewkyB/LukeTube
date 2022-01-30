@@ -10,14 +10,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi.Models;
-using Polly;
-using Polly.Extensions.Http;
 using StackExchange.Profiling.Storage;
 using System;
 using System.IO;
-using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using luke_site_mvc.Services.PollyPolicies;
 
 namespace luke_site_mvc
 {
@@ -30,26 +28,13 @@ namespace luke_site_mvc
 
         public IConfiguration Configuration { get; }
 
-        public static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
-        {
-            return HttpPolicyExtensions
-                .HandleTransientHttpError()
-                .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
-                .WaitAndRetryAsync(6, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2,
-                                                                            retryAttempt)));
-        }
-
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHttpClient<IPsawService>()
-                .SetHandlerLifetime(TimeSpan.FromMinutes(2)).AddPolicyHandler(GetRetryPolicy());
-
-            services.AddHttpClient("timeout", client =>
-            {
-                client.Timeout = TimeSpan.FromSeconds(10);
-            });
-
-            services.AddHttpContextAccessor();
+            // rate limited to 60 requests per 60 seconds
+            services.AddHttpClient("PushshiftClient")
+                .SetHandlerLifetime(TimeSpan.FromMinutes(2))
+                .AddPolicyHandler(PushshiftPolicies.GetWaitAndRetryPolicy())
+                .AddPolicyHandler(PushshiftPolicies.GetRateLimitPolicy());
 
             services.AddScoped<ISubredditRepository, SubredditRepository>();
             services.AddScoped<ISubredditService, SubredditService>();
@@ -57,7 +42,6 @@ namespace luke_site_mvc
             services.AddScoped<IPsawService, PsawService>();
             services.AddTransient<IDatabaseSeeder, DatabaseSeeder>();
 
-            // TODO: add a feature toggle for this
             services.AddHostedService<PushshiftBackgroundService>();
 
             services.AddControllersWithViews();
@@ -78,7 +62,7 @@ namespace luke_site_mvc
 
             services.AddSwaggerGen(options =>
            {
-               options.SwaggerDoc("v1", new OpenApiInfo { Title = "luke_site_mvc", Version = "v1" });
+               options.SwaggerDoc("v1", new OpenApiInfo { Title = "LukeTube", Version = "v1" });
 
                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
