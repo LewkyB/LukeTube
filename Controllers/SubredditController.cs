@@ -72,11 +72,9 @@ namespace luke_site_mvc.Controllers
                     _cache.SetString("cachedTotalRedditComments", jsonData, options);
 
                     ViewData["TotalLinkCount"] = totalRedditComments;
-                    ViewData["IsCachedPage"] = "no";
                 }
                 else
                 {
-                    ViewData["IsCachedPage"] = "yes";
                     ViewData["TotalLinkCount"] = JsonConvert.DeserializeObject(cachedTotalRedditComments);
                 }
 
@@ -114,17 +112,15 @@ namespace luke_site_mvc.Controllers
                     var jsonData = JsonConvert.SerializeObject(links);
 
                     _cache.SetString($"{subreddit}_cachedSubredditLinks", jsonData, options);
-                    ViewData["LinksIsCached"] = "no";
                 }
                 else
                 {
                     links = JsonConvert.DeserializeObject<List<RedditComment>>(cachedSubredditLinks);
-                    ViewData["LinksIsCached"] = "yes";
                 }
 
                 ViewData["CurrentSort"] = sortOrder;
-                ViewData["LinkSortParm"] = String.IsNullOrEmpty(sortOrder) ? "score_asc" : "";
-                ViewData["DateSortParm"] = sortOrder == "date" ? "date_desc" : "date";
+                ViewData["DateSortParm"] = sortOrder == "date_asc" ? "date_desc" : "date_asc";
+                ViewData["ScoreSortParm"] = sortOrder == "score_asc" ? "score_desc" : "score_asc";
 
 
                 ViewBag.Title = subreddit;
@@ -135,11 +131,14 @@ namespace luke_site_mvc.Controllers
                     case "score_asc":
                         links = links.OrderBy(link => link.Score).ToList();
                         break;
-                    case "date":
+                    case "date_asc":
                         links = links.OrderBy(link => link.CreatedUTC).ToList();
                         break;
                     case "date_desc":
                         links = links.OrderByDescending(link => link.CreatedUTC).ToList();
+                        break;
+                    case "score_desc":
+                        links = links.OrderByDescending(link => link.Score).ToList();
                         break;
                     default:
                         links = links.OrderByDescending(link => link.Score).ToList();
