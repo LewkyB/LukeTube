@@ -13,12 +13,20 @@ export class Subreddit {
     }
 
     public redditComments: RedditComment[] = [];
+    public subreddits = [];
 
     loadComments(): Observable<void> {
-        return this.http.get<[]>("https://www.luketube.net/api/arch")
-        // return this.http.get<[]>("/api/space")
+        return this.http.get<[]>("api/space")
             .pipe(map(data => {
                 this.redditComments = data;
+                return;
+            }));
+    }
+    
+    loadSubreddits(): Observable<void> {
+        return this.http.get<[]>("api/subredditnames")
+            .pipe(map(data => {
+                this.subreddits = data;
                 return;
             }));
     }

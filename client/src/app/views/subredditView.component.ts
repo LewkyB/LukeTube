@@ -12,7 +12,11 @@ export default class subredditView implements OnInit{
     }
 
     ngOnInit(): void {
-        this.subreddit.loadComments()
+        // this.subreddit.loadComments()
+        //     .subscribe(() => {
+        //         // do something
+        //     });
+        this.subreddit.loadSubreddits()
             .subscribe(() => {
                 // do something
             });
