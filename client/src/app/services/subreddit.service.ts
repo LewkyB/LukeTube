@@ -23,11 +23,12 @@ export class Subreddit {
             }));
     }
     
-    loadSubreddits(): Observable<void> {
+    loadSubreddits() {
+    // loadSubreddits(): Observable<void> {
         return this.http.get<string[]>("api/subredditnames")
-            .pipe(map(data => {
-                this.subreddits = data;
-                return;
-            }));
+            // .pipe(map(data => {
+            //     this.subreddits = data;
+            //     return;
+            // }));
     }
 }

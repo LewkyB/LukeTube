@@ -14,7 +14,8 @@ export class SubredditView implements OnInit {
   myControl: FormControl;
   filteredSubreddits: Observable<string[]>;
 
-  subreddits: string[] = ["luke", "lauren", "mrcat"];
+  subreddits: string[];
+  // subreddits: string[] = ["luke", "lauren", "mrcat"];
 
   constructor(public subreddit: Subreddit) {}
 
@@ -22,9 +23,9 @@ export class SubredditView implements OnInit {
 
     this.myControl = new FormControl("")
     
-    // this.subreddit.loadComments().subscribe(result => {
-    //   this.subreddits = result
-    // });
+    this.subreddit.loadSubreddits().subscribe(result => {
+      this.subreddit.subreddits = result
+    });
 
     this.filteredSubreddits = this.myControl.valueChanges.pipe(
       startWith(""),
@@ -33,7 +34,7 @@ export class SubredditView implements OnInit {
   }
 
   private _filter(value: string): string[] {
-    return this.subreddits.filter(
+    return this.subreddit.subreddits.filter(
       (subreddit) => subreddit.toLowerCase().indexOf(value.toLowerCase()) === 0
     );
   }
