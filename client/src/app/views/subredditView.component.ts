@@ -2,25 +2,29 @@
 import { Component } from "@angular/core";
 import { Subreddit } from "../services/subreddit.service";
 import { FormControl } from "@angular/forms";
-import { NEVER, Observable } from "rxjs";
+import { Observable, of } from "rxjs";
 import { map, startWith } from "rxjs/operators";
 
 @Component({
   selector: "subreddit-links",
   templateUrl: "subredditView.component.html",
 })
-export default class subredditView implements OnInit {
+export class SubredditView implements OnInit {
+
+  myControl: FormControl;
+  filteredSubreddits: Observable<string[]>;
+
+  subreddits: string[] = ["luke", "lauren", "mrcat"];
+
   constructor(public subreddit: Subreddit) {}
 
-  myControl = new FormControl("");
-
-  subreddits!: string[];
-  filteredSubreddits!: Observable<string[]>;
-
   ngOnInit(): void {
-    this.subreddit.loadSubreddits().subscribe(() => {
-      // do something
-    });
+
+    this.myControl = new FormControl("")
+    
+    // this.subreddit.loadComments().subscribe(result => {
+    //   this.subreddits = result
+    // });
 
     this.filteredSubreddits = this.myControl.valueChanges.pipe(
       startWith(""),
@@ -29,10 +33,9 @@ export default class subredditView implements OnInit {
   }
 
   private _filter(value: string): string[] {
-    const filterValue = value.toLowerCase();
-
-    return this.subreddits.filter((subreddit) =>
-      subreddit.toLowerCase().includes(filterValue)
+    return this.subreddits.filter(
+      (subreddit) => subreddit.toLowerCase().indexOf(value.toLowerCase()) === 0
     );
   }
+
 }

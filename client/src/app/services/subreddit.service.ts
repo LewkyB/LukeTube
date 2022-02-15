@@ -13,7 +13,7 @@ export class Subreddit {
     }
 
     public redditComments: RedditComment[] = [];
-    public subreddits = [];
+    public subreddits: string[] = [];
 
     loadComments(): Observable<void> {
         return this.http.get<[]>("api/space")
@@ -24,11 +24,10 @@ export class Subreddit {
     }
     
     loadSubreddits(): Observable<void> {
-        return this.http.get<[]>("api/subredditnames")
+        return this.http.get<string[]>("api/subredditnames")
             .pipe(map(data => {
                 this.subreddits = data;
                 return;
             }));
     }
-
 }

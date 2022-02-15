@@ -1,37 +1,15 @@
-﻿<!-- <div class="grid grid-cols-6 gap-4 rounded-md">
-    <button class="" *ngFor="let subreddit of subreddit.subreddits">{{ subreddit }}</button>
-</div> -->
-
-<!-- <mat-autocomplete #auto="matAutocomplete">
-    <mat-option *ngFor="let subreddit of subreddit.subreddits" [value]="subreddit">
-      {{subreddit}}
-    </mat-option>
-  </mat-autocomplete>
-  
-  <input type="text"
-       placeholder="enter subreddit"
-       aria-label="Number"
-       matInput
-       [formControl]="myControl"
-       [matAutocomplete]="auto"> -->
-
-<form class="example-form">
-  <mat-form-field class="example-full-width bg-slate-600" appearance="fill">
-    <mat-label>enter subreddit</mat-label>
+﻿<form>
+  <mat-form-field>
     <input
       type="text"
-      placeholder="Pick one"
-      aria-label="Number"
+      placeholder=""
       matInput
       [formControl]="myControl"
       [matAutocomplete]="auto"
-    />
-    <mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
-      <mat-option
-        *ngFor="let subreddit of filteredSubreddits | async"
-        [value]="subreddit"
-      >
-        {{ subreddit }}
+      class="form-control">
+    <mat-autocomplete #auto="matAutocomplete">
+      <mat-option *ngFor="let subreddit of filteredSubreddits| async" [value]="subreddit">
+        {{subreddit}}
       </mat-option>
     </mat-autocomplete>
   </mat-form-field>
