@@ -6,16 +6,13 @@ import { Observable, of } from "rxjs";
 import { map, startWith } from "rxjs/operators";
 
 @Component({
-  selector: "subreddit-links",
-  templateUrl: "subredditView.component.html",
+  selector: "subreddit-search-bar",
+  templateUrl: "subreddit-search-bar.component.html",
 })
-export class SubredditView implements OnInit {
+export class SubredditSearchBar implements OnInit {
 
-  myControl: FormControl;
-  filteredSubreddits: Observable<string[]>;
-
-  subreddits: string[];
-  // subreddits: string[] = ["luke", "lauren", "mrcat"];
+  myControl!: FormControl;
+  filteredSubreddits!: Observable<string[]>;
 
   constructor(public subreddit: Subreddit) {}
 
@@ -24,7 +21,7 @@ export class SubredditView implements OnInit {
     this.myControl = new FormControl("")
     
     this.subreddit.loadSubreddits().subscribe(result => {
-      this.subreddit.subreddits = result
+      // this.subreddit.subreddits = result;
     });
 
     this.filteredSubreddits = this.myControl.valueChanges.pipe(

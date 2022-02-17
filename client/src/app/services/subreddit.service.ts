@@ -15,12 +15,14 @@ export class Subreddit {
     public redditComments: RedditComment[] = [];
     public subreddits: string[] = [];
 
-    loadComments(): Observable<void> {
-        return this.http.get<[]>("api/space")
-            .pipe(map(data => {
-                this.redditComments = data;
-                return;
-            }));
+    loadComments(subreddit: string) {
+    // loadComments(subreddit: string): Observable<void> {
+        var subredditUrl = "api/" + subreddit;
+        return this.http.get<RedditComment[]>(subredditUrl)
+            // .pipe(map(data => {
+            //     this.redditComments = data;
+            //     return;
+            // }));
     }
     
     loadSubreddits() {

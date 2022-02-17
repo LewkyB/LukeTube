@@ -4,7 +4,7 @@ import { HttpClientModule } from "@angular/common/http";
 
 import { AppComponent } from "./app.component";
 import { Subreddit } from "./services/subreddit.service";
-import { SubredditView } from "./views/subredditView.component";
+import { SubredditSearchBar } from "./subreddit-search-bar/subreddit-search-bar.component";
 import { YouTubePlayerModule } from "@angular/youtube-player";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
@@ -16,13 +16,24 @@ import { MatInputModule } from '@angular/material/input';
 import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatIconModule } from "@angular/material/icon";
 import { SubredditListComponent } from "./subreddit-list/subreddit-list.component";
+import {MatGridListModule} from '@angular/material/grid-list'; 
+import { Routes, RouterModule } from '@angular/router';
+import { SubredditVideoComponent } from './subreddit-video/subreddit-video.component'; 
+import {MatCardModule} from '@angular/material/card'; 
+
+// const routes: Routes [
+//  { path: '.', component:  }
+
+  
+// ]
 
 @NgModule({
   declarations: [
     AppComponent,
-    SubredditView,
+    SubredditSearchBar,
     NavBarComponent,
     SubredditListComponent,
+    SubredditVideoComponent,
   ],
   imports: [
     BrowserModule,
@@ -35,6 +46,9 @@ import { SubredditListComponent } from "./subreddit-list/subreddit-list.componen
     MatToolbarModule,
     MatIconModule,
     MatInputModule,
+    MatGridListModule,
+    MatCardModule,
+    // RouterModule.forRoot(routes),
   ],
   providers: [Subreddit],
   bootstrap: [AppComponent],

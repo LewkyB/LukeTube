@@ -1,14 +1,14 @@
-﻿<form>
-  <mat-form-field>
+﻿<form class="example-form">
+  <mat-form-field class="example-full-width">
     <input
       type="text"
-      placeholder=""
+      placeholder="enter subreddit"
       matInput
       [formControl]="myControl"
       [matAutocomplete]="auto"
       class="form-control">
     <mat-autocomplete #auto="matAutocomplete">
-      <mat-option *ngFor="let subreddit of filteredSubreddits| async" [value]="subreddit">
+      <mat-option *ngFor="let subreddit of filteredSubreddits | async" [value]="subreddit">
         {{subreddit}}
       </mat-option>
     </mat-autocomplete>
