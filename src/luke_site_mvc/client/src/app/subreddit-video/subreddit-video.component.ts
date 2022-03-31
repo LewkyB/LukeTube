@@ -7,12 +7,27 @@ import { Subreddit } from '../services/subreddit.service';
   <hr>
     <mat-grid-list cols="3" rowHeight="1:1">
       <mat-grid-tile *ngFor="let redditComment of subreddit.redditComments">
-        <youtube-player videoId={{redditComment.youtubeLinkId}}></youtube-player>
+        <youtube-player class="video-container" videoId={{redditComment.youtubeLinkId}}></youtube-player>
         <mat-card>{{redditComment.score}}</mat-card>
       </mat-grid-tile>
     </mat-grid-list>
   `,
   styles: [
+    `
+    .video-container {
+      position: relative;
+      padding-top: 10%;
+      padding-bottom: 56.25%; /* 16:9 */
+      height: 0;
+    }
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    `,
   ]
 })
 export class SubredditVideoComponent implements OnInit {

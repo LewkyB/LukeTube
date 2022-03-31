@@ -21,11 +21,10 @@ import { Routes, RouterModule } from '@angular/router';
 import { SubredditVideoComponent } from './subreddit-video/subreddit-video.component'; 
 import {MatCardModule} from '@angular/material/card'; 
 
-// const routes: Routes [
-//  { path: '.', component:  }
-
-  
-// ]
+const routes: Routes = [
+ { path: "", component: SubredditListComponent },
+ { path: "videos/:subredditName", component: SubredditVideoComponent },
+];
 
 @NgModule({
   declarations: [
@@ -48,7 +47,7 @@ import {MatCardModule} from '@angular/material/card';
     MatInputModule,
     MatGridListModule,
     MatCardModule,
-    // RouterModule.forRoot(routes),
+    RouterModule.forRoot(routes),
   ],
   providers: [Subreddit],
   bootstrap: [AppComponent],

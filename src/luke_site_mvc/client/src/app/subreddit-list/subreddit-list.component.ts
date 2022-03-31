@@ -6,9 +6,13 @@ import { Subreddit } from "../services/subreddit.service";
   selector: "app-subreddit-list",
   template: `
     <mat-grid-list cols="12" rowHeight="3:1">
-      <mat-grid-tile *ngFor="let subreddit of subreddit.subreddits">{{ subreddit }}</mat-grid-tile>
+      <mat-grid-tile *ngFor="let subreddit of subreddit.subreddits">
+        <a routerLink="/videos/{{ subreddit }}">
+          {{ subreddit }}
+        </a>
+      </mat-grid-tile>
     </mat-grid-list>
-   `,
+  `,
   styles: [],
 })
 export class SubredditListComponent implements OnInit {
@@ -17,16 +21,15 @@ export class SubredditListComponent implements OnInit {
   constructor(public subreddit: Subreddit) {}
 
   ngOnInit(): void {
-    
-    this.subreddit.loadSubreddits().subscribe(result => {
+    this.subreddit.loadSubreddits().subscribe((result) => {
       // get the results
-      this.subreddit.subreddits = result
+      this.subreddit.subreddits = result;
       // sort them alphabetically
-      this.subreddit.subreddits.sort(function(a, b) {
+      this.subreddit.subreddits.sort(function (a, b) {
         var textA = a.toUpperCase();
         var textB = b.toUpperCase();
-        return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
-    });
+        return textA < textB ? -1 : textA > textB ? 1 : 0;
+      });
     });
   }
 }
