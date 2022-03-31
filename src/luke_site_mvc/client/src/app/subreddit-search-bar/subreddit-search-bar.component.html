@@ -1,0 +1,16 @@
+﻿<form class="example-form">
+  <mat-form-field class="example-full-width">
+    <input
+      type="text"
+      placeholder="enter subreddit"
+      matInput
+      [formControl]="myControl"
+      [matAutocomplete]="auto"
+      class="form-control">
+    <mat-autocomplete #auto="matAutocomplete">
+      <mat-option *ngFor="let subreddit of filteredSubreddits | async" [value]="subreddit">
+        {{subreddit}}
+      </mat-option>
+    </mat-autocomplete>
+  </mat-form-field>
+</form>
