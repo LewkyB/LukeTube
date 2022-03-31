@@ -3,6 +3,16 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+.env
+.vscode/
+*.bak
+**/wwwroot/lib/
+.angular/
+**/postgres-data/
+src/luke_site_mvc/wwwroot/lib/
+src/luke_site_mvc/wwwroot/js/site*
+src/luke_site_mvc/wwwroot/js/site.min.css
+
 # ignore custom config file containing connection string info
 config.json
 
