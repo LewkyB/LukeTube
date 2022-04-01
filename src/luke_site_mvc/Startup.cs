@@ -44,7 +44,8 @@ namespace luke_site_mvc
 
             services.AddHostedService<PushshiftBackgroundService>();
 
-            services.AddControllersWithViews();
+            //services.AddControllersWithViews();
+            services.AddControllers();
 
             services.AddStackExchangeRedisCache(options =>
             {
@@ -60,14 +61,14 @@ namespace luke_site_mvc
             },
             ServiceLifetime.Transient);
 
-            services.AddSwaggerGen(options =>
-           {
-               options.SwaggerDoc("v1", new OpenApiInfo { Title = "LukeTube", Version = "v1" });
+           // services.AddSwaggerGen(options =>
+           //{
+           //    options.SwaggerDoc("v1", new OpenApiInfo { Title = "LukeTube", Version = "v1" });
 
-               var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-               var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-               options.IncludeXmlComments(xmlPath);
-           });
+           //    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+           //    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+           //    options.IncludeXmlComments(xmlPath);
+           //});
 
             services.AddMiniProfiler(options =>
             {
@@ -92,7 +93,7 @@ namespace luke_site_mvc
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
-            services.AddRazorPages();
+            //services.AddRazorPages();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
@@ -114,7 +115,7 @@ namespace luke_site_mvc
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
+                //app.UseSwagger();
 
                 app.UseMiniProfiler();
 
@@ -143,11 +144,7 @@ namespace luke_site_mvc
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute("Fallback",
-                    "{controller}/{action}/{id?}",
-                    new { controller = "Subreddit", action = "Index" });
-
-                endpoints.MapRazorPages();
+                endpoints.MapControllers();
             });
         }
     }

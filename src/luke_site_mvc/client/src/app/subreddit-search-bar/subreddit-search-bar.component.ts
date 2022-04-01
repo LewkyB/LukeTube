@@ -4,6 +4,7 @@ import { Subreddit } from "../services/subreddit.service";
 import { FormControl } from "@angular/forms";
 import { Observable, of } from "rxjs";
 import { map, startWith } from "rxjs/operators";
+import { Router } from "@angular/router";
 
 @Component({
   selector: "subreddit-search-bar",
@@ -14,7 +15,7 @@ export class SubredditSearchBar implements OnInit {
   myControl!: FormControl;
   filteredSubreddits!: Observable<string[]>;
 
-  constructor(public subreddit: Subreddit) {}
+  constructor(public subreddit: Subreddit, private router: Router) {}
 
   ngOnInit(): void {
 
@@ -25,7 +26,7 @@ export class SubredditSearchBar implements OnInit {
     });
 
     this.filteredSubreddits = this.myControl.valueChanges.pipe(
-      startWith(""),
+      startWith(''),
       map((value) => this._filter(value))
     );
   }
@@ -35,5 +36,12 @@ export class SubredditSearchBar implements OnInit {
       (subreddit) => subreddit.toLowerCase().indexOf(value.toLowerCase()) === 0
     );
   }
+  navigateTo(value: any) {
+    if (value) {
+        this.router.navigate(["/videos/" + value]);
+        console.log(value)
+    }
+    return false;
+}
 
 }

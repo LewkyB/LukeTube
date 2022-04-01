@@ -5,6 +5,7 @@ import { Subreddit } from "../services/subreddit.service";
 @Component({
   selector: "app-subreddit-list",
   template: `
+  <div class="container">
     <mat-grid-list cols="12" rowHeight="3:1">
       <mat-grid-tile *ngFor="let subreddit of subreddit.subreddits">
         <a routerLink="/videos/{{ subreddit }}">
@@ -12,8 +13,16 @@ import { Subreddit } from "../services/subreddit.service";
         </a>
       </mat-grid-tile>
     </mat-grid-list>
+</div>
   `,
-  styles: [],
+  styles: [
+      `
+      .container {
+          border: 5px solid;
+          color: pink;
+      }
+      `
+  ],
 })
 export class SubredditListComponent implements OnInit {
   subreddits!: Observable<string[]>;

@@ -20,6 +20,7 @@ import {MatGridListModule} from '@angular/material/grid-list';
 import { Routes, RouterModule } from '@angular/router';
 import { SubredditVideoComponent } from './subreddit-video/subreddit-video.component'; 
 import {MatCardModule} from '@angular/material/card'; 
+import {MatPaginatorModule} from '@angular/material/paginator'; 
 
 const routes: Routes = [
  { path: "", component: SubredditListComponent },
@@ -47,6 +48,7 @@ const routes: Routes = [
     MatInputModule,
     MatGridListModule,
     MatCardModule,
+    MatPaginatorModule,
     RouterModule.forRoot(routes),
   ],
   providers: [Subreddit],
