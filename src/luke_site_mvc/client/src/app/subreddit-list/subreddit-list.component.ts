@@ -5,6 +5,7 @@ import { Subreddit } from "../services/subreddit.service";
 @Component({
   selector: "app-subreddit-list",
   template: `
+  <nav-bar></nav-bar>
   <div class="container">
     <mat-grid-list cols="12" rowHeight="3:1">
       <mat-grid-tile *ngFor="let subreddit of subreddit.subreddits">
@@ -18,7 +19,7 @@ import { Subreddit } from "../services/subreddit.service";
   styles: [
       `
       .container {
-          border: 5px solid;
+          border: 1px solid;
           color: pink;
       }
       `

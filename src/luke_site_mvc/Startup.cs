@@ -21,6 +21,8 @@ namespace luke_site_mvc
 {
     public class Startup
     {
+        private string AllowSpecificOrigins = "_allowSpecificOrigins";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -61,35 +63,47 @@ namespace luke_site_mvc
             },
             ServiceLifetime.Transient);
 
-           // services.AddSwaggerGen(options =>
-           //{
-           //    options.SwaggerDoc("v1", new OpenApiInfo { Title = "LukeTube", Version = "v1" });
+            // services.AddSwaggerGen(options =>
+            //{
+            //    options.SwaggerDoc("v1", new OpenApiInfo { Title = "LukeTube", Version = "v1" });
 
-           //    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-           //    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-           //    options.IncludeXmlComments(xmlPath);
-           //});
+            //    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            //    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            //    options.IncludeXmlComments(xmlPath);
+            //});
 
-            services.AddMiniProfiler(options =>
+            //services.AddMiniProfiler(options =>
+            //{
+            //    options.RouteBasePath = "/profiler";
+            //    (options.Storage as MemoryCacheStorage).CacheDuration = TimeSpan.FromMinutes(60);
+            //    options.SqlFormatter = new StackExchange.Profiling.SqlFormatters.InlineFormatter();
+            //    options.TrackConnectionOpenClose = true;
+            //    options.ColorScheme = StackExchange.Profiling.ColorScheme.Auto;
+            //    options.PopupRenderPosition = StackExchange.Profiling.RenderPosition.BottomLeft;
+            //    options.EnableServerTimingHeader = true;
+            //    options.EnableMvcFilterProfiling = true;
+            //    options.EnableMvcViewProfiling = true;
+            //    options.Storage = new PostgreSqlStorage(Environment.GetEnvironmentVariable("CONNECTION_STRINGS__POSTGRESQL"));
+
+            //    // including these is not useful
+            //    options.IgnoredPaths.Add("/js/");
+            //    options.IgnoredPaths.Add("/css/");
+            //    options.IgnoredPaths.Add("/lib/");
+            //}).AddEntityFramework();
+
+            //services.AddResponseCaching();
+
+            services.AddCors(options =>
             {
-                options.RouteBasePath = "/profiler";
-                (options.Storage as MemoryCacheStorage).CacheDuration = TimeSpan.FromMinutes(60);
-                options.SqlFormatter = new StackExchange.Profiling.SqlFormatters.InlineFormatter();
-                options.TrackConnectionOpenClose = true;
-                options.ColorScheme = StackExchange.Profiling.ColorScheme.Auto;
-                options.PopupRenderPosition = StackExchange.Profiling.RenderPosition.BottomLeft;
-                options.EnableServerTimingHeader = true;
-                options.EnableMvcFilterProfiling = true;
-                options.EnableMvcViewProfiling = true;
-                options.Storage = new PostgreSqlStorage(Environment.GetEnvironmentVariable("CONNECTION_STRINGS__POSTGRESQL"));
-
-                // including these is not useful
-                options.IgnoredPaths.Add("/js/");
-                options.IgnoredPaths.Add("/css/");
-                options.IgnoredPaths.Add("/lib/");
-            }).AddEntityFramework();
-
-            services.AddResponseCaching();
+                options.AddPolicy(name: AllowSpecificOrigins,
+                    policy =>
+                    {
+                        policy.WithOrigins("http://localhost:81/")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowAnyOrigin();
+                    });
+            });
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -117,9 +131,10 @@ namespace luke_site_mvc
                 app.UseDeveloperExceptionPage();
                 //app.UseSwagger();
 
-                app.UseMiniProfiler();
+                //app.UseMiniProfiler();
 
                 app.UseStatusCodePages();
+                app.UseCors(AllowSpecificOrigins);
             }
             else
             {

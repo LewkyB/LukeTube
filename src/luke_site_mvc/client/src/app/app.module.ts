@@ -16,11 +16,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatIconModule } from "@angular/material/icon";
 import { SubredditListComponent } from "./subreddit-list/subreddit-list.component";
-import {MatGridListModule} from '@angular/material/grid-list'; 
+import {MatGridListModule} from '@angular/material/grid-list';
 import { Routes, RouterModule } from '@angular/router';
-import { SubredditVideoComponent } from './subreddit-video/subreddit-video.component'; 
-import {MatCardModule} from '@angular/material/card'; 
-import {MatPaginatorModule} from '@angular/material/paginator'; 
+import { SubredditVideoComponent } from './subreddit-video/subreddit-video.component';
+import {MatCardModule} from '@angular/material/card';
+import {MatPaginatorModule} from '@angular/material/paginator';
+import {MatButtonModule} from '@angular/material/button';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatBadgeModule} from '@angular/material/badge';
 
 const routes: Routes = [
  { path: "", component: SubredditListComponent },
@@ -49,7 +52,11 @@ const routes: Routes = [
     MatGridListModule,
     MatCardModule,
     MatPaginatorModule,
-    RouterModule.forRoot(routes),
+    MatBadgeModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    // RouterModule.forRoot(routes),
+    RouterModule.forRoot(routes, { useHash: true}),
   ],
   providers: [Subreddit],
   bootstrap: [AppComponent],

@@ -9,24 +9,32 @@ import { Router } from "@angular/router";
 @Component({
   selector: "subreddit-search-bar",
   templateUrl: "subreddit-search-bar.component.html",
+  styles: [
+    `
+      .disable-scroll-bar {
+        -ms-overflow-style: none; /* for Internet Explorer, Edge */
+        scrollbar-width: none; /* for Firefox */
+        overflow-y: scroll;
+      }
+    `,
+  ],
 })
 export class SubredditSearchBar implements OnInit {
-
   myControl!: FormControl;
   filteredSubreddits!: Observable<string[]>;
 
   constructor(public subreddit: Subreddit, private router: Router) {}
 
   ngOnInit(): void {
+    // TODO: how can I select this by pressing the hotkey '/'
+    this.myControl = new FormControl("");
 
-    this.myControl = new FormControl("")
-    
-    this.subreddit.loadSubreddits().subscribe(result => {
+    this.subreddit.loadSubreddits().subscribe((result) => {
       // this.subreddit.subreddits = result;
     });
 
     this.filteredSubreddits = this.myControl.valueChanges.pipe(
-      startWith(''),
+      startWith(""),
       map((value) => this._filter(value))
     );
   }
@@ -38,10 +46,9 @@ export class SubredditSearchBar implements OnInit {
   }
   navigateTo(value: any) {
     if (value) {
-        this.router.navigate(["/videos/" + value]);
-        console.log(value)
+      this.router.navigate(["videos/" + value]);
+      console.log(value);
     }
     return false;
-}
-
+  }
 }
