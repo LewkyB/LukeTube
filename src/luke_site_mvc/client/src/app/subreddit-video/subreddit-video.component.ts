@@ -2,95 +2,13 @@ import { Component, OnInit } from "@angular/core";
 import { Subreddit } from "../services/subreddit.service";
 import { PageEvent } from "@angular/material/paginator";
 import { ActivatedRoute } from "@angular/router";
-import { RedditComment } from "../shared/RedditComment";
+import { RedditComment } from "../models/RedditComment";
 import { Observable } from "rxjs/internal/Observable";
 
 @Component({
-  selector: "app-subreddit-video",
-  template: `
-    <!-- <hr>
-    <mat-grid-list cols="3" rowHeight="1:1">
-      <mat-grid-tile *ngFor="let redditComment of subreddit.redditComments">
-        <youtube-player class="video-container" videoId={{redditComment.youtubeLinkId}}></youtube-player>
-        <mat-card>{{redditComment.score}}</mat-card>
-      </mat-grid-tile>
-    </mat-grid-list>
-    <hr /> -->
-
-    <div>
-      <mat-toolbar>
-        <mat-toolbar-row>
-          <a routerLink="">{{ subredditName }}</a>
-          <span class="spacer"></span>
-          <mat-button-toggle (click)="sortDate()">Date</mat-button-toggle>
-          <mat-button-toggle (click)="sortScore()">Score</mat-button-toggle>
-            <!-- <button (click)="getType()">type</button> -->
-
-          <span class="spacer"></span>
-          <subreddit-search-bar></subreddit-search-bar>
-          <span class="spacer"></span>
-          <mat-paginator
-            [length]="length"
-            [pageSize]="pageSize"
-            [pageSizeOptions]="pageSizeOptions"
-            (page)="pageEvent = loadPage($event)"
-          >
-          </mat-paginator>
-        </mat-toolbar-row>
-      </mat-toolbar>
-    </div>
-
-    <div class="videos">
-      <div
-        *ngFor="let redditComment of redditComments | slice: sliceLow:sliceHigh"
-      >
-        <mat-card>
-          <youtube-player
-            videoId="{{ redditComment.youtubeLinkId }}"
-          ></youtube-player>
-          <mat-card-actions align="end">
-            <a
-              mat-stroked-button
-              href="https://www.reddit.com{{ redditComment.permalink }}"
-              target="_blank"
-              >PERMALINK</a
-            >
-            <button mat-stroked-button>{{ redditComment.createdUTC.toString().substring(0,10) }} | {{ redditComment.createdUTC.toString().substring(11,19) }}</button>
-            <button mat-stroked-button>Score: {{ redditComment.score }}</button>
-            <!-- <button mat-stroked-button>{{ redditComment.createdUTC.toString().substring(0,10) }}</button>
-            <button mat-stroked-button>{{ redditComment.createdUTC.toString().substring(11,19) }}</button> -->
-          </mat-card-actions>
-        </mat-card>
-      </div>
-    </div>
-  `,
-  styles: [
-    `
-      .videos {
-        display: grid;
-        /* grid-template-columns: repeat(2, 1fr); */
-        grid-template-columns: 1fr 1fr;
-        /* grid-gap: 5px; */
-        grid-column-gap: 5px;
-        grid-row-gap: 10px;
-        justify-items: center;
-      }
-      .item {
-        
-      }
-      .info {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-      }
-
-      .spacer {
-        flex: 1 1 auto;
-      }
-      .center {
-        align-items: center;
-      }
-    `,
-  ],
+  selector: 'app-subreddit-video',
+  templateUrl: `./subreddit-video.component.html`,
+  styleUrls: ['./subreddit-video.component.css']
 })
 export class SubredditVideoComponent implements OnInit {
   length: number = 0;
@@ -126,27 +44,35 @@ export class SubredditVideoComponent implements OnInit {
   sortDate() {
     if (!this.sortDateToggled) {
       this.sortDateToggled = true;
-      
+
       // sort descending
       this.redditComments.sort((a, b) =>
-        a.createdUTC.toString() > b.createdUTC.toString() ? -1 : a.createdUTC.toString() < b.createdUTC.toString() ? 1 : 0
-      ); 
+        a.createdUTC.toString() > b.createdUTC.toString()
+          ? -1
+          : a.createdUTC.toString() < b.createdUTC.toString()
+          ? 1
+          : 0
+      );
     } else {
       this.sortDateToggled = false;
       // sort ascending
       this.redditComments.sort((a, b) =>
-        a.createdUTC.toString() < b.createdUTC.toString() ? -1 : a.createdUTC.toString() > b.createdUTC.toString() ? 1 : 0
+        a.createdUTC.toString() < b.createdUTC.toString()
+          ? -1
+          : a.createdUTC.toString() > b.createdUTC.toString()
+          ? 1
+          : 0
       );
     }
   }
-  
+
   sortScore() {
     if (!this.sortScoreToggled) {
       this.sortScoreToggled = true;
       // sort ascending
       this.redditComments.sort((a, b) =>
         a.score < b.score ? -1 : a.score > b.score ? 1 : 0
-      ); 
+      );
     } else {
       this.sortScoreToggled = false;
       // sort descending

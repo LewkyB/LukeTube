@@ -3,7 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
-import { RedditComment } from "../shared/RedditComment";
+import { RedditComment } from "../models/RedditComment";
 
 @Injectable()
 export class Subreddit {
