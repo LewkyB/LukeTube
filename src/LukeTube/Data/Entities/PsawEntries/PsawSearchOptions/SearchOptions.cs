@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace LukeTube.Models.PsawSearchOptions
+namespace LukeTube.Data.Entities.PsawEntries.PsawSearchOptions
 {
     public class SearchOptions
     {

@@ -15,6 +15,10 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using LukeTube.Services.PollyPolicies;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 namespace LukeTube
 {
@@ -104,6 +108,45 @@ namespace LukeTube
                     });
             });
 
+            const string serviceName = "LukeTube.Backend";
+            const string serviceVersion = "1.0.0";
+            services.AddOpenTelemetryTracing(tracerProviderBuilder =>
+            {
+                tracerProviderBuilder
+                    .AddConsoleExporter()
+                    .AddOtlpExporter(o =>
+                    {
+                        o.Endpoint = new Uri("http://0.0.0.0:4317");
+                        o.Protocol = OtlpExportProtocol.Grpc;
+                    })
+                    .AddJaegerExporter(o =>
+                    {
+                        // o.Endpoint = new Uri("http://0.0.0.0:14268");
+                        o.AgentHost = "jaeger";
+                        o.AgentPort = 6831;
+                    })
+                    .AddSource(serviceName)
+                    .SetResourceBuilder(
+                        ResourceBuilder.CreateDefault()
+                            .AddService(serviceName: serviceName, serviceVersion: serviceVersion))
+                    .AddHttpClientInstrumentation()
+                    .AddAspNetCoreInstrumentation()
+                    .AddRedisInstrumentation();
+            });
+
+            services.AddOpenTelemetryMetrics(builder =>
+            {
+                builder.AddPrometheusExporter(options =>
+                {
+                    options.StartHttpListener = true;
+                    // Use your endpoint and port here
+                    //options.HttpListenerPrefixes = new [] { "prometheus" };
+                    options.HttpListenerPrefixes = new [] { $"http://localhost:{9090}/" };
+                    options.ScrapeResponseCacheDurationMilliseconds = 0;
+                });
+            });
+
+
             services.AddDatabaseDeveloperPageExceptionFilter();
 
             //services.AddRazorPages();
@@ -155,6 +198,8 @@ namespace LukeTube
             app.UseResponseCaching();
 
             app.UseAuthorization();
+            app.UseOpenTelemetryPrometheusScrapingEndpoint();
+
 
             app.UseEndpoints(endpoints =>
             {

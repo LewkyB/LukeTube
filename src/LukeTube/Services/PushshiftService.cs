@@ -1,14 +1,16 @@
 ﻿using LukeTube.Data;
 using LukeTube.Data.Entities;
-using LukeTube.Models.PsawSearchOptions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LukeTube.Data.Entities.PsawEntries;
+using LukeTube.Data.Entities.PsawEntries.PsawSearchOptions;
+using StackExchange.Profiling.Internal;
 
 namespace LukeTube.Services
 {
@@ -175,6 +177,7 @@ namespace LukeTube.Services
 
         public async Task GetUniqueRedditComments(List<string> subreddit, int daysToGet, int numEntriesPerDay)
         {
+            Activity.Current?.SetTag("test", 5);
             if (subreddit is null) throw new NullReferenceException(nameof(subreddit));
 
             var redditComments = new List<RedditComment>();
@@ -244,13 +247,21 @@ namespace LukeTube.Services
             // TODO: what happens when there is multiple youtube links in a body? is there something to do with that
             foreach (Match match in linkMatches)
             {
-                if (match is null || match.Equals(""))
-                {
-                    // TODO: how to get method name in log message?
-                    _logger.LogTrace("FindYoutubeId(string commentBody) | invalid link, breaking loop");
-                    return "";
-                }
+                if (match is null || match.Equals("")) return string.Empty;
+
                 GroupCollection groups = match.Groups;
+
+                if (groups.Count > 1)
+                {
+                    var ex = new Exception("Caught more than one youtube id?");
+                    int count = 0;
+
+                    foreach (var group in groups)
+                    {
+                        ex.Data.Add($"{nameof(group)}[{count++}]", group.ToString());
+                    }
+                    _logger.LogInformation("Caught more than one youtube id", ex);
+                }
 
                 if (match.Groups[1].Length < 11) return string.Empty;
 

@@ -1,5 +1,4 @@
-﻿using LukeTube.Models.PsawSearchOptions;
-using LukeTube.Services;
+﻿using LukeTube.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Linq;
@@ -11,6 +10,7 @@ using Xunit.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using LukeTube.Services.PollyPolicies;
 using System;
+using LukeTube.Data.Entities.PsawEntries.PsawSearchOptions;
 
 namespace LukeTube.Tests.ServiceTests
 {

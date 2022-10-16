@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LukeTube.Models.PsawSearchOptions
+namespace LukeTube.Data.Entities.PsawEntries.PsawSearchOptions
 {
     public class SubmissionSearchOptions : SearchOptions
     {

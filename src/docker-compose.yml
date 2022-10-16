@@ -12,17 +12,17 @@ services:
     restart: always
     expose:
       - "82"
-    environment:
+    #environment:
     #  WEB_PORTS: "80"
     #  VIRTUAL_HOST: "www.luketube.net"
     #  VIRTUAL_PATH: "/api/"
     #  VIRTUAL_DEST: "/"
-    #  - CONNECTION_STRINGS__POSTGRESQL="host=db;database=SubredditDb;username=postgres;password=postgres"
+    #   - CONNECTION_STRINGS__POSTGRESQL="host=db;database=SubredditDb;username=postgres;password=postgres"
     #  - CONNECTION_STRINGS__REDIS="redis,abortConnect=False"
     #  - LETSENCRYPT_HOST=luketube.net, www.luketube.net
     #  - VIRTUAL_HOST=luketube.net
     #  - VIRTUAL_PORT=80
-      - ASPNETCORE_ENVIRONMENT=Development
+    #  - ASPNETCORE_ENVIRONMENT=Development
     #  - ASPNETCORE_URLS=http://+:80
     env_file:
       - ./.env
@@ -100,3 +100,47 @@ services:
   #    - ./.env.acme-companion
   #  depends_on:
   #    - nginx-proxy
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    volumes:
+      - "./jaeger-ui.json:/etc/jaeger/jaeger-ui.json"
+    command: --query.ui-config /etc/jaeger/jaeger-ui.json
+    environment:
+      - METRICS_STORAGE_TYPE=prometheus
+      - PROMETHEUS_SERVER_URL=http://localhost:9090
+    ports:
+      - "14250:14250"
+      - "14268:14268"
+      - "6831:6831/udp"
+      - "16686:16686"
+      - "16685:16685"
+
+  otel_collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - "./otel-collector-config.yml:/etc/otelcol/otel-collector-config.yml"
+    command: --config /etc/otelcol/otel-collector-config.yml
+    ports:
+      - "1888:1888" # pprof extention
+      - "8888:8888" # prometheus metrics exposed by collector
+      - "8889:8889" # prometheus exporter metrics
+      - "13133:13133" # health check extensioh
+      - "4317:4317" # otlp grpc receiver
+    depends_on:
+      - jaeger
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - ./grafana.ini:/etc/grafana/grafana.ini
+      - ./datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+    ports:
+      - 3000:3000

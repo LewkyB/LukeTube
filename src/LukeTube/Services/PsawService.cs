@@ -1,11 +1,11 @@
-﻿using LukeTube.Models.PsawSearchOptions;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using LukeTube.Data.Entities.PsawEntries;
+using LukeTube.Data.Entities.PsawEntries.PsawSearchOptions;
 
 namespace LukeTube.Services
 {
