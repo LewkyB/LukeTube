@@ -32,26 +32,6 @@ services:
     #ports:
     #  - "${PORT}"  disable for production?
 
-  angular:
-    restart: always
-    build:
-      context: ./LukeTube/client
-      dockerfile: Dockerfile
-    depends_on:
-      - LukeTubeBackend
-    #volumes:
-      #- ./.nginx/html/:/usr/src/app/dist/*  # store built files here so nginx-proxy can grab them
-    #expose:
-    #  - "8080"
-    ports:
-      - 81:80
-    #environment:
-    #  WEB_PORTS: "81"
-    #  VIRTUAL_HOST: "luketube.local"
-    #  VIRTUAL_PORT: 81
-    #env_file:
-    #  - ./.env.angular
-
   db:
     image: postgres:14.1
     environment:

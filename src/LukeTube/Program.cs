@@ -76,6 +76,7 @@ public class Program
                     o.IncludeScopes = true;
                     o.IncludeFormattedMessage = true;
                     o.ParseStateValues = true;
+                    o.AddConsoleExporter();
                 });
             });
     // .UseNLog();  // NLog: Setup NLog for Dependency injection

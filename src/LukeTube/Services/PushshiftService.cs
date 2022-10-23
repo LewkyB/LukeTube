@@ -28,6 +28,12 @@ namespace LukeTube.Services
         private readonly IPsawService _psawService;
         private readonly ISubredditRepository _subredditRepository;
 
+        private const string _youtubeLinkIdRegexPattern = @"http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\]*)(&(amp;)?[\w\?‌​=]*)?";
+        private static readonly Regex _youtubeLinkIdRegex = new(
+            _youtubeLinkIdRegexPattern,
+            RegexOptions.Compiled | RegexOptions.IgnoreCase,
+            TimeSpan.FromSeconds(30));
+
         public PushshiftService(ILogger<PushshiftService> logger, IDistributedCache distributedCache, IPsawService psawService, ISubredditRepository subredditRepository)
         {
             _logger = logger;
@@ -207,16 +213,15 @@ namespace LukeTube.Services
                 foreach (var comment in rawComments)
                 {
                     // check to make sure comment body has a valid YoutubeLinkId
-                    var validatedLink = FindYoutubeId(comment.Body);
+                    var youtubeId = FindYoutubeId(comment.Body);
 
                     // if not valid YoutubeLinkId then do not continue
-                    if (string.IsNullOrEmpty(validatedLink)) break;
+                    if (string.IsNullOrEmpty(youtubeId)) break;
 
-                    // load up RedditComment with data from the API response
                     var redditComment = new RedditComment
                     {
                         Subreddit = comment.Subreddit,
-                        YoutubeLinkId = FindYoutubeId(comment.Body), // use regex to pull youtubeId from comment body
+                        YoutubeLinkId = youtubeId,
                         CreatedUTC = comment.CreatedUtc,
                         Score = comment.Score,
                         RetrievedUTC = comment.RetrievedOn,
@@ -233,10 +238,6 @@ namespace LukeTube.Services
             }
         }
 
-        private const string YoutubeLinkIdRegexPattern = @"http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\]*)(&(amp;)?[\w\?‌​=]*)?";
-
-        // worth compiling because this regex is used so heavily
-        private readonly Regex _youtubeLinkIdRegex = new(YoutubeLinkIdRegexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // should this return multiples? do i need to change youtube linkid to be an array
         // TODO: worried about performance on the regex here?
@@ -253,16 +254,9 @@ namespace LukeTube.Services
 
                 GroupCollection groups = match.Groups;
 
-                if (groups.Count > 1)
+                if (groups.Count > 2)
                 {
-                    var ex = new Exception("Caught more than one youtube id?");
-                    int count = 0;
-
-                    foreach (var group in groups)
-                    {
-                        ex.Data.Add($"{nameof(group)}[{count++}]", group.ToString());
-                    }
-                    _logger.LogInformation("Caught more than one youtube id", ex);
+                    _logger.LogInformation("Caught more than one youtube id {}", groups.ToJson());
                 }
 
                 if (match.Groups[1].Length < 11) return string.Empty;

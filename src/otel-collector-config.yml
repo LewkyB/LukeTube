@@ -12,14 +12,14 @@ exporters:
     tls:
       insecure: true
   logging:
-    loglevel: debug
+#    loglevel: debug
   loki:
     endpoint: "http://loki:3100/loki/api/v1/push"
     tls:
       insecure: true
-    labels:
-      resource:
-        job: job
+#    labels:
+#      resource:
+#        service.name: "service.name"
 #    labels:
 #      attributes:
 #        log.file.name: "filename"
@@ -30,11 +30,11 @@ processors:
   batch:
   spanmetrics:
     metrics_exporter: prometheus
-#  attributes:
-#    actions:
-#      - action: insert
-#        key: loki.attribute.labels
-#        value: http.status_code
+  attributes:
+    actions:
+      - action: insert
+        key: service.name
+        value: service.name
 #  resource:
 #    attributes:
 #      - action: insert
@@ -66,7 +66,7 @@ service:
       exporters: [prometheus]
     logs:
       receivers: [otlp]
-      processors: [batch]
+      processors: [batch,attributes]
 #      processors: [batch,resource,attributes]
 #      exporters: [logging,loki]
       exporters: [logging,loki]
