@@ -1,5 +1,8 @@
 version: '3.9'
 
+# to install the docker plugin for loki logging
+# $ docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
+
 services:
   LukeTubeBackend:
     image: ${DOCKER_REGISTRY-}luketube
