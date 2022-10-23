@@ -6,6 +6,10 @@ using Microsoft.Extensions.Logging;
 using NLog.Web;
 using System;
 using System.Threading.Tasks;
+using NLog;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace LukeTube;
 #pragma warning disable CS1591 // used for disabling xml comment warning for swagger
@@ -59,7 +63,21 @@ public class Program
             {
                 logging.ClearProviders();
                 logging.SetMinimumLevel(LogLevel.Trace);
-            })
-            .UseNLog();  // NLog: Setup NLog for Dependency injection
+                logging.AddOpenTelemetry(o =>
+                {
+                    o.ConfigureResource(r =>
+                    {
+                        r.AddService(Telemetry.ServiceName, Telemetry.ServiceVersion);
+                    });
+                    o.AddOtlpExporter(o =>
+                    {
+                        o.Endpoint = new Uri("http://otel_collector:4317");
+                    });
+                    o.IncludeScopes = true;
+                    o.IncludeFormattedMessage = true;
+                    o.ParseStateValues = true;
+                });
+            });
+    // .UseNLog();  // NLog: Setup NLog for Dependency injection
 }
 #pragma warning restore CS1591 // used for xml comment warning for swagger

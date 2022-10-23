@@ -177,7 +177,9 @@ namespace LukeTube.Services
 
         public async Task GetUniqueRedditComments(List<string> subreddit, int daysToGet, int numEntriesPerDay)
         {
-            Activity.Current?.SetTag("test", 5);
+            using var activity = Telemetry.MyActivitySource.StartActivity("tester");
+            activity?.SetTag("test", "test");
+
             if (subreddit is null) throw new NullReferenceException(nameof(subreddit));
 
             var redditComments = new List<RedditComment>();

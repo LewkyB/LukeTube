@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,13 +30,21 @@ namespace LukeTube.Services.BackgroundServices
 
         private async Task DoWorkAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"{nameof(PushshiftBackgroundService)} is working.");
+            try
+            {
+                _logger.LogInformation($"{nameof(PushshiftBackgroundService)} is working.");
 
-            // in order to use a scoped service in a background service you must create it's own scope
-            using var scope = _serviceProvider.CreateScope();
-            var pushshiftService = scope.ServiceProvider.GetService<IPushshiftService>();
+                // in order to use a scoped service in a background service you must create it's own scope
+                using var scope = _serviceProvider.CreateScope();
+                var pushshiftService = scope.ServiceProvider.GetService<IPushshiftService>();
 
-            if (pushshiftService != null) await pushshiftService.GetLinksFromCommentsAsync();
+                if (pushshiftService != null) await pushshiftService.GetLinksFromCommentsAsync();
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError($"Pushshift API unavailable {ex.StatusCode}");
+                await StopAsync(CancellationToken.None);
+            }
         }
 
         public override async Task StopAsync(CancellationToken stoppingToken)

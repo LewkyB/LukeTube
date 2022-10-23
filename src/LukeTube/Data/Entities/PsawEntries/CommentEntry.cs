@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace LukeTube.Data.Entities.PsawEntries
 {
-    public class CommentEntry
+    public class CommentEntry : IEntry
     {
 
         [JsonProperty("approved_at_utc")]

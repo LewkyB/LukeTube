@@ -16,6 +16,7 @@
     <Content Include="datasource.yml" />
     <Content Include="grafana.ini" />
     <Content Include="jaeger-ui.json" />
+    <Content Include="loki-config.yaml" />
     <Content Include="otel-collector-config.yml" />
     <Content Include="prometheus.yml" />
   </ItemGroup>

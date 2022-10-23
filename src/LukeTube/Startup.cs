@@ -15,10 +15,14 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using LukeTube.Services.PollyPolicies;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using OpenTelemetry.Exporter;
+using OpenTelemetry.Extensions.Docker.Resources;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using StackExchange.Redis;
 
 namespace LukeTube
 {
@@ -49,7 +53,6 @@ namespace LukeTube
 
             services.AddHostedService<PushshiftBackgroundService>();
 
-            //services.AddControllersWithViews();
             services.AddControllers();
 
             services.AddStackExchangeRedisCache(options =>
@@ -108,48 +111,78 @@ namespace LukeTube
                     });
             });
 
-            const string serviceName = "LukeTube.Backend";
-            const string serviceVersion = "1.0.0";
+            // AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             services.AddOpenTelemetryTracing(tracerProviderBuilder =>
             {
                 tracerProviderBuilder
-                    .AddConsoleExporter()
-                    .AddOtlpExporter(o =>
-                    {
-                        o.Endpoint = new Uri("http://0.0.0.0:4317");
-                        o.Protocol = OtlpExportProtocol.Grpc;
-                    })
-                    .AddJaegerExporter(o =>
-                    {
-                        // o.Endpoint = new Uri("http://0.0.0.0:14268");
-                        o.AgentHost = "jaeger";
-                        o.AgentPort = 6831;
-                    })
-                    .AddSource(serviceName)
+                    .AddSource(Telemetry.ServiceName)
                     .SetResourceBuilder(
                         ResourceBuilder.CreateDefault()
-                            .AddService(serviceName: serviceName, serviceVersion: serviceVersion))
-                    .AddHttpClientInstrumentation()
-                    .AddAspNetCoreInstrumentation()
-                    .AddRedisInstrumentation();
+                            .AddService(serviceName: Telemetry.ServiceName, serviceVersion: Telemetry.ServiceVersion)
+                        // .AddTelemetrySdk()
+                        // .AddDetector(new DockerResourceDetector())
+                    )
+                    .AddHttpClientInstrumentation(o =>
+                    {
+                    })
+                    .AddAspNetCoreInstrumentation(o =>
+                    {
+                        o.Filter = (httpContext) => !httpContext.Request.Path.ToString().Contains("/_");
+                        o.Enrich = (activity, eventName, rawObject) =>
+                        {
+                            if (eventName.Equals("OnStartActivity"))
+                            {
+                                if (rawObject is HttpRequest httpRequest)
+                                {
+                                    activity.SetStartTime(DateTime.Now);
+                                    activity.SetTag("http.method", httpRequest.Method);
+                                    activity.SetTag("http.url", httpRequest.Path);
+                                }
+                            }
+                            else if (eventName.Equals("OnStopActivity"))
+                            {
+                                if (rawObject is HttpResponse httpResponse)
+                                {
+                                    activity.SetEndTime(DateTime.Now);
+                                    activity.SetTag("responseLength", httpResponse.ContentLength);
+                                }
+                            }
+                        };
+                    })
+                    .AddRedisInstrumentation()
+                    // .AddRedisInstrumentation(ConnectionMultiplexer.Connect("localhost"), options =>
+                    // {
+                    //     options.FlushInterval = TimeSpan.FromSeconds(5);
+                    // })
+                    // Ensures that all activities are recorded and sent to exporter
+                    // .SetSampler(new AlwaysOnSampler())
+                    .AddEntityFrameworkCoreInstrumentation(o =>
+                    {
+                        o.SetDbStatementForText = true;
+                        o.SetDbStatementForStoredProcedure = true;
+                    })
+                    .AddOtlpExporter(o =>
+                    {
+                        o.Endpoint = new Uri("http://localhost:4317");
+                        o.Protocol = OtlpExportProtocol.Grpc;
+                    });
             });
 
             services.AddOpenTelemetryMetrics(builder =>
             {
-                builder.AddPrometheusExporter(options =>
-                {
-                    options.StartHttpListener = true;
-                    // Use your endpoint and port here
-                    //options.HttpListenerPrefixes = new [] { "prometheus" };
-                    options.HttpListenerPrefixes = new [] { $"http://localhost:{9090}/" };
-                    options.ScrapeResponseCacheDurationMilliseconds = 0;
-                });
+                builder
+                    .AddHttpClientInstrumentation()
+                    .AddAspNetCoreInstrumentation()
+                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(Telemetry.ServiceName, Telemetry.ServiceVersion).AddTelemetrySdk())
+                    .AddOtlpExporter(o =>
+                    {
+                        o.Endpoint = new Uri("http://otel_collector:4317");
+                        o.Protocol = OtlpExportProtocol.Grpc;
+                    });
             });
-
+            services.AddSingleton(TracerProvider.Default.GetTracer(Telemetry.ServiceName));
 
             services.AddDatabaseDeveloperPageExceptionFilter();
-
-            //services.AddRazorPages();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
@@ -198,8 +231,6 @@ namespace LukeTube
             app.UseResponseCaching();
 
             app.UseAuthorization();
-            app.UseOpenTelemetryPrometheusScrapingEndpoint();
-
 
             app.UseEndpoints(endpoints =>
             {

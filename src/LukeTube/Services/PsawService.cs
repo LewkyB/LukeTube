@@ -22,7 +22,7 @@ namespace LukeTube.Services
     {
         Task<MetaEntry> GetMeta();
         Task<string[]> GetSubmissionCommentIds(string base36SubmissionId);
-        Task<T[]> Search<T>(SearchOptions options = null);
+        Task<T[]> Search<T>(SearchOptions options = null) where T : IEntry;
     }
 
     public class PsawService : IPsawService
@@ -36,7 +36,7 @@ namespace LukeTube.Services
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<T[]> Search<T>(SearchOptions options = null)
+        public async Task<T[]> Search<T>(SearchOptions options = null) where T : IEntry
         {
             var type = typeof(T).Name.Replace("Entry", "").ToLower();
             var route = string.Format(RequestsConstants.BaseAddress + RequestsConstants.SearchRoute, type);

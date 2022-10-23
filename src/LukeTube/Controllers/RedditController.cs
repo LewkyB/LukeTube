@@ -1,8 +1,10 @@
 ﻿using LukeTube.Data.Entities;
 using LukeTube.Services;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using OpenTelemetry.Trace;
 
 namespace LukeTube.Controllers
 {
@@ -48,6 +50,24 @@ namespace LukeTube.Controllers
         [Route("subreddit-names")]
         public async Task<IReadOnlyList<string>> GetSubredditNames()
         {
+            using (var activity = Telemetry.MyActivitySource.StartActivity($"{nameof(GetSubredditNames)}", ActivityKind.Server))
+            {
+                activity?.SetTag("test", "test");
+                activity?.SetTag("test", "test");
+                activity?.SetTag("test", "test");
+                activity?.SetStatus(ActivityStatusCode.Ok);
+            }
+            Activity.Current?.AddTag("test", "test");
+
+            var tracer = TracerProvider.Default.GetTracer(Telemetry.ServiceName);
+
+            using var parentSpan = tracer.StartActiveSpan("Hi");
+            parentSpan.SetAttribute("act test", "act test");
+            // parentSpan.
+            var act = Activity.Current;
+            act?.SetTag("act test", "act test");
+            act?.AddEvent(new("act event"));
+
             return await _subredditService.GetAllSubredditNames();
         }
     }
