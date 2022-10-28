@@ -10,9 +10,9 @@ namespace LukeTube.Services
     {
         Task<IReadOnlyList<string>> GetAllSubredditNames();
         Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
-        int GetSubredditLinkCount(string subredditName);
-        int GetTotalRedditComments();
-        IReadOnlyList<string> GetYoutubeLinkIdsBySubreddit(string subredditName);
+        Task<int> GetSubredditLinkCount(string subredditName);
+        Task<int> GetTotalRedditComments();
+        Task<IReadOnlyList<string>> GetYoutubeLinkIdsBySubreddit(string subredditName);
         Task<IReadOnlyList<RedditComment>> GetCommentsBySubreddit(string subreddit);
     }
 
@@ -25,9 +25,7 @@ namespace LukeTube.Services
         public SubredditService(ILogger<SubredditService> logger, ISubredditRepository dataRepository)
         {
             _subredditRepository = dataRepository;
-
             _logger = logger;
-            _logger.LogDebug(1, "NLog injected into ChatroomService");
         }
 
         public async Task<IReadOnlyList<string>> GetAllSubredditNames()
@@ -45,17 +43,17 @@ namespace LukeTube.Services
             return await _subredditRepository.GetCommentsBySubreddit(subreddit);
         }
 
-        public IReadOnlyList<string> GetYoutubeLinkIdsBySubreddit(string subredditName)
+        public async Task<IReadOnlyList<string>> GetYoutubeLinkIdsBySubreddit(string subredditName)
         {
-            return _subredditRepository.GetYoutubeIdsBySubreddit(subredditName);
+            return await _subredditRepository.GetYoutubeIdsBySubreddit(subredditName);
         }
 
-        public int GetSubredditLinkCount(string subredditName)
+        public Task<int> GetSubredditLinkCount(string subredditName)
         {
             return _subredditRepository.GetSubredditLinkCount(subredditName);
         }
 
-        public int GetTotalRedditComments()
+        public Task<int> GetTotalRedditComments()
             => _subredditRepository.GetTotalRedditComments();
     }
 }

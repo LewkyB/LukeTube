@@ -34,7 +34,7 @@ namespace LukeTube.Controllers
         /// <returns>JSON list of either all chatnames or chatlinks to associated chatname</returns>
         [HttpGet]
         [Route("subreddit/link-ids/{subredditName}")]
-        public IReadOnlyList<string> GetYoutubeLinkIdsBySubreddit(string subredditName)
+        public Task<IReadOnlyList<string>> GetYoutubeLinkIdsBySubreddit(string subredditName)
         {
             return _subredditService.GetYoutubeLinkIdsBySubreddit(subredditName);
         }

@@ -4,11 +4,11 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using LukeTube.Data.Entities.PsawEntries;
 using LukeTube.Data.Entities.PsawEntries.PsawSearchOptions;
 using StackExchange.Profiling.Internal;
 
@@ -18,15 +18,15 @@ namespace LukeTube.Services
     {
         string FindYoutubeId(string commentBody);
         Task GetLinksFromCommentsAsync();
-        List<string> GetSubreddits();
+        Task<IReadOnlyList<string>> GetSubreddits();
         Task GetUniqueRedditComments(List<string> subreddit, int daysToGet, int numEntriesPerDay);
     }
     public class PushshiftService : IPushshiftService
     {
         private readonly ILogger<PushshiftService> _logger;
         private readonly IDistributedCache _cache;
-        private readonly IPsawService _psawService;
         private readonly ISubredditRepository _subredditRepository;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         private const string _youtubeLinkIdRegexPattern = @"http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\]*)(&(amp;)?[\w\?‌​=]*)?";
         private static readonly Regex _youtubeLinkIdRegex = new(
@@ -34,12 +34,16 @@ namespace LukeTube.Services
             RegexOptions.Compiled | RegexOptions.IgnoreCase,
             TimeSpan.FromSeconds(30));
 
-        public PushshiftService(ILogger<PushshiftService> logger, IDistributedCache distributedCache, IPsawService psawService, ISubredditRepository subredditRepository)
+        public PushshiftService(
+            ILogger<PushshiftService> logger,
+            IDistributedCache distributedCache,
+            ISubredditRepository subredditRepository,
+            IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
             _cache = distributedCache;
-            _psawService = psawService;
             _subredditRepository = subredditRepository;
+            _httpClientFactory = httpClientFactory;
         }
 
         // TODO: provide a better list of subreddits
@@ -163,15 +167,15 @@ namespace LukeTube.Services
             //    "youtube",
             //};
 
-        public List<string> GetSubreddits()
+        public async Task<IReadOnlyList<string>> GetSubreddits()
         {
             var validSubreddits = new List<string>();
 
             // only return subreddits that have any content
             foreach (var subreddit in _subreddits)
             {
-                if (_subredditRepository.GetSubredditLinkCount(subreddit) > 0)
-                    validSubreddits.Add(subreddit);
+                var linkCount = await _subredditRepository.GetSubredditLinkCount(subreddit);
+                if (linkCount > 0) validSubreddits.Add(subreddit);
             }
 
             // return list in alphabetical order
@@ -181,26 +185,23 @@ namespace LukeTube.Services
         public async Task GetLinksFromCommentsAsync()
             => await GetUniqueRedditComments(_subreddits, daysToGet: 365, numEntriesPerDay: 100);
 
-        public async Task GetUniqueRedditComments(List<string> subreddit, int daysToGet, int numEntriesPerDay)
+        public async Task GetUniqueRedditComments(List<string> subreddits, int daysToGet, int numEntriesPerDay)
         {
-            using var activity = Telemetry.MyActivitySource.StartActivity("tester");
-            activity?.SetTag("test", "test");
-
-            if (subreddit is null) throw new NullReferenceException(nameof(subreddit));
+            if (subreddits is null) throw new NullReferenceException(nameof(subreddits));
 
             var redditComments = new List<RedditComment>();
 
-            var subredditCsv = string.Join(",", subreddit);
+            var subredditCsv = string.Join(",", subreddits);
 
             // going by hour gets more detailed results
             var daysToGetInHours = daysToGet * 24;
             for (var i = 0; i < daysToGetInHours; i++)
             {
                 string before = daysToGetInHours - i + "h";
-                string after = (daysToGetInHours + 1 - i).ToString() + "h";
+                string after = (daysToGetInHours + 1 - i) + "h";
 
-                var rawComments = await _psawService.Search<CommentEntry>(new SearchOptions
-                {
+                // var rawComments = await _psawService.Search<CommentEntry>(new SearchOptions
+                var rawComments = await GetData(new() {
                     Subreddit = subredditCsv,
                     Query = "www.youtube.com/watch", // TODO: seperate out the query for the other link and score
                     Before = before,
@@ -208,9 +209,9 @@ namespace LukeTube.Services
                     Size = numEntriesPerDay
                 });
 
-                _logger.LogInformation($"{i} out of {daysToGetInHours}\tFetched {rawComments.Count()}\tBefore:{daysToGetInHours - i} After:{(daysToGetInHours + 1) - i}");
+                _logger.LogInformation($"{i} out of {daysToGetInHours}\tFetched {rawComments.Data.Count()}\tBefore:{daysToGetInHours - i} After:{(daysToGetInHours + 1) - i}");
 
-                foreach (var comment in rawComments)
+                foreach (var comment in rawComments.Data.Distinct())
                 {
                     // check to make sure comment body has a valid YoutubeLinkId
                     var youtubeId = FindYoutubeId(comment.Body);
@@ -218,8 +219,7 @@ namespace LukeTube.Services
                     // if not valid YoutubeLinkId then do not continue
                     if (string.IsNullOrEmpty(youtubeId)) break;
 
-                    var redditComment = new RedditComment
-                    {
+                    var redditComment = new RedditComment {
                         Subreddit = comment.Subreddit,
                         YoutubeLinkId = youtubeId,
                         CreatedUTC = comment.CreatedUtc,
@@ -231,16 +231,17 @@ namespace LukeTube.Services
                     redditComments.Add(redditComment);
                 }
 
-                _subredditRepository.SaveUniqueComments(redditComments.Distinct().ToList());
-
-                // clear the list to avoid keeping too much in memory
-                redditComments.Clear();
+                await _subredditRepository.SaveUniqueComments(redditComments);
             }
         }
 
+        public async Task<PushshiftCommentResponseModel> GetData(SearchOptions searchOptions)
+        {
+            var httpClient = _httpClientFactory.CreateClient("PushshiftServiceCommentClient");
+            return await httpClient .GetFromJsonAsync<PushshiftCommentResponseModel>($"?{ArgsToString(searchOptions.ToArgs())}");
+        }
 
         // should this return multiples? do i need to change youtube linkid to be an array
-        // TODO: worried about performance on the regex here?
         public string FindYoutubeId(string commentBody)
         {
             if (string.IsNullOrEmpty(commentBody)) return string.Empty;
@@ -250,7 +251,11 @@ namespace LukeTube.Services
             // TODO: what happens when there is multiple youtube links in a body? is there something to do with that
             foreach (Match match in linkMatches)
             {
-                if (match is null || match.Equals("")) return string.Empty;
+                if (match is null || match.Value.Equals(""))
+                {
+                    _logger.LogInformation($"Match is null or empty: {match} {match?.Value}");
+                    return string.Empty;
+                }
 
                 GroupCollection groups = match.Groups;
 
@@ -267,5 +272,18 @@ namespace LukeTube.Services
 
             return string.Empty;
         }
+
+        private static string ConstructUrl(string route, IReadOnlyCollection<string> args)
+            => args == null ? route : $"{route}?{ArgsToString(args)}";
+
+        private static string ArgsToString(IEnumerable<string> args)
+            => args.Aggregate((x, y) => $"{x}&{y}");
+    }
+
+    public static class RequestsConstants
+    {
+        public const string BaseAddress = "https://api.pushshift.io/";
+        public const string SearchRoute = "reddit/{0}/search";
+        public const string CommentIdsRoute = "reddit/submission/comment_ids/{0}";
     }
 }

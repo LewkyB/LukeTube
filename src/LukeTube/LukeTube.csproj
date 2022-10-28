@@ -57,4 +57,8 @@
     <None Remove="..\.dockerignore" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\client\favicon.ico" />
+  </ItemGroup>
+
 </Project>

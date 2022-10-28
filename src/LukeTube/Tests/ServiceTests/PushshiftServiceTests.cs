@@ -58,8 +58,8 @@ namespace LukeTube.Tests.ServiceTests
             _pushshiftService = new PushshiftService(
                 _loggerMock.Object,
                 _cacheMock.Object,
-                _psawService,
-                _subredditRepository);
+                _subredditRepository,
+                _httpClientFactory);
         }
 
         [Fact]

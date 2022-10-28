@@ -3,20 +3,24 @@ using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
+using LukeTube.Data.Entities;
 using LukeTube.Data.Entities.PsawEntries;
 using LukeTube.Data.Entities.PsawEntries.PsawSearchOptions;
+using Newtonsoft.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace LukeTube.Services
 {
     // TODO: get rid of this
-    public static class RequestsConstants
-    {
-        public const string BaseAddress = "https://api.pushshift.io/";
-        public const string SearchRoute = "reddit/{0}/search";
-        public const string CommentIdsRoute = "reddit/submission/comment_ids/{0}";
-        public const int MaxRequestsPerMinute = 60;
-    }
+    // public static class RequestsConstants
+    // {
+    //     public const string BaseAddress = "https://api.pushshift.io/";
+    //     public const string SearchRoute = "reddit/{0}/search";
+    //     public const string CommentIdsRoute = "reddit/submission/comment_ids/{0}";
+    //     public const int MaxRequestsPerMinute = 60;
+    // }
 
     public interface IPsawService
     {
@@ -78,6 +82,13 @@ namespace LukeTube.Services
 
             // Convert response to json
             var result = await response.Content.ReadAsStringAsync();
+            // var stream = await response.Content.ReadAsStreamAsync();
+            var x = JsonSerializer.Deserialize<PushshiftCommentResponseModel>(result);
+                // response.Content.ReadAsStream(),
+                // new JsonSerializerOptions
+                // {
+                //     PropertyNameCaseInsensitive = true,
+                // });
             return JToken.Parse(result);
         }
 

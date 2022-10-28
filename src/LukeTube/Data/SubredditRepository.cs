@@ -12,10 +12,10 @@ namespace LukeTube.Data
     {
         Task<IReadOnlyList<string>> GetAllSubredditNames();
         Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
-        int GetSubredditLinkCount(string subredditName);
-        int GetTotalRedditComments();
-        IReadOnlyList<string> GetYoutubeIdsBySubreddit(string subredditName);
-        void SaveUniqueComments(List<RedditComment> redditComments);
+        Task<int> GetSubredditLinkCount(string subredditName);
+        Task<int> GetTotalRedditComments();
+        Task<IReadOnlyList<string>> GetYoutubeIdsBySubreddit(string subredditName);
+        Task SaveUniqueComments(IReadOnlyList<RedditComment> redditComments);
         Task<IReadOnlyList<RedditComment>> GetCommentsBySubreddit(string subredditName);
     }
 
@@ -47,12 +47,12 @@ namespace LukeTube.Data
         }
 
         // TODO: adding sorting logic here or in service layer
-        public IReadOnlyList<string> GetYoutubeIdsBySubreddit(string subredditName)
+        public async Task<IReadOnlyList<string>> GetYoutubeIdsBySubreddit(string subredditName)
         {
-            return _subredditContext.RedditComments
+            return await _subredditContext.RedditComments
                 .Where(comment => comment.Subreddit == subredditName)
                 .Select(comment => comment.YoutubeLinkId)
-                .ToList();
+                .ToListAsync();
         }
 
         public async Task<IReadOnlyList<RedditComment>> GetCommentsBySubreddit(string subredditName)
@@ -62,33 +62,36 @@ namespace LukeTube.Data
                 .ToListAsync();
         }
 
-        public int GetSubredditLinkCount(string subredditName)
+        public Task<int> GetSubredditLinkCount(string subredditName)
         {
             return _subredditContext.RedditComments
                 .Where(comment => comment.Subreddit == subredditName)
                 .Select(comment => comment)
-                .Count();
+                .CountAsync();
         }
 
         // TODO: get async database calls to work w/o concurrency issues
         // makes sure that there isn't a duplicate entry that has the same
         // Subreddit and YoutubeLinkId combination in the database before
         // inserting a new record
-        public void SaveUniqueComments(List<RedditComment> redditComments)
+        public async Task SaveUniqueComments(IReadOnlyList<RedditComment> redditComments)
         {
             foreach (var comment in redditComments)
             {
-                if (!_subredditContext.RedditComments.Any(c => c.Subreddit == comment.Subreddit && c.YoutubeLinkId == comment.YoutubeLinkId))
+                var exists = await _subredditContext.RedditComments
+                    .AnyAsync(c => c.Subreddit == comment.Subreddit && c.YoutubeLinkId == comment.YoutubeLinkId);
+
+                if (!exists)
                 {
-                    _subredditContext.RedditComments.Add(comment);
-                    _subredditContext.SaveChanges();
+                    await _subredditContext.RedditComments.AddAsync(comment);
+                    await _subredditContext.SaveChangesAsync();
                 }
             }
         }
 
-        public int GetTotalRedditComments()
+        public Task<int> GetTotalRedditComments()
         {
-            return _subredditContext.RedditComments.Count();
+            return _subredditContext.RedditComments.CountAsync();
         }
     }
 }

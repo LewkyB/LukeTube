@@ -28,7 +28,8 @@ namespace LukeTube
 {
     public class Startup
     {
-        private string AllowSpecificOrigins = "_allowSpecificOrigins";
+        private const string AllowSpecificOrigins = "_allowSpecificOrigins";
+        private const string PushshiftBaseAddress = "https://api.pushshift.io/";
 
         public Startup(IConfiguration configuration)
         {
@@ -40,7 +41,10 @@ namespace LukeTube
         public void ConfigureServices(IServiceCollection services)
         {
             // rate limited to 60 requests per 60 seconds
-            services.AddHttpClient("PushshiftClient")
+            services.AddHttpClient<IPushshiftService, PushshiftService>("PushshiftServiceCommentClient", client =>
+                {
+                    client.BaseAddress = new Uri("https://api.pushshift.io/reddit/comment/search");
+                })
                 .SetHandlerLifetime(TimeSpan.FromMinutes(2))
                 .AddPolicyHandler(PushshiftPolicies.GetWaitAndRetryPolicy())
                 .AddPolicyHandler(PushshiftPolicies.GetRateLimitPolicy());
