@@ -1,0 +1,188 @@
+version: '3.9'
+
+# to install the docker plugin for loki logging
+# $ docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
+
+services:
+  LukeTubeBackend:
+    image: ${DOCKER_REGISTRY-}luketube
+    build:
+      context: ./LukeTube/
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - redis
+#    restart: always
+    restart: "no"
+    expose:
+      - "82"
+    env_file:
+      - ./.env
+    ports:
+      - 82:82
+    networks:
+      - otlp
+#    logging:
+#      driver: loki
+#      options:
+#        loki-url: 'http://localhost:3100/loki/api/v1/push'
+
+  angular:
+    restart: always
+    build:
+      context: ./LukeTube/client
+      dockerfile: Dockerfile
+    depends_on:
+      - LukeTubeBackend
+    #volumes:
+      #- ./.nginx/html/:/usr/src/app/dist/*  # store built files here so nginx-proxy can grab them
+    #expose:
+    #  - "8080"
+    ports:
+      - 81:80
+    networks:
+      - otlp
+    #environment:
+    #  WEB_PORTS: "81"
+    #  VIRTUAL_HOST: "luketube.local"
+    #  VIRTUAL_PORT: 81
+    #env_file:
+    #  - ./.env.angular
+#    logging:
+#      driver: loki
+#      options:
+#        loki-url: 'http://localhost:3100/loki/api/v1/push'
+
+  db:
+    image: postgres:14.1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: SubredditDb
+    restart: always
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      - otlp
+    ports:
+      - 6379:6379
+#    logging:
+#      driver: loki
+#      options:
+#        loki-url: 'http://localhost:3100/loki/api/v1/push'
+
+  redis:
+    image: redis:6.2.6
+    restart: always
+    networks:
+      - otlp
+#    logging:
+#      driver: loki
+#      options:
+#        loki-url: 'http://localhost:3100/loki/api/v1/push'
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    volumes:
+      - "./jaeger-ui.json:/etc/jaeger/jaeger-ui.json"
+    command: --query.ui-config /etc/jaeger/jaeger-ui.json
+    environment:
+      - METRICS_STORAGE_TYPE=prometheus
+      - PROMETHEUS_SERVER_URL=http://prometheus:9090
+#      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+#      - "14250:14250"
+      - "14250"
+      - "14268:14268"
+      - "6831:6831/udp"
+      - "16686:16686"
+      - "16685:16685"
+    networks:
+      - otlp
+#    logging:
+#      driver: loki
+#      options:
+#        loki-url: 'http://localhost:3100/loki/api/v1/push'
+#    depends_on:
+#      - LukeTubeBackend
+
+  otel_collector:
+    image: otel/opentelemetry-collector-contrib:latest
+#    image: otel/opentelemetry-collector-contrib:0.58.0-amd64
+    volumes:
+      - "./otel-collector-config.yml:/etc/otelcol/otel-collector-config.yml"
+    command: --config /etc/otelcol/otel-collector-config.yml
+    ports:
+      - "1888:1888" # pprof extention
+      - "8888:8888" # prometheus metrics exposed by collector
+      - "8889:8889" # prometheus exporter metrics
+      - "13133:13133" # health check extensioh
+      - "4317:4317" # otlp grpc receiver
+      - "4318:4318" # otlp http receiver
+      - "55679:55679" # zpages extension
+    depends_on:
+      - jaeger
+      - prometheus
+#      - loki
+    networks:
+      - otlp
+#    logging:
+#      driver: loki
+#      options:
+#        loki-url: 'http://localhost:3100/loki/api/v1/push'
+
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+    networks:
+      - otlp
+#    logging:
+#      driver: loki
+#      options:
+#        loki-url: 'http://localhost:3100/loki/api/v1/push'
+
+#  loki:
+#    image: grafana/loki:latest
+#    container_name: loki
+#    ports:
+#      - 3100:3100
+#    volumes:
+#      - ./loki-config.yaml:/etc/loki/loki-config.yaml
+#    command: -config.file=/etc/loki/loki-config.yaml
+#    networks:
+#      - otlp
+#    logging:
+#      driver: loki
+#      options:
+#        loki-url: 'http://localhost:3100/loki/api/v1/push'
+
+#  grafana:
+#    image: grafana/grafana:latest
+#    volumes:
+#      - ./grafana.ini:/etc/grafana/grafana.ini
+#      - ./datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+#    environment:
+##      GF_DATASOURCES_LOKI_URL: http://loki:3100
+#      - GF_AUTH_ANONYMOUS_ENABLED=true
+#      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+#      - GF_AUTH_DISABLE_LOGIN_FORM=true
+#    ports:
+#      - 3000:3000
+#    networks:
+#      - otlp
+#    logging:
+#      driver: loki
+#      options:
+#        loki-url: 'http://localhost:3100/loki/api/v1/push'
+#
+#  zipkin:
+#    image: openzipkin/zipkin
+#    ports:
+#      - 9411:9411
+
+networks:
+  otlp:

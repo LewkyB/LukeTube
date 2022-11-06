@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" Sdk="Microsoft.Docker.Sdk">
+  <PropertyGroup Label="Globals">
+    <ProjectVersion>2.1</ProjectVersion>
+    <DockerTargetOS>Linux</DockerTargetOS>
+    <ProjectGuid>9c0deaa3-4aea-4981-92a2-0e5f0b057f63</ProjectGuid>
+    <DockerLaunchAction>None</DockerLaunchAction>
+    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}</DockerServiceUrl>
+    <DockerServiceName>LukeTube</DockerServiceName>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="docker-compose-telemetry-minimal.yml" />
+    <None Include="docker-compose-telemetry.yml" />
+    <None Include="docker-compose-without-frontend.yml" />
+    <None Include="docker-compose.yml" />
+    <None Include=".env" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="datasource.yml" />
+    <Content Include="grafana.ini" />
+    <Content Include="jaeger-ui.json" />
+    <Content Include="loki-config.yaml" />
+    <Content Include="otel-collector-config.yml" />
+    <Content Include="prometheus.yml" />
+  </ItemGroup>
+</Project>

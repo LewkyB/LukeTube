@@ -1,0 +1,70 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+  jaeger:
+    endpoint: "jaeger:14250"
+    tls:
+      insecure: true
+  logging:
+    loglevel: debug
+  loki:
+    endpoint: "http://loki:3100/loki/api/v1/push"
+    tls:
+      insecure: true
+#    labels:
+#      resource:
+#        service.name: "service.name"
+#    labels:
+#      attributes:
+#        log.file.name: "filename"
+#      container_id: "",
+#      container_name: ""
+
+processors:
+  batch:
+  spanmetrics:
+    metrics_exporter: prometheus
+  attributes:
+    actions:
+      - action: insert
+        key: service.name
+        value: service.name
+#  resource:
+#    attributes:
+#      - action: insert
+#        key: loki.resource.labels
+#        value: pod.name
+
+extensions:
+  health_check:
+  pprof:
+    endpoint: :1888
+  zpages:
+    endpoint: :55679
+
+service:
+  extensions: [health_check,pprof,zpages]
+#  telemetry:
+#    logs:
+#      level: "debug"
+#    metrics:
+#      address: ":8888"
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [spanmetrics,batch]
+      exporters: [jaeger]
+    metrics/spanmetrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch,attributes]
+      exporters: [logging,loki]
