@@ -61,7 +61,6 @@ builder.Services.AddCors(options =>
         });
 });
 
-using var redisConnection = await ConnectionMultiplexer.ConnectAsync("db");
 builder.Services.AddOpenTelemetryTracing(tracerProviderBuilder =>
 {
     tracerProviderBuilder
