@@ -4,13 +4,12 @@ using Polly.RateLimit;
 
 namespace LukeTube.PollyPolicies
 {
-    public class PushshiftPolicies
+    public static class PushshiftPolicies
     {
         public static IAsyncPolicy<HttpResponseMessage> GetRateLimitPolicy()
         {
-            // set rate limit policy
             return Policy
-                .RateLimitAsync<HttpResponseMessage>(numberOfExecutions: 60, TimeSpan.FromSeconds(60));
+                .RateLimitAsync<HttpResponseMessage>(numberOfExecutions: 120, TimeSpan.FromSeconds(60));
         }
         public static IAsyncPolicy<HttpResponseMessage> GetWaitAndRetryPolicy()
         {

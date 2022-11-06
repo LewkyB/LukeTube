@@ -18,16 +18,19 @@ namespace LukeTube.Services
     public sealed class PushshiftService : IPushshiftService
     {
         private readonly IPushshiftRepository _pushshiftRepository;
-        private readonly ILogger<PushshiftService> _logger;
         private readonly IDistributedCache _distributedCache;
+        private readonly IConfiguration _configuration;
 
         private static string? CachingEnabled => Environment.GetEnvironmentVariable("ENABLE_CACHING");
         
-        public PushshiftService(ILogger<PushshiftService> logger, IPushshiftRepository pushshiftRepository, IDistributedCache distributedCache)
+        public PushshiftService(
+            IPushshiftRepository pushshiftRepository, 
+            IDistributedCache distributedCache,
+            IConfiguration configuration)
         {
             _pushshiftRepository = pushshiftRepository;
             _distributedCache = distributedCache;
-            _logger = logger;
+            _configuration = configuration;
         }
 
         public async Task<IReadOnlyList<string>> GetAllSubredditNames()

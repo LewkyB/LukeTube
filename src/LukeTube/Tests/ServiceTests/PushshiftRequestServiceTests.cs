@@ -9,8 +9,8 @@ namespace LukeTube.Tests.ServiceTests
 {
     public class PushshiftRequestServiceTests
     {
-        private readonly Mock<ILogger<PushshiftRequestService>> _loggerMock = new Mock<ILogger<PushshiftRequestService>>();
-        private readonly Mock<PushshiftRepository> _subredditRepositoryMock = new Mock<PushshiftRepository>();
+        private readonly Mock<ILogger<PushshiftRequestService>> _loggerMock = new();
+        private readonly Mock<IPushshiftRepository> _pushshiftRepositoryMock = new();
         private readonly PushshiftRequestService _pushshiftRequestService;
 
         public PushshiftRequestServiceTests()
@@ -24,11 +24,11 @@ namespace LukeTube.Tests.ServiceTests
                 .AddPolicyHandler(PushshiftPolicies.GetWaitAndRetryPolicy())
                 .AddPolicyHandler(PushshiftPolicies.GetRateLimitPolicy());
 
-            IHttpClientFactory httpClientFactory = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
+            var httpClientFactory = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
 
             _pushshiftRequestService = new PushshiftRequestService(
                 _loggerMock.Object,
-                _subredditRepositoryMock.Object,
+                _pushshiftRepositoryMock.Object,
                 httpClientFactory);
         }
 
@@ -36,11 +36,11 @@ namespace LukeTube.Tests.ServiceTests
         public void FindYoutubeIdTest_ShouldReturnCorrectSizeId()
         {
             const string youtubeLink = @"https://www.youtube.com/watch?v=fe4Yf-0Wm4U";
-            int expectedLength = 11;
+            const int expectedLength = 11;
 
             var result = _pushshiftRequestService.FindYoutubeId(youtubeLink);
 
-            Assert.Equal(result.Length, expectedLength);
+            Assert.Equal(expectedLength, result.Length);
         }
 
         [Fact]

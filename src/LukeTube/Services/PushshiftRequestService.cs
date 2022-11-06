@@ -1,7 +1,6 @@
 ﻿using LukeTube.Data;
 using System.Text.RegularExpressions;
 using LukeTube.Models.Pushshift;
-using StackExchange.Profiling.Internal;
 
 namespace LukeTube.Services
 {
@@ -34,7 +33,7 @@ namespace LukeTube.Services
 
         // TODO: provide a better list of subreddits
         // avoid magic strings
-        public static readonly List<string> Subreddits = new()
+        private static readonly List<string> Subreddits = new()
         {
             "space",
             "science",
@@ -178,8 +177,8 @@ namespace LukeTube.Services
             var daysToGetInHours = daysToGet * 24;
             for (var i = 0; i < daysToGetInHours; i++)
             {
-                string before = daysToGetInHours - i + "h";
-                string after = (daysToGetInHours + 1 - i) + "h";
+                var before = daysToGetInHours - i + "h";
+                var after = daysToGetInHours + 1 - i + "h";
 
                 var rawComments = await GetPushshiftQueryResults<CommentResponse>("comment", new SearchOptions
                 {
@@ -190,7 +189,7 @@ namespace LukeTube.Services
                     Size = numEntriesPerDay
                 });
 
-                _logger.LogTrace($"{i} out of {daysToGetInHours}\tFetched {rawComments.Data.Count()}\tBefore:{daysToGetInHours - i} After:{(daysToGetInHours + 1) - i}");
+                _logger.LogTrace($"{i} out of {daysToGetInHours}\tFetched {rawComments.Data.Count}\tBefore:{daysToGetInHours - i} After:{(daysToGetInHours + 1) - i}");
 
                 foreach (var comment in rawComments.Data.Distinct())
                 {
@@ -218,7 +217,7 @@ namespace LukeTube.Services
 
         internal async Task<T> GetPushshiftQueryResults<T>(string requestType, SearchOptions? searchOptions = null) where T : new()
         {
-            string pushshiftUrl = requestType switch
+            var pushshiftUrl = requestType switch
             {
                 "comment" => $"reddit/comment/search?{ArgsToString(searchOptions.ToArgs())}",
                 "submission" => $"reddit/submission/search?{ArgsToString(searchOptions.ToArgs())}",
@@ -259,17 +258,17 @@ namespace LukeTube.Services
                     return string.Empty;
                 }
 
-                GroupCollection groups = match.Groups;
+                var groups = match.Groups;
 
                 if (groups.Count > 2)
                 {
-                    _logger.LogInformation("Caught more than one youtube id {}", groups.ToJson());
+                    _logger.LogInformation($"Caught more than one youtube id {string.Join(",", groups.Values)}");
                 }
 
                 if (match.Groups[1].Length < 11) return string.Empty;
 
                 // trim down id, it should be a maximum of 11 characters
-                return (groups[1].Length > 11) ? groups[1].Value.Remove(11) : groups[1].Value;
+                return groups[1].Length > 11 ? groups[1].Value.Remove(11) : groups[1].Value;
             }
 
             return string.Empty;

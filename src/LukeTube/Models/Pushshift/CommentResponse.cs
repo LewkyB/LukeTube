@@ -108,24 +108,21 @@ namespace LukeTube.Models.Pushshift
 
     public class EpochDateTimeJsonConverter : JsonConverter<DateTime>
     {
-        private static readonly DateTime _epoc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly DateTime Epoc = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            if (reader.TokenType == JsonTokenType.Number)
-            {
-                var utcValue = reader.GetInt64();
-                var convertedDate = _epoc.AddSeconds(utcValue);
-                return convertedDate;
-            }
+            if (reader.TokenType != JsonTokenType.Number) throw new JsonException();
 
-            throw new JsonException();
+            var utcValue = reader.GetInt64();
+            var convertedDate = Epoc.AddSeconds(utcValue);
+            return convertedDate;
         }
 
         // TODO: should this be seconds or milliseconds, figure out how to test
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
         {
-            var epocMilliseconds = (long)Math.Round((value - _epoc).TotalSeconds, 0);
+            var epocMilliseconds = (long)Math.Round((value - Epoc).TotalSeconds, 0);
             writer.WriteNumberValue(epocMilliseconds);
         }
     }

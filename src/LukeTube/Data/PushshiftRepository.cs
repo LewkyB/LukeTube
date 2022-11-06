@@ -16,14 +16,10 @@ namespace LukeTube.Data
 
     public sealed class PushshiftRepository : IPushshiftRepository
     {
-        private readonly ILogger<PushshiftRepository> _logger;
-        private readonly IConfiguration _config;
         private readonly PushshiftContext _pushshiftContext;
 
-        public PushshiftRepository(IConfiguration config, ILogger<PushshiftRepository> logger, PushshiftContext pushshiftContext)
+        public PushshiftRepository(PushshiftContext pushshiftContext)
         {
-            _config = config;
-            _logger = logger;
             _pushshiftContext = pushshiftContext;
         }
 
@@ -56,9 +52,9 @@ namespace LukeTube.Data
                 .ToListAsync();
         }
 
-        public Task<int> GetSubredditLinkCount(string subredditName)
+        public async Task<int> GetSubredditLinkCount(string subredditName)
         {
-            return _pushshiftContext.RedditComments
+            return await _pushshiftContext.RedditComments
                 .Where(comment => comment.Subreddit == subredditName)
                 .Select(comment => comment)
                 .CountAsync();
@@ -79,9 +75,9 @@ namespace LukeTube.Data
             }
         }
 
-        public Task<int> GetTotalRedditComments()
+        public async Task<int> GetTotalRedditComments()
         {
-            return _pushshiftContext.RedditComments.CountAsync();
+            return await _pushshiftContext.RedditComments.CountAsync();
         }
     }
 }

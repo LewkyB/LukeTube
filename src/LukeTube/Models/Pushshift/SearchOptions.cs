@@ -6,7 +6,7 @@
         /// <summary>
         /// String / Quoted String for phrases
         /// </summary>
-        public string Query { get; set; }
+        public string Query { get; init; }
 
         /// <summary>
         /// Comma-delimited base36 ids
@@ -16,7 +16,7 @@
         /// <summary>
         /// Integer &lt;= 1000
         /// </summary>
-        public int Size { get; set; }
+        public int Size { get; init; }
 
         /// <summary>
         /// Response fields
@@ -31,17 +31,17 @@
 
         public string Author { get; set; }
 
-        public string Subreddit { get; set; }
+        public string Subreddit { get; init; }
 
         /// <summary>
         /// Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
         /// </summary>
-        public string After { get; set; }
+        public string After { get; init; }
 
         /// <summary>
         /// Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
         /// </summary>
-        public string Before { get; set; }
+        public string Before { get; init; }
 
         public Frequency Frequency { get; set; }
 

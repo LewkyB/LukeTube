@@ -16,12 +16,12 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-const string AllowSpecificOrigins = "_allowSpecificOrigins";
-const string PushshiftBaseAddress = "https://api.pushshift.io/";
+const string allowSpecificOrigins = "_allowSpecificOrigins";
+const string pushshiftBaseAddress = "https://api.pushshift.io/";
 
 builder.Services.AddHttpClient<IPushshiftRequestService, PushshiftRequestService>("PushshiftServiceClient", client =>
     {
-        client.BaseAddress = new Uri(PushshiftBaseAddress);
+        client.BaseAddress = new Uri(pushshiftBaseAddress);
     })
     .SetHandlerLifetime(TimeSpan.FromMinutes(2))
     .AddPolicyHandler(PushshiftPolicies.GetWaitAndRetryPolicy())
@@ -41,17 +41,14 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "LukeTube_";
 });
 
-builder.Services.AddDbContext<PushshiftContext>(options =>
-    {
-        options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRINGS__POSTGRESQL"));
-        options.EnableSensitiveDataLogging();
-        options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-    },
-    ServiceLifetime.Transient);
+builder.Services.AddDbContextPool<PushshiftContext>(options =>
+{
+    options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRINGS__POSTGRESQL"));
+});
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: AllowSpecificOrigins,
+    options.AddPolicy(name: allowSpecificOrigins,
         policy =>
         {
             policy.WithOrigins("http://localhost:81/")
@@ -72,42 +69,48 @@ builder.Services.AddOpenTelemetryTracing(tracerProviderBuilder =>
         .AddHttpClientInstrumentation()
         .AddAspNetCoreInstrumentation(o =>
         {
-            o.Filter = (httpContext) => !httpContext.Request.Path.ToString().Contains("/_");
+            o.Filter = httpContext => !httpContext.Request.Path.ToString().Contains("/_");
             o.Enrich = (activity, eventName, rawObject) =>
             {
-                if (eventName.Equals("OnStartActivity"))
+                switch (eventName)
                 {
-                    if (rawObject is HttpRequest httpRequest)
+                    case "OnStartActivity":
                     {
-                        activity.SetStartTime(DateTime.Now);
-                        activity.SetTag("http.method", httpRequest.Method);
-                        activity.SetTag("http.url", httpRequest.Path);
+                        if (rawObject is HttpRequest httpRequest)
+                        {
+                            activity.SetStartTime(DateTime.Now);
+                            activity.SetTag("http.method", httpRequest.Method);
+                            activity.SetTag("http.url", httpRequest.Path);
+                        }
+
+                        break;
                     }
-                }
-                else if (eventName.Equals("OnStopActivity"))
-                {
-                    if (rawObject is HttpResponse httpResponse)
+                    case "OnStopActivity":
                     {
-                        activity.SetEndTime(DateTime.Now);
-                        activity.SetTag("responseLength", httpResponse.ContentLength);
+                        if (rawObject is HttpResponse httpResponse)
+                        {
+                            activity.SetEndTime(DateTime.Now);
+                            activity.SetTag("responseLength", httpResponse.ContentLength);
+                        }
+
+                        break;
                     }
                 }
             };
         })
-        // .AddRedisInstrumentation()
-        // .AddRedisInstrumentation(ConnectionMultiplexer.Connect("localhost:6379"), options =>
-        // {
-        //     options.FlushInterval = TimeSpan.FromSeconds(5);
-        //     options.SetVerboseDatabaseStatements = true;
-        //     options.EnrichActivityWithTimingEvents = true;
-        //     options.Enrich = (activity, command) =>
-        //     {
-        //         if (command.ElapsedTime < TimeSpan.FromMilliseconds(100))
-        //         {
-        //             activity.SetTag("is_fast", true);
-        //         }
-        //     };
-        // })
+        .AddRedisInstrumentation(ConnectionMultiplexer.Connect(Environment.GetEnvironmentVariable("CONNECTION_STRINGS__REDIS")), options =>
+        {
+            options.FlushInterval = TimeSpan.FromSeconds(5);
+            options.SetVerboseDatabaseStatements = true;
+            options.EnrichActivityWithTimingEvents = true;
+            options.Enrich = (activity, command) =>
+            {
+                if (command.ElapsedTime < TimeSpan.FromMilliseconds(100))
+                {
+                    activity.SetTag("is_fast", true);
+                }
+            };
+        })
         .AddEntityFrameworkCoreInstrumentation(o =>
         {
             o.SetDbStatementForText = true;
@@ -120,9 +123,9 @@ builder.Services.AddOpenTelemetryTracing(tracerProviderBuilder =>
         });
 });
 
-builder.Services.AddOpenTelemetryMetrics(builder =>
+builder.Services.AddOpenTelemetryMetrics(options =>
 {
-    builder
+    options
         .AddHttpClientInstrumentation()
         .AddAspNetCoreInstrumentation()
         .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(Telemetry.ServiceName, Telemetry.ServiceVersion).AddTelemetrySdk())
@@ -138,20 +141,20 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Logging.ClearProviders();
 builder.Logging.SetMinimumLevel(LogLevel.Trace);
-builder.Logging.AddOpenTelemetry(o =>
+builder.Logging.AddOpenTelemetry(options =>
 {
-    o.ConfigureResource(r =>
+    options.ConfigureResource(r =>
     {
         r.AddService(Telemetry.ServiceName, Telemetry.ServiceVersion);
     });
-    o.AddOtlpExporter(o =>
+    options.AddOtlpExporter(o =>
     {
         o.Endpoint = new Uri("http://otel_collector:4317");
     });
 
-    o.IncludeScopes = true;
-    o.IncludeFormattedMessage = true;
-    o.ParseStateValues = true;
+    options.IncludeScopes = true;
+    options.IncludeFormattedMessage = true;
+    options.ParseStateValues = true;
 });
 
 var app = builder.Build();
@@ -165,18 +168,14 @@ app.Lifetime.ApplicationStarted.Register(() =>
     var options = new DistributedCacheEntryOptions()
         .SetSlidingExpiration(TimeSpan.FromSeconds(20));
 
-    app.Services.GetService<IDistributedCache>().Set("cachedTimeUTC", encodedCurrentTimeUtc, options);
+    app.Services.GetService<IDistributedCache>()?.Set("cachedTimeUTC", encodedCurrentTimeUtc, options);
 });
 
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    //app.UseSwagger();
-
-    //app.UseMiniProfiler();
-
     app.UseStatusCodePages();
-    app.UseCors(AllowSpecificOrigins);
+    app.UseCors(allowSpecificOrigins);
 }
 else
 {
