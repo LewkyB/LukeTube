@@ -1,17 +1,12 @@
-﻿using LukeTube.Data.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.EntityFrameworkCore;
+using LukeTube.Models.Pushshift;
 
 namespace LukeTube.Data
 {
-    public interface ISubredditRepository
+    public interface IPushshiftRepository
     {
         Task<IReadOnlyList<string>> GetAllSubredditNames();
-        Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs();
+        Task<IReadOnlyList<RedditComment>> GetAllRedditComments();
         Task<int> GetSubredditLinkCount(string subredditName);
         Task<int> GetTotalRedditComments();
         Task<IReadOnlyList<string>> GetYoutubeIdsBySubreddit(string subredditName);
@@ -19,37 +14,36 @@ namespace LukeTube.Data
         Task<IReadOnlyList<RedditComment>> GetCommentsBySubreddit(string subredditName);
     }
 
-    public class SubredditRepository : ISubredditRepository
+    public sealed class PushshiftRepository : IPushshiftRepository
     {
-        private readonly ILogger<SubredditRepository> _logger;
+        private readonly ILogger<PushshiftRepository> _logger;
         private readonly IConfiguration _config;
-        private readonly SubredditContext _subredditContext;
+        private readonly PushshiftContext _pushshiftContext;
 
-        public SubredditRepository(IConfiguration config, ILogger<SubredditRepository> logger, SubredditContext subredditContext)
+        public PushshiftRepository(IConfiguration config, ILogger<PushshiftRepository> logger, PushshiftContext pushshiftContext)
         {
             _config = config;
             _logger = logger;
-            _subredditContext = subredditContext;
+            _pushshiftContext = pushshiftContext;
         }
 
-        public async Task<IReadOnlyList<RedditComment>> GetAllYoutubeIDs()
+        public async Task<IReadOnlyList<RedditComment>> GetAllRedditComments()
         {
-            return await _subredditContext.RedditComments
+            return await _pushshiftContext.RedditComments
                 .ToListAsync();
         }
 
         public async Task<IReadOnlyList<string>> GetAllSubredditNames()
         {
-            return await _subredditContext.RedditComments
+            return await _pushshiftContext.RedditComments
                 .Where(comment => comment.Subreddit != " ")
                 .Select(comment => comment.Subreddit).Distinct()
                 .ToListAsync();
         }
 
-        // TODO: adding sorting logic here or in service layer
         public async Task<IReadOnlyList<string>> GetYoutubeIdsBySubreddit(string subredditName)
         {
-            return await _subredditContext.RedditComments
+            return await _pushshiftContext.RedditComments
                 .Where(comment => comment.Subreddit == subredditName)
                 .Select(comment => comment.YoutubeLinkId)
                 .ToListAsync();
@@ -57,41 +51,37 @@ namespace LukeTube.Data
 
         public async Task<IReadOnlyList<RedditComment>> GetCommentsBySubreddit(string subredditName)
         {
-            return await _subredditContext.RedditComments
+            return await _pushshiftContext.RedditComments
                 .Where(comment => comment.Subreddit == subredditName)
                 .ToListAsync();
         }
 
         public Task<int> GetSubredditLinkCount(string subredditName)
         {
-            return _subredditContext.RedditComments
+            return _pushshiftContext.RedditComments
                 .Where(comment => comment.Subreddit == subredditName)
                 .Select(comment => comment)
                 .CountAsync();
         }
 
-        // TODO: get async database calls to work w/o concurrency issues
-        // makes sure that there isn't a duplicate entry that has the same
-        // Subreddit and YoutubeLinkId combination in the database before
-        // inserting a new record
         public async Task SaveUniqueComments(IReadOnlyList<RedditComment> redditComments)
         {
             foreach (var comment in redditComments)
             {
-                var exists = await _subredditContext.RedditComments
+                var exists = await _pushshiftContext.RedditComments
                     .AnyAsync(c => c.Subreddit == comment.Subreddit && c.YoutubeLinkId == comment.YoutubeLinkId);
 
                 if (!exists)
                 {
-                    await _subredditContext.RedditComments.AddAsync(comment);
-                    await _subredditContext.SaveChangesAsync();
+                    await _pushshiftContext.RedditComments.AddAsync(comment);
+                    await _pushshiftContext.SaveChangesAsync();
                 }
             }
         }
 
         public Task<int> GetTotalRedditComments()
         {
-            return _subredditContext.RedditComments.CountAsync();
+            return _pushshiftContext.RedditComments.CountAsync();
         }
     }
 }

@@ -1,23 +1,24 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
-namespace LukeTube.Data.Entities.PsawEntries
+namespace LukeTube.Models.Pushshift
 {
-    public class MetaEntry
+    public class MetaResponse
     {
 
-        [JsonProperty("client_accepts_json")]
+        [JsonPropertyName("client_accepts_json")]
         public bool ClientAcceptsJson { get; set; }
 
-        [JsonProperty("client_request_headers")]
+        [JsonPropertyName("client_request_headers")]
         public ClientRequestHeaders ClientRequestHeaders { get; set; }
 
-        [JsonProperty("client_user_agent")]
+        [JsonPropertyName("client_user_agent")]
         public string ClientUserAgent { get; set; }
 
-        [JsonProperty("server_ratelimit_per_minute")]
+        [JsonPropertyName("server_ratelimit_per_minute")]
         public int ServerRatelimitPerMinute { get; set; }
 
-        [JsonProperty("source-ip")]
+        [JsonPropertyName("source-ip")]
         public string SourceIp { get; set; }
 
     }

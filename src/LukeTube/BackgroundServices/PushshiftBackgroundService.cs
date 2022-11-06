@@ -1,14 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using LukeTube.Services;
 
-namespace LukeTube.Services.BackgroundServices
+namespace LukeTube.BackgroundServices
 {
-    public class PushshiftBackgroundService : BackgroundService
+    public sealed class PushshiftBackgroundService : BackgroundService
     {
         private readonly ILogger<PushshiftBackgroundService> _logger;
         private readonly IServiceProvider _serviceProvider;
@@ -21,11 +15,11 @@ namespace LukeTube.Services.BackgroundServices
 
         // background task that is constantly running and loading the database
         // with data from Pushshift's API
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation($"{nameof(PushshiftBackgroundService)} is running.");
 
-            await DoWorkAsync(stoppingToken);
+            await DoWorkAsync(cancellationToken);
         }
 
         private async Task DoWorkAsync(CancellationToken cancellationToken)
@@ -36,22 +30,29 @@ namespace LukeTube.Services.BackgroundServices
 
                 // in order to use a scoped service in a background service you must create it's own scope
                 using var scope = _serviceProvider.CreateScope();
-                var pushshiftService = scope.ServiceProvider.GetService<IPushshiftService>();
+                var pushshiftService = scope.ServiceProvider.GetService<IPushshiftRequestService>();
 
-                if (pushshiftService != null) await pushshiftService.GetLinksFromCommentsAsync();
+                if (pushshiftService is null) throw new NullReferenceException(nameof(pushshiftService));
+
+                var subreddits = await pushshiftService.GetSubreddits();
+                await pushshiftService.GetUniqueRedditComments(subreddits, 365, 100);
             }
             catch (HttpRequestException ex)
             {
                 _logger.LogError($"Pushshift API unavailable {ex.StatusCode}");
-                await StopAsync(CancellationToken.None);
+            }
+            finally
+            {
+                // await StopAsync(CancellationToken.None);
+                await StopAsync(cancellationToken);
             }
         }
 
-        public override async Task StopAsync(CancellationToken stoppingToken)
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation($"{nameof(PushshiftBackgroundService)} is stopping.");
 
-            await base.StopAsync(stoppingToken);
+            await base.StopAsync(cancellationToken);
         }
     }
 }

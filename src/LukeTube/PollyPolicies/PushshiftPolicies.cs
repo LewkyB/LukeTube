@@ -1,10 +1,8 @@
 ﻿using Polly;
 using Polly.Extensions.Http;
 using Polly.RateLimit;
-using System;
-using System.Net.Http;
 
-namespace LukeTube.Services.PollyPolicies
+namespace LukeTube.PollyPolicies
 {
     public class PushshiftPolicies
     {

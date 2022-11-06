@@ -1,289 +1,120 @@
 ﻿using LukeTube.Data;
-using LukeTube.Data.Entities;
+using System.Text.Json;
+using LukeTube.Models.Pushshift;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using LukeTube.Data.Entities.PsawEntries.PsawSearchOptions;
-using StackExchange.Profiling.Internal;
 
 namespace LukeTube.Services
 {
     public interface IPushshiftService
     {
-        string FindYoutubeId(string commentBody);
-        Task GetLinksFromCommentsAsync();
-        Task<IReadOnlyList<string>> GetSubreddits();
-        Task GetUniqueRedditComments(List<string> subreddit, int daysToGet, int numEntriesPerDay);
+        Task<IReadOnlyList<string>> GetAllSubredditNames();
+        Task<IReadOnlyList<RedditComment>> GetAllRedditComments();
+        Task<int> GetSubredditLinkCount(string subredditName);
+        Task<int> GetTotalRedditComments();
+        Task<IReadOnlyList<string>> GetYoutubeLinkIdsBySubreddit(string subredditName);
+        Task<IReadOnlyList<RedditComment>> GetCommentsBySubreddit(string subreddit);
     }
-    public class PushshiftService : IPushshiftService
+
+    public sealed class PushshiftService : IPushshiftService
     {
+        private readonly IPushshiftRepository _pushshiftRepository;
         private readonly ILogger<PushshiftService> _logger;
-        private readonly IDistributedCache _cache;
-        private readonly ISubredditRepository _subredditRepository;
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IDistributedCache _distributedCache;
 
-        private const string _youtubeLinkIdRegexPattern = @"http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\]*)(&(amp;)?[\w\?‌​=]*)?";
-        private static readonly Regex _youtubeLinkIdRegex = new(
-            _youtubeLinkIdRegexPattern,
-            RegexOptions.Compiled | RegexOptions.IgnoreCase,
-            TimeSpan.FromSeconds(30));
-
-        public PushshiftService(
-            ILogger<PushshiftService> logger,
-            IDistributedCache distributedCache,
-            ISubredditRepository subredditRepository,
-            IHttpClientFactory httpClientFactory)
+        private static string? CachingEnabled => Environment.GetEnvironmentVariable("ENABLE_CACHING");
+        
+        public PushshiftService(ILogger<PushshiftService> logger, IPushshiftRepository pushshiftRepository, IDistributedCache distributedCache)
         {
+            _pushshiftRepository = pushshiftRepository;
+            _distributedCache = distributedCache;
             _logger = logger;
-            _cache = distributedCache;
-            _subredditRepository = subredditRepository;
-            _httpClientFactory = httpClientFactory;
         }
 
-        // TODO: provide a better list of subreddits
-        // avoid magic strings
-        private readonly List<string> _subreddits = new()
+        public async Task<IReadOnlyList<string>> GetAllSubredditNames()
         {
-            "space",
-            "science",
-            "mealtimevideos",
-            "skookum",
-            "artisanvideos",
-            "AIDKE",
-            "linux",
-            "movies",
-            "dotnet",
-            "csharp",
-            "biology",
-            "astronomy",
-            "photography",
-            "aviation",
-            "lectures",
-            "homebrewing",
-            "fantasy",
-            "homeimprovement",
-            "woodworking",
-            "medicine",
-            "ultralight",
-            "travel",
-            "askHistorians",
-            "camping",
-            "cats",
-            "cpp",
-            "chemistry",
-            "beer",
-            "whisky",
-            "games",
-            "moviesuggestions",
-            "utarlington",
-            "docker",
-            "dotnetcore",
-            "math",
-            "askculinary",
-            "tesla",
-            "nintendoswitch",
-            "diy",
-            "aww",
-            "history",
-            "youtube",
-            "askscience",
-            "dallas",
-            "galveston",
-            "arlington",
-            "programming",
-            "arch",
-            "buildapcsales",
-            "cooking",
-            "hunting",
-            "askculinary",
-            "blender",
-            "CC0Textures",
-            "DigitalArt",
-            "blenderTutorials",
-            "computergraphics",
-            "3Dmodeling",
-            "blenderhelp",
-            "cgiMemes",
-            "learnblender",
-            "blenderpython",
-            "low_poly",
-            "ancienthistory",
-            "AncientWorld",
-            "Anthropology",
-            "ArtefactPorn",
-            "aviationmaintenance",
-            "badhistory",
-            "commandline",
-            "contalks",
-            "dailyprogrammer",
-            "finallydeclassified",
-            "fsharp",
-            "indoorgarden",
-            "vegetablegardening",
-            "submarines",
-            "systemd",
-            "smoking",
-            "grilling",
-            "salsasnobs",
-            "python",
-            "powershell",
-            "osdev",
-            "homelab",
-            "experienceddevs",
-        };
+            var cachedSubredditNames = await _distributedCache.GetAsync($"{nameof(GetAllSubredditNames)}");
 
-            // shorter list while dealing with rate limit problems
-            //private readonly List<string> _subreddits = new()
-            //{
-            //    "homeimprovement",
-            //    "woodworking",
-            //    "medicine",
-            //    "ultralight",
-            //    "travel",
-            //    "askculinary",
-            //    "space",
-            //    "skookum",
-            //    "AIDKE",
-            //    "linux",
-            //    "dotnet",
-            //    "csharp",
-            //    "biology",
-            //    "aviation",
-            //    "homebrewing",
-            //    "fantasy",
-            //    "whisky",
-            //    "docker",
-            //    "math",
-            //    "history",
-            //    "mealtimevideos",
-            //    "movies",
-            //    "gaming",
-            //    "youtube",
-            //};
-
-        public async Task<IReadOnlyList<string>> GetSubreddits()
-        {
-            var validSubreddits = new List<string>();
-
-            // only return subreddits that have any content
-            foreach (var subreddit in _subreddits)
+            if (cachedSubredditNames is not null && CachingEnabled.Equals("true"))
             {
-                var linkCount = await _subredditRepository.GetSubredditLinkCount(subreddit);
-                if (linkCount > 0) validSubreddits.Add(subreddit);
+                using var stream = new MemoryStream(cachedSubredditNames);
+                var deserializedSubredditNames = await JsonSerializer.DeserializeAsync<IReadOnlyList<string>>(stream) ?? new List<string>();
+
+                return deserializedSubredditNames;
             }
 
-            // return list in alphabetical order
-            return validSubreddits.OrderBy(x => x).ToList();
+            var subredditNames = await _pushshiftRepository.GetAllSubredditNames();
+            var json = JsonSerializer.SerializeToUtf8Bytes(subredditNames);
+            await _distributedCache.SetAsync($"{nameof(GetAllSubredditNames)}", json);
+
+            return subredditNames;
         }
 
-        public async Task GetLinksFromCommentsAsync()
-            => await GetUniqueRedditComments(_subreddits, daysToGet: 365, numEntriesPerDay: 100);
-
-        public async Task GetUniqueRedditComments(List<string> subreddits, int daysToGet, int numEntriesPerDay)
+        public async Task<IReadOnlyList<RedditComment>> GetAllRedditComments()
         {
-            if (subreddits is null) throw new NullReferenceException(nameof(subreddits));
+            var allCachedYoutubeIds = await _distributedCache.GetAsync($"{nameof(GetAllRedditComments)}");
 
-            var redditComments = new List<RedditComment>();
-
-            var subredditCsv = string.Join(",", subreddits);
-
-            // going by hour gets more detailed results
-            var daysToGetInHours = daysToGet * 24;
-            for (var i = 0; i < daysToGetInHours; i++)
+            if (allCachedYoutubeIds is not null && CachingEnabled.Equals("true"))
             {
-                string before = daysToGetInHours - i + "h";
-                string after = (daysToGetInHours + 1 - i) + "h";
+                using var stream = new MemoryStream(allCachedYoutubeIds);
+                var deserializedRedditComments = await JsonSerializer.DeserializeAsync<IReadOnlyList<RedditComment>>(stream) ?? new List<RedditComment>();
 
-                // var rawComments = await _psawService.Search<CommentEntry>(new SearchOptions
-                var rawComments = await GetData(new() {
-                    Subreddit = subredditCsv,
-                    Query = "www.youtube.com/watch", // TODO: seperate out the query for the other link and score
-                    Before = before,
-                    After = after,
-                    Size = numEntriesPerDay
-                });
-
-                _logger.LogInformation($"{i} out of {daysToGetInHours}\tFetched {rawComments.Data.Count()}\tBefore:{daysToGetInHours - i} After:{(daysToGetInHours + 1) - i}");
-
-                foreach (var comment in rawComments.Data.Distinct())
-                {
-                    // check to make sure comment body has a valid YoutubeLinkId
-                    var youtubeId = FindYoutubeId(comment.Body);
-
-                    // if not valid YoutubeLinkId then do not continue
-                    if (string.IsNullOrEmpty(youtubeId)) break;
-
-                    var redditComment = new RedditComment {
-                        Subreddit = comment.Subreddit,
-                        YoutubeLinkId = youtubeId,
-                        CreatedUTC = comment.CreatedUtc,
-                        Score = comment.Score,
-                        RetrievedUTC = comment.RetrievedOn,
-                        Permalink = comment.Permalink
-                    };
-
-                    redditComments.Add(redditComment);
-                }
-
-                await _subredditRepository.SaveUniqueComments(redditComments);
-            }
-        }
-
-        public async Task<PushshiftCommentResponseModel> GetData(SearchOptions searchOptions)
-        {
-            var httpClient = _httpClientFactory.CreateClient("PushshiftServiceCommentClient");
-            return await httpClient .GetFromJsonAsync<PushshiftCommentResponseModel>($"?{ArgsToString(searchOptions.ToArgs())}");
-        }
-
-        // should this return multiples? do i need to change youtube linkid to be an array
-        public string FindYoutubeId(string commentBody)
-        {
-            if (string.IsNullOrEmpty(commentBody)) return string.Empty;
-
-            var linkMatches = _youtubeLinkIdRegex.Matches(commentBody);
-
-            // TODO: what happens when there is multiple youtube links in a body? is there something to do with that
-            foreach (Match match in linkMatches)
-            {
-                if (match is null || match.Value.Equals(""))
-                {
-                    _logger.LogInformation($"Match is null or empty: {match} {match?.Value}");
-                    return string.Empty;
-                }
-
-                GroupCollection groups = match.Groups;
-
-                if (groups.Count > 2)
-                {
-                    _logger.LogInformation("Caught more than one youtube id {}", groups.ToJson());
-                }
-
-                if (match.Groups[1].Length < 11) return string.Empty;
-
-                // trim down id, it should be a maximum of 11 characters
-                return (groups[1].Length > 11) ? groups[1].Value.Remove(11) : groups[1].Value;
+                return deserializedRedditComments;
             }
 
-            return string.Empty;
+            var allYoutubeIDs = await _pushshiftRepository.GetAllRedditComments();
+            var json = JsonSerializer.SerializeToUtf8Bytes(allYoutubeIDs);
+            await _distributedCache.SetAsync($"{nameof(GetAllRedditComments)}", json);
+            return allYoutubeIDs;
         }
 
-        private static string ConstructUrl(string route, IReadOnlyCollection<string> args)
-            => args == null ? route : $"{route}?{ArgsToString(args)}";
+        public async Task<IReadOnlyList<RedditComment>> GetCommentsBySubreddit(string subreddit)
+        {
+            if (string.IsNullOrEmpty(subreddit)) return new List<RedditComment>();
 
-        private static string ArgsToString(IEnumerable<string> args)
-            => args.Aggregate((x, y) => $"{x}&{y}");
-    }
+            var cachedComments = await _distributedCache.GetAsync($"{subreddit}_{nameof(GetYoutubeLinkIdsBySubreddit)}");
 
-    public static class RequestsConstants
-    {
-        public const string BaseAddress = "https://api.pushshift.io/";
-        public const string SearchRoute = "reddit/{0}/search";
-        public const string CommentIdsRoute = "reddit/submission/comment_ids/{0}";
+            if (cachedComments is not null && CachingEnabled.Equals("true"))
+            {
+                using var stream = new MemoryStream(cachedComments);
+                var deserializedCachedComments = await JsonSerializer.DeserializeAsync<IReadOnlyList<RedditComment>>(stream) ?? new List<RedditComment>();
+
+                return deserializedCachedComments;
+            }
+            
+            var comments = await _pushshiftRepository.GetCommentsBySubreddit(subreddit);
+            var json = JsonSerializer.SerializeToUtf8Bytes(comments);
+            await _distributedCache.SetAsync($"{subreddit}_{nameof(GetYoutubeLinkIdsBySubreddit)}", json);
+
+            return comments;
+        }
+
+        public async Task<IReadOnlyList<string>> GetYoutubeLinkIdsBySubreddit(string subredditName)
+        {
+            if (string.IsNullOrEmpty(subredditName)) return new List<string>();
+            
+            var cachedValue = await _distributedCache.GetAsync($"{subredditName}_{nameof(GetYoutubeLinkIdsBySubreddit)}");
+
+            if (cachedValue is not null && CachingEnabled.Equals(true))
+            {
+                using var stream = new MemoryStream(cachedValue);
+                var cachedYoutubeIds = await JsonSerializer.DeserializeAsync<IReadOnlyList<string>>(stream) ?? new List<string>();
+
+                return cachedYoutubeIds;
+            }
+
+            var youtubeIds = await _pushshiftRepository.GetYoutubeIdsBySubreddit(subredditName);
+            var json = JsonSerializer.SerializeToUtf8Bytes(youtubeIds);
+            await _distributedCache.SetAsync($"{subredditName}_{nameof(GetYoutubeLinkIdsBySubreddit)}", json);
+
+            return youtubeIds;
+        }
+
+        public Task<int> GetSubredditLinkCount(string subredditName)
+        {
+            return _pushshiftRepository.GetSubredditLinkCount(subredditName);
+        }
+
+        public Task<int> GetTotalRedditComments()
+            => _pushshiftRepository.GetTotalRedditComments();
     }
 }

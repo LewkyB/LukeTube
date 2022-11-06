@@ -1,11 +1,11 @@
-﻿using LukeTube.Data.Entities;
+﻿using LukeTube.Models.Pushshift;
 using Microsoft.EntityFrameworkCore;
 
 namespace LukeTube.Data
 {
-    public class SubredditContext : DbContext
+    public sealed class PushshiftContext : DbContext
     {
-        public SubredditContext(DbContextOptions<SubredditContext> options)
+        public PushshiftContext(DbContextOptions<PushshiftContext> options)
             : base(options)
         {
         }

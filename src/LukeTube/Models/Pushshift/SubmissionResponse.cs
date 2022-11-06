@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Mime;
-using System.Text.Json.Serialization;
-using LukeTube.Services;
+﻿using System.Text.Json.Serialization;
 
-namespace LukeTube.Data.Entities
+namespace LukeTube.Models.Pushshift
 {
-    public class PushshiftSubmissionReponseModel
+    public class SubmissionResponse
     {
         [JsonPropertyName("data")]
         public IReadOnlyList<PushshiftSubmissions> Data { get; set; }

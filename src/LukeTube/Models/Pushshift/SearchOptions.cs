@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace LukeTube.Data.Entities.PsawEntries.PsawSearchOptions
+﻿namespace LukeTube.Models.Pushshift
 {
     public class SearchOptions
     {

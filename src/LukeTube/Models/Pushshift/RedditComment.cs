@@ -1,14 +1,12 @@
-﻿using System;
-
-namespace LukeTube.Data.Entities
+﻿namespace LukeTube.Models.Pushshift
 {
     public class RedditComment
     {
         public int Id { get; set; }
 
-        public string Subreddit { get; set; }
+        public string Subreddit { get; init; }
 
-        public string YoutubeLinkId { get; set; }
+        public string YoutubeLinkId { get; init; }
 
         public int Score { get; set; }
 

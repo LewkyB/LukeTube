@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace LukeTube.Data.Entities.PsawEntries.PsawSearchOptions
+﻿namespace LukeTube.Models.Pushshift
 {
     public class SubmissionSearchOptions : SearchOptions
     {

@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LukeTube.Data.Entities
+namespace LukeTube.Models.Pushshift
 {
-    public class PushshiftCommentResponseModel
+    public class CommentResponse
     {
         [JsonPropertyName("data")]
         public IReadOnlyList<PushshiftCommentResponse> Data { get; set; }

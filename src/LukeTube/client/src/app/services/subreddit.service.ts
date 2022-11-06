@@ -17,7 +17,7 @@ export class Subreddit {
 
     loadComments(subreddit: string) {
     // loadComments(subreddit: string): Observable<void> {
-        var subredditUrl = "http://localhost:82/api/reddit/subreddit/" + subreddit;
+        var subredditUrl = "http://localhost:82/api/pushshift/subreddit/" + subreddit;
         return this.http.get<RedditComment[]>(subredditUrl)
             // .pipe(map(data => {
             //     this.redditComments = data;
@@ -27,7 +27,7 @@ export class Subreddit {
 
     loadSubreddits() {
     // loadSubreddits(): Observable<void> {
-        return this.http.get<string[]>("http://localhost:82/api/reddit/subreddit-names")
+        return this.http.get<string[]>("http://localhost:82/api/pushshift/subreddit-names")
             // .pipe(map(data => {
             //     this.subreddits = data;
             //     return;
