@@ -1,7 +1,7 @@
 ﻿import { OnInit } from "@angular/core";
 import { Component } from "@angular/core";
 import { Subreddit } from "../services/subreddit.service";
-import { FormControl } from "@angular/forms";
+import { UntypedFormControl } from "@angular/forms";
 import { Observable, of } from "rxjs";
 import { map, startWith } from "rxjs/operators";
 import { Router } from "@angular/router";
@@ -20,14 +20,14 @@ import { Router } from "@angular/router";
   ],
 })
 export class SubredditSearchBar implements OnInit {
-  myControl!: FormControl;
+  myControl!: UntypedFormControl;
   filteredSubreddits!: Observable<string[]>;
 
   constructor(public subreddit: Subreddit, private router: Router) {}
 
   ngOnInit(): void {
     // TODO: how can I select this by pressing the hotkey '/'
-    this.myControl = new FormControl("");
+    this.myControl = new UntypedFormControl("");
 
     this.subreddit.loadSubreddits().subscribe((result) => {
       // this.subreddit.subreddits = result;
