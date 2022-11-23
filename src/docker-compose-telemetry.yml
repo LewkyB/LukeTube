@@ -7,11 +7,12 @@ services:
   LukeTubeBackend:
     image: ${DOCKER_REGISTRY-}luketube
     build:
-      context: ./LukeTube/
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: LukeTubeBackend.Dockerfile
     depends_on:
       - db
       - redis
+      - otel_collector
 #    restart: always
     restart: "no"
     expose:
@@ -40,6 +41,9 @@ services:
       driver: loki
       options:
         loki-url: 'http://localhost:3100/loki/api/v1/push'
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   angular:
     restart: always
@@ -66,6 +70,30 @@ services:
       driver: loki
       options:
         loki-url: 'http://localhost:3100/loki/api/v1/push'
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
+
+  LukeTubeWorker:
+    image: ${DOCKER_REGISTRY-}luketube-worker
+    build:
+      context: .
+      dockerfile: LukeTubeWorker.Dockerfile
+    restart: "no"
+    depends_on:
+      - db
+      - otel_collector
+    networks:
+      - otlp
+    env_file:
+      - ./.env
+    logging:
+      driver: loki
+      options:
+        loki-url: 'http://localhost:3100/loki/api/v1/push'
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   db:
     image: postgres:14.1
@@ -78,20 +106,26 @@ services:
       - ./postgres-data:/var/lib/postgresql/data
     networks:
       - otlp
-#    logging:
-#      driver: loki
-#      options:
-#        loki-url: 'http://localhost:3100/loki/api/v1/push'
+    logging:
+      driver: loki
+      options:
+        loki-url: 'http://localhost:3100/loki/api/v1/push'
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   redis:
     image: redis:6.2.6
     restart: always
     networks:
       - otlp
-#    logging:
-#      driver: loki
-#      options:
-#        loki-url: 'http://localhost:3100/loki/api/v1/push'
+    logging:
+      driver: loki
+      options:
+        loki-url: 'http://localhost:3100/loki/api/v1/push'
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   #nginx-proxy:
   #  image: nginxproxy/nginx-proxy:1.0.0
@@ -151,8 +185,9 @@ services:
       driver: loki
       options:
         loki-url: 'http://localhost:3100/loki/api/v1/push'
-#    depends_on:
-#      - LukeTubeBackend
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   otel_collector:
     image: otel/opentelemetry-collector-contrib:latest
@@ -178,7 +213,9 @@ services:
       driver: loki
       options:
         loki-url: 'http://localhost:3100/loki/api/v1/push'
-
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   prometheus:
     image: prom/prometheus:latest
@@ -192,6 +229,9 @@ services:
       driver: loki
       options:
         loki-url: 'http://localhost:3100/loki/api/v1/push'
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   loki:
     image: grafana/loki:latest
@@ -207,6 +247,9 @@ services:
       driver: loki
       options:
         loki-url: 'http://localhost:3100/loki/api/v1/push'
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   grafana:
     image: grafana/grafana:latest
@@ -214,7 +257,6 @@ services:
       - ./grafana.ini:/etc/grafana/grafana.ini
       - ./datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
     environment:
-#      GF_DATASOURCES_LOKI_URL: http://loki:3100
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_AUTH_DISABLE_LOGIN_FORM=true
@@ -226,11 +268,9 @@ services:
       driver: loki
       options:
         loki-url: 'http://localhost:3100/loki/api/v1/push'
-#
-#  zipkin:
-#    image: openzipkin/zipkin
-#    ports:
-#      - 9411:9411
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
 networks:
   otlp:

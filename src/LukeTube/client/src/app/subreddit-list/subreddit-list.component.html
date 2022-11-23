@@ -1,0 +1,7 @@
+<div class="container">
+  <div class="subreddit" *ngFor="let subreddit of subreddits">
+    <a mat-raised-button routerLink="/videos/{{ subreddit.subreddit }}">
+      {{ [subreddit.subreddit] }} <br />{{ subreddit.count }} videos
+    </a>
+  </div>
+</div>

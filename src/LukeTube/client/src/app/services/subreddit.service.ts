@@ -1,36 +1,68 @@
 ﻿import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
-
-import { RedditComment } from "../models/RedditComment";
 
 @Injectable()
 export class Subreddit {
+  loadComments(subreddit: string) {
+    return fetch(`http://localhost:82/api/pushshift/subreddit/${subreddit}`, {
+      method: "GET",
+    }).then((response) => {
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
 
-    constructor(private http: HttpClient) {
+      return response.json();
+    });
+  }
 
-    }
+  loadSubreddits() {
+    return fetch("http://localhost:82/api/pushshift/subreddit-names", {
+      method: "GET",
+    }).then((response) => {
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
 
-    public redditComments: RedditComment[] = [];
-    public subreddits: string[] = [];
+      return response.json();
+    });
+  }
 
-    loadComments(subreddit: string) {
-    // loadComments(subreddit: string): Observable<void> {
-        var subredditUrl = "http://localhost:82/api/pushshift/subreddit/" + subreddit;
-        return this.http.get<RedditComment[]>(subredditUrl)
-            // .pipe(map(data => {
-            //     this.redditComments = data;
-            //     return;
-            // }));
-    }
+  loadCommentsPaged(subreddit: string, pageNumber: number) {
+    return fetch(
+      `http://localhost:82/api/pushshift/${subreddit}/paged-comments/${pageNumber}`,
+      {
+        method: "GET",
+      }
+    ).then((response) => {
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
 
-    loadSubreddits() {
-    // loadSubreddits(): Observable<void> {
-        return this.http.get<string[]>("http://localhost:82/api/pushshift/subreddit-names")
-            // .pipe(map(data => {
-            //     this.subreddits = data;
-            //     return;
-            // }));
-    }
+      return response.json();
+    });
+  }
+
+  loadSubredditsWithLinkCount() {
+    return fetch(
+      "http://localhost:82/api/pushshift/subreddit-names-with-link-count",
+      {
+        method: "GET",
+      }
+    ).then((response) => {
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
+
+      return response.json();
+    });
+  }
+
+  getTotalRedditComments() {
+    return fetch(
+      "http://localhost:82/api/pushshift/youtube-video-total-count",
+      {
+        method: "GET",
+      }
+    ).then((response) => {
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
+
+      return response.json();
+    });
+  }
 }

@@ -1,28 +1,14 @@
-.fit-on-page {
-display: flex;
-flex-direction: column;
+:host {
+    display: flex;
 }
 
 .videos {
-display: grid;
-/* grid-template-columns: repeat(2, 1fr); */
-grid-template-columns: 1fr 1fr;
-/* grid-gap: 5px; */
-grid-column-gap: 5px;
-grid-row-gap: 10px;
-justify-items: center;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
 }
 
-.item {
-}
-.info {
-display: grid;
-grid-template-columns: 1fr 1fr 1fr;
-}
-
-.spacer {
-flex: 1 1 auto;
-}
-.center {
-align-items: center;
+.card {
+    display: flex;
+    padding: 10px;
 }

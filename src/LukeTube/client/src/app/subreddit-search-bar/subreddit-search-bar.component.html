@@ -8,10 +8,14 @@
       [matAutocomplete]="auto"
       class="form-control"
       (keyup.enter)="navigateTo(myControl.value)"
-      >
+    />
     <mat-autocomplete #auto="matAutocomplete">
-      <mat-option *ngFor="let subreddit of filteredSubreddits | async" [value]="subreddit" (click)="navigateTo(subreddit)">
-        {{subreddit}}
+      <mat-option
+        *ngFor="let subreddit of filteredSubreddits | async"
+        [value]="subreddit"
+        (click)="navigateTo(subreddit)"
+      >
+        {{ subreddit }}
       </mat-option>
     </mat-autocomplete>
   </mat-form-field>

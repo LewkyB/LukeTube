@@ -3,9 +3,27 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LukeTube", "LukeTube\LukeTube.csproj", "{B7292DFC-F68F-4A32-B05D-12EC51AB0D84}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "docker-compose", "docker-compose.dcproj", "{9C0DEAA3-4AEA-4981-92A2-0E5F0B057F63}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{9C0DEAA3-4AEA-4981-92A2-0E5F0B057F63}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LukeTube", "LukeTube\LukeTube.csproj", "{E8238D8F-E0D6-423B-B9D1-A9B69B5B03F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LukeTube.Tests", "LukeTube.Tests\LukeTube.Tests.csproj", "{BA363C1B-FE1B-4B9C-9655-C740BC1666CC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LukeTubeWorkerService", "LukeTubeWorkerService\LukeTubeWorkerService.csproj", "{BDAFBC7B-5CBF-4109-B502-454A00E99F05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LukeTubeLib", "LukeTubeLib\LukeTubeLib.csproj", "{2DB717D0-CEB4-4245-859A-4C74F7B2D684}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B7AE3382-0A51-453D-851B-1F0C6FD1711C} = {B7AE3382-0A51-453D-851B-1F0C6FD1711C}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{D9FC5064-2F88-49C9-BF37-25EBB68803CA}"
+	ProjectSection(SolutionItems) = preProject
+		LukeTubeBackend.Dockerfile = LukeTubeBackend.Dockerfile
+		LukeTubeWorker.Dockerfile = LukeTubeWorker.Dockerfile
+		..\README.md = ..\README.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YoutubeExplode", "YoutubeExplode\YoutubeExplode.csproj", "{B7AE3382-0A51-453D-851B-1F0C6FD1711C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +31,26 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B7292DFC-F68F-4A32-B05D-12EC51AB0D84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B7292DFC-F68F-4A32-B05D-12EC51AB0D84}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B7292DFC-F68F-4A32-B05D-12EC51AB0D84}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B7292DFC-F68F-4A32-B05D-12EC51AB0D84}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9C0DEAA3-4AEA-4981-92A2-0E5F0B057F63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9C0DEAA3-4AEA-4981-92A2-0E5F0B057F63}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9C0DEAA3-4AEA-4981-92A2-0E5F0B057F63}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9C0DEAA3-4AEA-4981-92A2-0E5F0B057F63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8238D8F-E0D6-423B-B9D1-A9B69B5B03F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8238D8F-E0D6-423B-B9D1-A9B69B5B03F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8238D8F-E0D6-423B-B9D1-A9B69B5B03F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8238D8F-E0D6-423B-B9D1-A9B69B5B03F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA363C1B-FE1B-4B9C-9655-C740BC1666CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA363C1B-FE1B-4B9C-9655-C740BC1666CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA363C1B-FE1B-4B9C-9655-C740BC1666CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA363C1B-FE1B-4B9C-9655-C740BC1666CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDAFBC7B-5CBF-4109-B502-454A00E99F05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDAFBC7B-5CBF-4109-B502-454A00E99F05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDAFBC7B-5CBF-4109-B502-454A00E99F05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDAFBC7B-5CBF-4109-B502-454A00E99F05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DB717D0-CEB4-4245-859A-4C74F7B2D684}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DB717D0-CEB4-4245-859A-4C74F7B2D684}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DB717D0-CEB4-4245-859A-4C74F7B2D684}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DB717D0-CEB4-4245-859A-4C74F7B2D684}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7AE3382-0A51-453D-851B-1F0C6FD1711C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7AE3382-0A51-453D-851B-1F0C6FD1711C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7AE3382-0A51-453D-851B-1F0C6FD1711C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7AE3382-0A51-453D-851B-1F0C6FD1711C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

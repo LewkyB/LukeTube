@@ -1,49 +1,28 @@
-<!-- <hr>
-<mat-grid-list cols="3" rowHeight="1:1">
-  <mat-grid-tile *ngFor="let redditComment of subreddit.redditComments">
-    <youtube-player class="video-container" videoId={{redditComment.youtubeLinkId}}></youtube-player>
-    <mat-card>{{redditComment.score}}</mat-card>
-  </mat-grid-tile>
-</mat-grid-list>
-<hr /> -->
+<div>
+  <mat-button-toggle (click)="sortDate()">Date</mat-button-toggle>
+  <mat-button-toggle (click)="sortScore()">Score</mat-button-toggle>
+</div>
 
-<div class="fit-on-page">
-  <div>
-    <mat-toolbar>
-      <mat-toolbar-row>
-        <a routerLink="">{{ subredditName }}</a>
-        <span class="spacer"></span>
-        <mat-button-toggle (click)="sortDate()">Date</mat-button-toggle>
-        <mat-button-toggle (click)="sortScore()">Score</mat-button-toggle>
-        <!-- <button (click)="getType()">type</button> -->
-
-        <span class="spacer"></span>
-        <subreddit-search-bar></subreddit-search-bar>
-        <span class="spacer"></span>
-        <mat-paginator
-          [length]="length"
-          [pageSize]="pageSize"
-          [pageSizeOptions]="pageSizeOptions"
-          (page)="pageEvent = loadPage($event)"
-        >
-        </mat-paginator>
-      </mat-toolbar-row>
-    </mat-toolbar>
-  </div>
-
-  <div class="videos">
-    <div
-      *ngFor="
-        let redditComment of redditComments | slice: sliceLow:sliceHigh
-      "
-    >
+<div
+  infinite-scroll
+  [infiniteScrollDistance]="distance"
+  [infiniteScrollThrottle]="throttle"
+  (scrolled)="onScroll()"
+  class="videos"
+>
+  <div *ngFor="let redditComment of redditComments">
+    <div class="card">
       <mat-card>
         <youtube-player
           videoId="{{ redditComment.youtubeLinkId }}"
-        ></youtube-player>
-        <mat-card-actions align="end">
+          [height]="300"
+          [width]="400"
+        >
+        </youtube-player>
+        <mat-card-actions>
           <a
-            mat-stroked-button
+            mat-raised-button
+            color="green"
             href="https://www.reddit.com{{ redditComment.permalink }}"
             target="_blank"
             >PERMALINK</a
@@ -52,14 +31,9 @@
             {{ redditComment.createdUTC.toString().substring(0, 10) }} |
             {{ redditComment.createdUTC.toString().substring(11, 19) }}
           </button>
-          <button mat-stroked-button>
-            Score: {{ redditComment.score }}
-          </button>
-          <!-- <button mat-stroked-button>{{ redditComment.createdUTC.toString().substring(0,10) }}</button>
-          <button mat-stroked-button>{{ redditComment.createdUTC.toString().substring(11,19) }}</button> -->
+          <button mat-stroked-button>Score: {{ redditComment.score }}</button>
         </mat-card-actions>
       </mat-card>
     </div>
   </div>
-
 </div>

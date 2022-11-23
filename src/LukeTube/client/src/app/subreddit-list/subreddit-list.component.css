@@ -1,0 +1,12 @@
+.container {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+  margin-left: 10%;
+  margin-right: 10%;
+  margin-top: 2%
+}
+
+.subreddit {
+  padding: 7px;
+}

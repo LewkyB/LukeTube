@@ -1,0 +1,27 @@
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
+
+namespace LukeTubeLib.Models.Pushshift
+{
+    [PrimaryKey(nameof(RedditCommentId))]
+    public class RedditComment
+    {
+        [Key]
+        public int RedditCommentId { get; set; }
+
+        [Required]
+        public string Subreddit { get; init; }
+
+        [Required]
+        public string YoutubeLinkId { get; set; }
+
+        public int Score { get; set; }
+
+        public DateTime CreatedUTC { get; set; }
+
+        public DateTime RetrievedUTC { get; set; }
+
+        public string Permalink { get; set; }
+        public VideoModel VideoModel { get; set; }
+    }
+}

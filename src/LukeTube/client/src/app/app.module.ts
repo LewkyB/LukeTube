@@ -24,6 +24,8 @@ import {MatPaginatorModule} from '@angular/material/paginator';
 import {MatButtonModule} from '@angular/material/button';
 import {MatButtonToggleModule} from '@angular/material/button-toggle';
 import {MatBadgeModule} from '@angular/material/badge';
+import {InfiniteScrollModule} from 'ngx-infinite-scroll';
+import { VideoThumbnailComponent } from "./video-thumbnail";
 
 const routes: Routes = [
  { path: "", component: SubredditListComponent },
@@ -55,6 +57,8 @@ const routes: Routes = [
     MatBadgeModule,
     MatButtonModule,
     MatButtonToggleModule,
+    InfiniteScrollModule,
+    VideoThumbnailComponent,
     // RouterModule.forRoot(routes),
     RouterModule.forRoot(routes, { useHash: true}),
   ],

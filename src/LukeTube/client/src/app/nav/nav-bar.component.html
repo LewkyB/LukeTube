@@ -1,10 +1,22 @@
-<mat-toolbar>
-  <!-- <span>LukeTube</span> -->
-  <a routerLink="">LukeTube</a>
-  <span class="spacer"></span>
-  <subreddit-search-bar></subreddit-search-bar>
-  <span class="spacer"></span>
-  <a mat-button href="https://www.lukebrown.us" target="_blank">Blog</a> 
-  &nbsp;&nbsp;
-  <a mat-button href="https://github.com/LewkyB/IRCTube-ASPNETCore" target="_blank">Github</a>
+<mat-toolbar color="yellow" class="container">
+  <mat-toolbar-row>
+    <a mat-button routerLink="">LukeTube</a>
+    <span class="spacer"></span>
+    <!-- <subreddit-search-bar></subreddit-search-bar> -->
+    <!-- <span class="spacer"></span> -->
+    <button mat-button>Total Youtube Videos: {{youtubeVideoCount}}</button>
+    <a mat-button href="https://www.lukebrown.us" target="_blank">Blog</a>
+    &nbsp;&nbsp;
+    <a
+      mat-button
+      href="https://github.com/LewkyB/LukeTube"
+      target="_blank"
+      >Github</a
+    >
+  </mat-toolbar-row>
+  <mat-toolbar-row>
+    <span class="spacer"></span>
+    <subreddit-search-bar></subreddit-search-bar>
+    <span class="spacer"></span>
+  </mat-toolbar-row>
 </mat-toolbar>

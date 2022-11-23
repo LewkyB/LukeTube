@@ -1,11 +1,13 @@
 ﻿using LukeTube.Services;
-using LukeTube.Models.Pushshift;
+using LukeTubeLib.Models.Pushshift;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace LukeTube.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
+    [Produces("application/json")]
     public sealed class PushshiftController : ControllerBase
     {
         private readonly IPushshiftService _pushshiftService;
@@ -17,9 +19,9 @@ namespace LukeTube.Controllers
 
         [HttpGet]
         [Route("get-all-reddit-comments")]
-        public async Task<IReadOnlyList<RedditComment>> GetAllRedditComments()
+        public Task<IReadOnlyList<RedditComment>> GetAllRedditComments()
         {
-            return await _pushshiftService.GetAllRedditComments();
+            return _pushshiftService.GetAllRedditComments();
         }
 
         [HttpGet]
@@ -31,16 +33,38 @@ namespace LukeTube.Controllers
 
         [HttpGet]
         [Route("subreddit/{subredditName}")]
-        public Task<IReadOnlyList<RedditComment>> GetCommentsBySubreddit(string subredditName)
+        public Task<IReadOnlyList<RedditComment>> GetCommentsBySubreddit([FromQuery] string subredditName)
         {
             return _pushshiftService.GetCommentsBySubreddit(subredditName);
         }
 
         [HttpGet]
         [Route("subreddit-names")]
-        public async Task<IReadOnlyList<string>> GetSubredditNames()
+        public Task<IReadOnlyList<string>> GetSubredditNames()
         {
-            return await _pushshiftService.GetAllSubredditNames();
+            return _pushshiftService.GetAllSubredditNames();
+        }
+
+        [HttpGet]
+        [Route("subreddit-names-with-link-count")]
+        [OutputCache(NoStore = true)]
+        public Task<IReadOnlyList<SubredditWithCount>> GetSubredditNamesWithLinkCount()
+        {
+            return _pushshiftService.GetSubredditsWithLinkCounts();
+        }
+
+        [HttpGet]
+        [Route("{subredditName}/paged-comments/{pageNumber}")]
+        public Task<IReadOnlyList<RedditComment>> GetPagedRedditCommentsBySubreddit(string subredditName,int pageNumber)
+        {
+            return _pushshiftService.GetPagedRedditCommentsBySubreddit(subredditName, pageNumber);
+        }
+
+        [HttpGet]
+        [Route("youtube-video-total-count")]
+        public Task<int> GetTotalYoutubeIdCount()
+        {
+            return _pushshiftService.GetTotalRedditComments();
         }
     }
 }
