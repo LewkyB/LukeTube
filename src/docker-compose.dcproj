@@ -9,6 +9,7 @@
     <DockerServiceName>LukeTube</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="docker-compose-database-only.yml" />
     <None Include="docker-compose-telemetry-minimal.yml" />
     <None Include="docker-compose-telemetry.yml" />
     <None Include="docker-compose-without-frontend.yml" />

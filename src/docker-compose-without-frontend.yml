@@ -38,6 +38,7 @@ services:
     restart: "no"
     depends_on:
       - db
+      - db-hacker-news
     env_file:
       - ./.env
 
@@ -52,6 +53,15 @@ services:
       - 5432:5432
 #    volumes:
 #      - ./postgres-data:/var/lib/postgresql/data
+  db-hacker-news:
+    image: postgres:14.1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: HackerNewsDb
+    restart: always
+#    ports:
+#      - 5433:5432
 
   redis:
     image: redis:6.2.6

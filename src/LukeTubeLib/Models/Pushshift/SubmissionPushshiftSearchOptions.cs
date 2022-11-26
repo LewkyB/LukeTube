@@ -1,6 +1,6 @@
 ﻿namespace LukeTubeLib.Models.Pushshift
 {
-    public record SubmissionSearchOptions : SearchOptions
+    public record SubmissionPushshiftSearchOptions : PushshiftSearchOptions
     {
 
         #region Properties

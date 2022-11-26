@@ -21,19 +21,15 @@ namespace LukeTube.Services
     {
         private readonly IPushshiftRepository _pushshiftRepository;
         private readonly IDistributedCache _distributedCache;
-        private readonly IConfiguration _configuration;
 
-        // TODO: use config instead of this? why?
         private static string? CachingEnabled => Environment.GetEnvironmentVariable("ENABLE_CACHING");
 
         public PushshiftService(
             IPushshiftRepository pushshiftRepository,
-            IDistributedCache distributedCache,
-            IConfiguration configuration)
+            IDistributedCache distributedCache)
         {
             _pushshiftRepository = pushshiftRepository;
             _distributedCache = distributedCache;
-            _configuration = configuration;
         }
 
         public async Task<IReadOnlyList<string>> GetAllSubredditNames()

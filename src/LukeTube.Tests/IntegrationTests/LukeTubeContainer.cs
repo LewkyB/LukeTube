@@ -69,6 +69,7 @@ public sealed class LukeTubeContainer : HttpClient, IAsyncLifetime
             .WithEnvironment("ASPNETCORE_URLS", "http://+:82")
             .WithEnvironment("CONNECTION_STRINGS__POSTGRESQL", postgreSqlConnectionString)
             .WithEnvironment("CONNECTION_STRINGS__REDIS", redisConnectionString)
+            .WithEnvironment("ENABLE_CACHING", "true")
             // .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(LukeTubeBackendImage.HttpPort))
             .Build();

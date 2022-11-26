@@ -9,6 +9,7 @@
 **/wwwroot/lib/
 .angular/
 **/postgres-data/
+**/postgres-data-old/
 src/luke_site_mvc/wwwroot/lib/
 src/luke_site_mvc/wwwroot/js/site*
 src/luke_site_mvc/wwwroot/js/site.min.css

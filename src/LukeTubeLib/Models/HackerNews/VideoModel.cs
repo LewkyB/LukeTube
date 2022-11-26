@@ -1,9 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using YoutubeExplode.Videos;
 
-namespace LukeTubeLib.Models.Pushshift;
+namespace LukeTubeLib.Models.HackerNews;
 
 [PrimaryKey(nameof(VideoId))]
 public class VideoModel
@@ -42,9 +41,9 @@ public class VideoModel
     public EngagementModel EngagementModel { get; set; }
 
     // navigational properties
-    public int RedditCommentId { get; set; }
-    [ForeignKey(nameof(RedditCommentId))]
-    public RedditComment RedditComment { get; set; }
+    public int HackerNewsHitId { get; set; }
+    [ForeignKey(nameof(HackerNewsHitId))]
+    public HackerNewsHit HackerNewsHit { get; set; }
 }
 
 [PrimaryKey(nameof(AuthorId))]

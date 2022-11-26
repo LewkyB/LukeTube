@@ -106,60 +106,48 @@ public sealed class PushshiftRepositoryTests : IAsyncLifetime
         public async Task NewVideoTable()
         {
             var loggerMock = new Mock<ILogger<PushshiftRequestService>>();
+
             IServiceCollection services = new ServiceCollection();
+
             services.AddHttpClient<IPushshiftRequestService, PushshiftRequestService>("PushshiftRequestServiceClient",
                     client => { client.BaseAddress = new Uri("https://api.pushshift.io/"); })
                 .SetHandlerLifetime(TimeSpan.FromMinutes(2))
                 .AddPolicyHandler(PushshiftPolicies.GetWaitAndRetryPolicy())
                 .AddPolicyHandler(PushshiftPolicies.GetRateLimitPolicy());
 
+            services.AddHttpClient<IPushshiftRequestService, PushshiftRequestService>("YoutubeExplodeClient");
+
             var httpClientFactory = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
             var _pushshiftRequestService = new PushshiftRequestService(loggerMock.Object, _pushshiftRepository, httpClientFactory);
 
-            var videoHttpClient = new HttpClient();
+            var videoHttpClient = httpClientFactory.CreateClient("YoutubeExplodeClient");
             var videoClient = new VideoClient(videoHttpClient);
 
             var startDate = 0;
             var searchOptionsNoDates = _pushshiftRequestService.BuildSearchOptionsNoDates("www.youtube.com", 500);
+
+            // only taking a few to make the test not run as long
             var filledOutOptions = _pushshiftRequestService
                 .AddBeforeAndAfter(searchOptionsNoDates, startDate)
-                .Take(3);
+                .Take(2);
 
             foreach (var searchOption in filledOutOptions)
             {
-                // var redditComments = await _pushshiftRequestService.GetUniqueRedditComments(searchOption, client);
-                var redditComments = (await _pushshiftRequestService.GetUniqueRedditComments(searchOption, null)).ToList();
-
-                // var newlySavedComments = await _pushshiftRepository.SaveRedditComments(redditComments);
-
-                // var videos = new List<Video>();
-                // foreach (var redditComment in newlySavedComments)
-                foreach (var redditComment in redditComments)
-                {
-                    try
-                    {
-                        var result =  await videoClient.GetAsync(redditComment.YoutubeLinkId);
-                        if (result is not null)
-                        {
-                            redditComment.VideoModel = VideoModelHelper.MapVideoEntity(result);
-                        }
-                        // videos.Add(result);
-                    }
-                    catch(Exception ex)
-                    {}
-                }
-
-                var newlySavedComments = await _pushshiftRepository.SaveRedditComments(redditComments);
-                // await _pushshiftRepository.SaveVideos();
+                var redditComments =
+                    (await _pushshiftRequestService.GetUniqueRedditComments(searchOption, null, CancellationToken.None)).ToList();
+                await _pushshiftRepository.SaveRedditComments(redditComments);
             }
+
             var pushshiftContext = new PushshiftContext(dbOption.Options);
-            var comments = await pushshiftContext.RedditComments.ToListAsync();
-            var videos = await pushshiftContext.Videos.ToListAsync();
-            var combo = await pushshiftContext.RedditComments
+
+            var combo =  await pushshiftContext.RedditComments
+                .AsNoTracking()
                 .Include(x => x.VideoModel)
-                .Include(x => x.VideoModel.Author)
-                .Include(x => x.VideoModel.EngagementModel)
-                .Include(x => x.VideoModel.Thumbnails)
+                .ThenInclude(x => x.Author)
+                .Include(x => x.VideoModel)
+                .ThenInclude(x => x.EngagementModel)
+                .Include(x => x.VideoModel)
+                .ThenInclude(x => x.Thumbnails)
                 .ToListAsync();
 
             var records = await _pushshiftRepository.GetAllRedditComments();

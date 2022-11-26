@@ -21,9 +21,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionF
 		LukeTubeBackend.Dockerfile = LukeTubeBackend.Dockerfile
 		LukeTubeWorker.Dockerfile = LukeTubeWorker.Dockerfile
 		..\README.md = ..\README.md
+		compose-build.ps1 = compose-build.ps1
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YoutubeExplode", "YoutubeExplode\YoutubeExplode.csproj", "{B7AE3382-0A51-453D-851B-1F0C6FD1711C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LukeTube.Benchmark", "LukeTube.Benchmark\LukeTube.Benchmark.csproj", "{14770B3E-498A-40F5-97D6-EF388D668DC7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +54,10 @@ Global
 		{B7AE3382-0A51-453D-851B-1F0C6FD1711C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7AE3382-0A51-453D-851B-1F0C6FD1711C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7AE3382-0A51-453D-851B-1F0C6FD1711C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14770B3E-498A-40F5-97D6-EF388D668DC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14770B3E-498A-40F5-97D6-EF388D668DC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14770B3E-498A-40F5-97D6-EF388D668DC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14770B3E-498A-40F5-97D6-EF388D668DC7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

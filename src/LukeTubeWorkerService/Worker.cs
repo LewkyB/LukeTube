@@ -1,4 +1,6 @@
 using System.Threading.RateLimiting;
+using LukeTubeLib.Models.HackerNews;
+using LukeTubeLib.Models.Pushshift;
 using LukeTubeLib.Repositories;
 using LukeTubeLib.Services;
 using YoutubeExplode.Videos;
@@ -10,6 +12,8 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly IPushshiftRequestService _pushshiftRequestService;
     private readonly IPushshiftRepository _pushshiftRepository;
+    private readonly IHackerNewsRequestService _hackerNewsRequestService;
+    private readonly IHackerNewsRepository _hackerNewsRepository;
 
     private TokenBucketRateLimiterOptions rateLimitOptions = new()
     {
@@ -21,11 +25,18 @@ public class Worker : BackgroundService
         AutoReplenishment = true
     };
 
-    public Worker(ILogger<Worker> logger, IPushshiftRequestService pushshiftRequestService, IPushshiftRepository pushshiftRepository)
+    public Worker(
+        ILogger<Worker> logger,
+        IPushshiftRequestService pushshiftRequestService,
+        IPushshiftRepository pushshiftRepository,
+        IHackerNewsRequestService hackerNewsRequestService,
+        IHackerNewsRepository hackerNewsRepository)
     {
         _logger = logger;
         _pushshiftRequestService = pushshiftRequestService;
         _pushshiftRepository = pushshiftRepository;
+        _hackerNewsRequestService = hackerNewsRequestService;
+        _hackerNewsRepository = hackerNewsRepository;
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,7 +47,7 @@ public class Worker : BackgroundService
     private async Task DoWorkAsync(CancellationToken cancellationToken)
     {
         // var searchOptions = _pushshiftRequestService.GetSearchOptions("www.youtube.com/watch", 365, 100);
-        var searchOptionsNoDates = _pushshiftRequestService.BuildSearchOptionsNoDates("www.youtube.com", 500);
+        var pushshiftSearchOptionsNoDates = _pushshiftRequestService.BuildSearchOptionsNoDates("www.youtube.com", 500);
 
         // using HttpClient client = new HttpClient(new ClientSideRateLimitedHandler(rateLimitOptions));
         using HttpClient client = new HttpClient(new ClientSideRateLimitedHandler(new TokenBucketRateLimiter(rateLimitOptions)));
@@ -49,29 +60,29 @@ public class Worker : BackgroundService
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            var filledOutOptions = _pushshiftRequestService.AddBeforeAndAfter(searchOptionsNoDates, startDate);
+            var filledOutOptions = _pushshiftRequestService.AddBeforeAndAfter(pushshiftSearchOptionsNoDates, startDate);
+            var filledoutHackerNewsOptions = _hackerNewsRequestService.AddBeforeAndAfter(new HackerNewsSearchOptions
+            {
+                HitsPerPage = 1000,
+                After = null,
+                Before = null,
+                Query = "www.youtube.com",
+            }, startDate);
+
+            foreach (var searchOption in filledoutHackerNewsOptions)
+            {
+                var hackerNewsHits =
+                    await _hackerNewsRequestService.GetUniqueHackerNewsHits(searchOption, cancellationToken);
+
+                await _hackerNewsRepository.SaveHackerNewsHits(hackerNewsHits);
+            }
+
             foreach (var searchOption in filledOutOptions)
             {
-                // var redditComments = await _pushshiftRequestService.GetUniqueRedditComments(searchOption, client);
-                var redditComments = await _pushshiftRequestService.GetUniqueRedditComments(searchOption, null);
+                var redditComments =
+                    await _pushshiftRequestService.GetUniqueRedditComments(searchOption, null, cancellationToken);
 
-                var newlySavedComments = await _pushshiftRepository.SaveRedditComments(redditComments);
-
-                var videos = new List<Video>();
-                foreach (var redditComment in newlySavedComments)
-                {
-                    try
-                    {
-                        var result =  await videoClient.GetAsync(redditComment.YoutubeLinkId, cancellationToken);
-                        videos.Add(result);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, ex.Message);
-                    }
-                }
-
-                await _pushshiftRepository.SaveVideos(videos);
+                await _pushshiftRepository.SaveRedditComments(redditComments);
             }
 
             startDate++;

@@ -1,6 +1,6 @@
 ﻿namespace LukeTubeLib.Models.Pushshift
 {
-    public record SearchOptions
+    public record PushshiftSearchOptions
     {
 
         /// <summary>

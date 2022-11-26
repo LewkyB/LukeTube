@@ -112,6 +112,7 @@ public sealed class LukeTubeTestWebApplication : IAsyncLifetime
             Environment.SetEnvironmentVariable("ASPNETCORE_URLS", "http://+:82");
             Environment.SetEnvironmentVariable("CONNECTION_STRINGS__POSTGRESQL", postgreSqlConnectionString);
             Environment.SetEnvironmentVariable("CONNECTION_STRINGS__REDIS", "localhost,abortConnect=False");
+            Environment.SetEnvironmentVariable("ENABLE_CACHING", "true");
             // Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
             _webApplicationFactory = new WebApplicationFactory<Program>();
             _serviceScope = _webApplicationFactory.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();

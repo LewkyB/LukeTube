@@ -4,23 +4,23 @@ using System.Text;
 using LukeTubeLib.Models.Pushshift;
 using LukeTubeLib.Repositories;
 using Microsoft.Extensions.Logging;
+using YoutubeExplode.Videos;
 
 namespace LukeTubeLib.Services
 {
     public interface IPushshiftRequestService
     {
-        IReadOnlyList<SearchOptions> GetSearchOptions(string query, int daysToGet, int maxNumComments);
-        Task<IReadOnlyList<RedditComment>> GetUniqueRedditComments(SearchOptions searchOption, HttpClient? rateLimitedClient);
+        IReadOnlyList<PushshiftSearchOptions> GetSearchOptions(string query, int daysToGet, int maxNumComments);
+        Task<IReadOnlyList<RedditComment>> GetUniqueRedditComments(PushshiftSearchOptions pushshiftSearchOption, HttpClient? rateLimitedClient, CancellationToken cancellationToken);
         // Task<IReadOnlyList<RedditComment>> GetRedditComments(IReadOnlyList<SearchOptions> searchOptions);
-        List<SearchOptions> BuildSearchOptionsNoDates(string query, int maxNumComments);
-        IList<SearchOptions> AddBeforeAndAfter(IList<SearchOptions> searchOptions, int dayToGet);
+        List<PushshiftSearchOptions> BuildSearchOptionsNoDates(string query, int maxNumComments);
+        IList<PushshiftSearchOptions> AddBeforeAndAfter(IList<PushshiftSearchOptions> searchOptions, int dayToGet);
     }
     public sealed class PushshiftRequestService : IPushshiftRequestService
     {
         private readonly ILogger<PushshiftRequestService> _logger;
         private readonly IPushshiftRepository _pushshiftRepository;
         private readonly IHttpClientFactory _httpClientFactory;
-
 
         public PushshiftRequestService(
             ILogger<PushshiftRequestService> logger,
@@ -33,11 +33,11 @@ namespace LukeTubeLib.Services
         }
 
         // TODO: when this runs with 365 days to get and 100 max comments, it allocates about 280mb, how to prevent an allocation that big but still get the results
-        public IReadOnlyList<SearchOptions> GetSearchOptions(string query, int daysToGet, int maxNumComments)
+        public IReadOnlyList<PushshiftSearchOptions> GetSearchOptions(string query, int daysToGet, int maxNumComments)
         {
-            if (string.IsNullOrEmpty(query)) throw new NullReferenceException(nameof(query));
+            if (string.IsNullOrEmpty(query)) throw new ArgumentNullException(nameof(query));
 
-            var searchOptions = new List<SearchOptions>();
+            var searchOptions = new List<PushshiftSearchOptions>();
             // going by hour gets more detailed results
             var daysToGetInHours = daysToGet * 24;
             for (var i = 0; i < daysToGetInHours; i++)
@@ -51,9 +51,13 @@ namespace LukeTubeLib.Services
             return searchOptions;
         }
 
-        public async Task<IReadOnlyList<RedditComment>> GetUniqueRedditComments(SearchOptions searchOption, HttpClient? rateLimitedClient)
+        public async Task<IReadOnlyList<RedditComment>> GetUniqueRedditComments(
+            PushshiftSearchOptions pushshiftSearchOption,
+            HttpClient? rateLimitedClient,
+            CancellationToken cancellationToken)
         {
             var redditComments = new List<RedditComment>();
+            var videoClient = new VideoClient(_httpClientFactory.CreateClient("YoutubeExplodeClient"));
 
             // List<HttpClient> clients = new List<HttpClient>();
             // for (int i = 0; i < 10; i++)
@@ -78,7 +82,11 @@ namespace LukeTubeLib.Services
             // await Task.WhenAll(tasks);
 
             var rawComments =
-                (await GetPushshiftQueryResults<CommentResponse>("comment", searchOption, rateLimitedClient)).Data.Distinct();
+                (await GetPushshiftQueryResults<CommentResponse>(
+                    "comment",
+                    pushshiftSearchOption,
+                    rateLimitedClient,
+                    cancellationToken)).Data.Distinct();
 
             // if (rawComments is null) return redditComments;
 
@@ -88,19 +96,33 @@ namespace LukeTubeLib.Services
                 redditComments.AddRange( CreateRedditComments(youtubeIds, comment));
             }
 
-            return redditComments.DistinctBy(x => x.YoutubeLinkId).ToList();
+            var uniqueRedditComments = redditComments.DistinctBy(x => x.YoutubeLinkId).ToList();
+            foreach (var uniqueRedditComment in uniqueRedditComments)
+            {
+                try
+                {
+                    var result = await videoClient.GetAsync(uniqueRedditComment.YoutubeLinkId, cancellationToken);
+                    if (result is not null) uniqueRedditComment.VideoModel = VideoModelHelper.MapVideoEntity(result);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, ex.Message);
+                }
+            }
+
+            return uniqueRedditComments;
         }
 
-        public List<SearchOptions> BuildSearchOptionsNoDates(string query, int maxNumComments)
+        public List<PushshiftSearchOptions> BuildSearchOptionsNoDates(string query, int maxNumComments)
         {
-            var searchOptions = new List<SearchOptions>();
+            var searchOptions = new List<PushshiftSearchOptions>();
             var stringBuilder = new StringBuilder();
             var counter = 0;
 
             // < or <=, am I cutting off the last subreddit?
             while (counter < AllSubreddits.Subreddits.Count)
             {
-                var searchOption = new SearchOptions
+                var searchOption = new PushshiftSearchOptions
                 {
                     Subreddit = string.Empty,
                     Query = query,
@@ -130,7 +152,7 @@ namespace LukeTubeLib.Services
             return searchOptions;
         }
 
-        public IList<SearchOptions> AddBeforeAndAfter(IList<SearchOptions> searchOptions, int dayToGet)
+        public IList<PushshiftSearchOptions> AddBeforeAndAfter(IList<PushshiftSearchOptions> searchOptions, int dayToGet)
         {
             // 0 days ago
             //initial before
@@ -138,7 +160,7 @@ namespace LukeTubeLib.Services
             // initial after
             // (24 * 0(day to get)) + 2 = 2
             // add 2 to both 12 times
-            var newSearchOptions = new List<SearchOptions>();
+            var newSearchOptions = new List<PushshiftSearchOptions>();
             int initialBefore = 24 * dayToGet;
             int initialAfter = 24 * dayToGet + 2;
             for (int i = 0; i < 24; i += 2)
@@ -151,7 +173,7 @@ namespace LukeTubeLib.Services
 
                 for (int j = 0; j < searchOptions.Count; j++)
                 {
-                    var newSearchOption = new SearchOptions
+                    var newSearchOption = new PushshiftSearchOptions
                     {
                         Subreddit = searchOptions[j].Subreddit,
                         After = after,
@@ -167,16 +189,16 @@ namespace LukeTubeLib.Services
             return newSearchOptions;
         }
 
-        internal List<SearchOptions> BuildSearchOptions(string query, int maxNumComments, string before, string after)
+        internal List<PushshiftSearchOptions> BuildSearchOptions(string query, int maxNumComments, string before, string after)
         {
-            var searchOptions = new List<SearchOptions>();
+            var searchOptions = new List<PushshiftSearchOptions>();
             var stringBuilder = new StringBuilder();
             var counter = 0;
 
             // < or <=, am I cutting off the last subreddit?
             while (counter < AllSubreddits.Subreddits.Count)
             {
-                var searchOption = new SearchOptions
+                var searchOption = new PushshiftSearchOptions
                 {
                     Subreddit = string.Empty,
                     Query = query,
@@ -208,7 +230,7 @@ namespace LukeTubeLib.Services
 
         internal static IReadOnlyList<RedditComment> CreateRedditComments(IReadOnlyList<string> youtubeIds, PushshiftCommentResponse comment)
         {
-            if (youtubeIds.Count <= 0) return new List<RedditComment>();
+            if (youtubeIds.Count <= 0){ return new List<RedditComment>();}
 
             var redditComments = new List<RedditComment>();
 
@@ -230,7 +252,11 @@ namespace LukeTubeLib.Services
             return redditComments;
         }
 
-        internal async Task<T> GetPushshiftQueryResults<T>(string requestType, SearchOptions? searchOptions, HttpClient? rateLimtedClient) where T : new()
+        internal async Task<T> GetPushshiftQueryResults<T>(
+            string requestType,
+            PushshiftSearchOptions? searchOptions,
+            HttpClient? rateLimtedClient,
+            CancellationToken cancellationToken) where T : new()
         {
             var pushshiftUrl = requestType switch
             {
@@ -247,7 +273,7 @@ namespace LukeTubeLib.Services
 
             try
             {
-                result = await httpClient.GetFromJsonAsync<T>(pushshiftUrl);
+                result = await httpClient.GetFromJsonAsync<T>(pushshiftUrl, cancellationToken);
             }
             catch (Exception ex)
             {

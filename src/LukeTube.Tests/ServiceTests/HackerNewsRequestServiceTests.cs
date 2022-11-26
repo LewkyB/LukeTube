@@ -1,6 +1,7 @@
 ﻿using System.Threading.RateLimiting;
 using LukeTube.Services;
 using LukeTubeLib;
+using LukeTubeLib.Models.HackerNews;
 using Moq;
 using LukeTubeLib.Models.Pushshift;
 using LukeTubeLib.PollyPolicies;
@@ -13,16 +14,16 @@ using YoutubeExplode.Videos;
 
 namespace LukeTube.Tests.ServiceTests
 {
-    public class PushshiftRequestServiceTests
+    public class HackerNewsRequestServiceTests
     {
-        private readonly Mock<ILogger<PushshiftRequestService>> _loggerMock = new();
-        private readonly Mock<IPushshiftRepository> _pushshiftRepositoryMock = new();
-        private readonly PushshiftRequestService _pushshiftRequestService;
+        private readonly Mock<ILogger<HackerNewsRequestService>> _loggerMock = new();
+        private readonly Mock<IHackerNewsRepository> _HackerNewsRepositoryMock = new();
+        private readonly HackerNewsRequestService _HackerNewsRequestService;
 
-        public PushshiftRequestServiceTests()
+        public HackerNewsRequestServiceTests()
         {
             IServiceCollection services = new ServiceCollection();
-            services.AddHttpClient<IPushshiftRequestService, PushshiftRequestService>("PushshiftRequestServiceClient",
+            services.AddHttpClient<IHackerNewsRequestService, HackerNewsRequestService>("HackerNewsRequestServiceClient",
                     client => { client.BaseAddress = new Uri("https://api.pushshift.io/"); })
                 .SetHandlerLifetime(TimeSpan.FromMinutes(2))
                 .AddPolicyHandler(PushshiftPolicies.GetWaitAndRetryPolicy())
@@ -30,17 +31,14 @@ namespace LukeTube.Tests.ServiceTests
 
             var httpClientFactory = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
 
-            _pushshiftRequestService = new PushshiftRequestService(
-                _loggerMock.Object,
-                _pushshiftRepositoryMock.Object,
-                httpClientFactory);
+            _HackerNewsRequestService = new HackerNewsRequestService(httpClientFactory, _loggerMock.Object);
         }
 
         [Theory]
         [InlineData(@"https://www.youtube.com/watch?v=fe4Yf-0Wm4U", 11)]
         public void FindYoutubeIdTest_ShouldReturnCorrectSizeId(string youtubeLink, int expectedLength)
         {
-            var result = _pushshiftRequestService.FindYoutubeId(youtubeLink);
+            var result = YoutubeUtilities.FindYoutubeId(youtubeLink);
             Assert.True(result.Count is 1);
             Assert.Equal(expectedLength, result[0].Length);
         }
@@ -49,7 +47,7 @@ namespace LukeTube.Tests.ServiceTests
         [InlineData(@"https://www.youtube.com/watch?v=fe4Yf-0Wm4U https://www.youtube.com/watch?v=fg6pf-0Wm4U", 2, 11)]
         public void FindYoutubeIdTest_ShouldReturnMultipleIds(string body, int expectedCount, int expectedLength)
         {
-            var result = _pushshiftRequestService.FindYoutubeId(body);
+            var result = YoutubeUtilities.FindYoutubeId(body);
             Assert.Equal(expectedCount, result.Count);
 
             foreach (var res in result)
@@ -61,7 +59,7 @@ namespace LukeTube.Tests.ServiceTests
         [Fact]
         public void FindYoutubeIdTest_EmptyString()
         {
-            var result = _pushshiftRequestService.FindYoutubeId(string.Empty);
+            var result = YoutubeUtilities.FindYoutubeId(string.Empty);
             Assert.Empty(result);
         }
 
@@ -72,7 +70,7 @@ namespace LukeTube.Tests.ServiceTests
         [InlineData("youtube.com/shorts/sKL1vjP0tIo", "sKL1vjP0tIo")]
         public void Video_ID_can_be_parsed_from_a_URL_string(string videoUrl, string expectedVideoId)
         {
-            var result = _pushshiftRequestService.FindYoutubeId(videoUrl);
+            var result = YoutubeUtilities.FindYoutubeId(videoUrl);
             Assert.True(result.Count is 1);
             Assert.Equal(expectedVideoId, result[0]);
         }
@@ -83,7 +81,7 @@ namespace LukeTube.Tests.ServiceTests
         [InlineData("AI7ULzgf8RU")]
         public void Video_ID_can_be_parsed_from_an_ID_string(string videoId)
         {
-            var result = _pushshiftRequestService.FindYoutubeId(videoId);
+            var result = YoutubeUtilities.FindYoutubeId(videoId);
             Assert.True(result.Count is 1);
             Assert.Equal(videoId, result[0]);
         }
@@ -97,90 +95,53 @@ namespace LukeTube.Tests.ServiceTests
         [InlineData("youtube.com/embed/")]
         public void Video_ID_cannot_be_parsed_from_an_invalid_string(string videoId)
         {
-            var result = _pushshiftRequestService.FindYoutubeId(videoId);
+            var result = YoutubeUtilities.FindYoutubeId(videoId);
 
             Assert.True(result.Count is 0);
         }
 
         [Fact]
-        public async Task GetMeta()
+        public async Task GetComments()
         {
-            var meta = await _pushshiftRequestService.GetPushshiftQueryResults<MetaResponse>(
-                "meta",
-                null,
-                null,
-                CancellationToken.None);
-
-            Assert.True(meta.ClientAcceptsJson);
-        }
-
-        [Theory]
-        [InlineData("aviation")]
-        [InlineData("programming")]
-        public async Task GetComments(string subreddit)
-        {
-            var rawComments = await _pushshiftRequestService.GetPushshiftQueryResults<CommentResponse>(
-                "comment",
-                new PushshiftSearchOptions
+            var hackerNewsQueryResults = await _HackerNewsRequestService.GetHackerNewsQueryResults<HackerNewsResponse>(
+                "search",
+                new HackerNewsSearchOptions
                 {
-                    Subreddit = subreddit,
                     Query = "www.youtube.com/watch", // TODO: separate out the query for the other link and score
-                    Before = "0h",
-                    After = "10000h",
-                    Size = 100
+                    After = "0",
+                    Before = "100000000",
+                    HitsPerPage = 1000,
                 },
-                null,
                 CancellationToken.None);
 
-            Assert.True(rawComments.Data.Count > 0);
+            Assert.True(hackerNewsQueryResults.Hits.Count > 0);
         }
 
-        [Theory]
-        [InlineData("aviation")]
-        [InlineData("programming")]
-        public async Task GetSubmissions(string subreddit)
-        {
-            var rawComments = await _pushshiftRequestService.GetPushshiftQueryResults<SubmissionResponse>(
-                "submission",
-                new PushshiftSearchOptions
-                {
-                    Subreddit = subreddit,
-                    Query = "www.youtube.com/watch", // TODO: separate out the query for the other link and score
-                    Before = "0h",
-                    After = "10000h",
-                    Size = 100
-                },
-                null,
-                CancellationToken.None);
-
-            Assert.True(rawComments.Data.Count > 0);
-        }
-
-        [Theory]
-        [InlineData("youtube.com", 100, "24h", "0h")]
-        public void BuildSearchOptions(string query, int numEntriesPerDay, string before, string after)
-        {
-            var results = _pushshiftRequestService.BuildSearchOptions(query, numEntriesPerDay, before, after);
-            Assert.True(results.Count > 0);
-        }
-
-        [Theory]
-        [InlineData("youtube.com", 365, 100)]
-        public void GetSearchOptions(string query, int numOfDays, int maxNumComments)
-        {
-            var results = _pushshiftRequestService.GetSearchOptions(query, numOfDays, maxNumComments);
-            Assert.True(results.Count > 0);
-        }
-
-        [Fact]
+        // [Theory]
+        // [InlineData("youtube.com", 100, "24h", "0h")]
+        // public void BuildSearchOptions(string query, int numEntriesPerDay, string before, string after)
+        // {
+        //     var results = _HackerNewsRequestService.BuildSearchOptions(query, numEntriesPerDay, before, after);
+        //     Assert.True(results.Count > 0);
+        // }
+        //
+        // [Theory]
         // [InlineData("youtube.com", 365, 100)]
-        // public void GetSearchOptionsNoDates(string query, int numOfDays, int maxNumComments)
-        public void GetSearchOptionsNoDates()
-        {
-            var options = _pushshiftRequestService.BuildSearchOptionsNoDates("wwww.youtube.com", 500);
-            var results = _pushshiftRequestService.AddBeforeAndAfter(options, 0);
-            Assert.True(results.Count > 0);
-        }
+        // public void GetSearchOptions(string query, int numOfDays, int maxNumComments)
+        // {
+        //     var results = _HackerNewsRequestService.GetSearchOptions(query, numOfDays, maxNumComments);
+        //     Assert.True(results.Count > 0);
+        // }
+        //
+        // [Fact]
+        // // [InlineData("youtube.com", 365, 100)]
+        // // public void GetSearchOptionsNoDates(string query, int numOfDays, int maxNumComments)
+        // public void GetSearchOptionsNoDates()
+        // {
+        //     var options = _HackerNewsRequestService.BuildSearchOptionsNoDates("wwww.youtube.com", 500);
+        //     var results = _HackerNewsRequestService.AddBeforeAndAfter(options, 0);
+        //     Assert.True(results.Count > 0);
+        // }
 
         // [Fact]
         // public async Task Tester()
@@ -195,8 +156,8 @@ namespace LukeTube.Tests.ServiceTests
         //         AutoReplenishment = true
         //     };
         //
-        //     // var searchOptions = _pushshiftRequestService.GetSearchOptions("www.youtube.com/watch", 365, 100);
-        //     var searchOptionsNoDates = _pushshiftRequestService.BuildSearchOptionsNoDates("www.youtube.com", 500);
+        //     // var searchOptions = _HackerNewsRequestService.GetSearchOptions("www.youtube.com/watch", 365, 100);
+        //     var searchOptionsNoDates = _HackerNewsRequestService.BuildSearchOptionsNoDates("www.youtube.com", 500);
         //
         //     // using HttpClient client = new HttpClient(new ClientSideRateLimitedHandler(rateLimitOptions));
         //     using HttpClient client = new HttpClient(new ClientSideRateLimitedHandler(new TokenBucketRateLimiter(rateLimitOptions)));
@@ -205,19 +166,19 @@ namespace LukeTube.Tests.ServiceTests
         //     int startDate = 0; // 0 is today, 1 is tomorrow
         //     while (true)
         //     {
-        //         var filledOutOptions = _pushshiftRequestService.AddBeforeAndAfter(searchOptionsNoDates, startDate);
+        //         var filledOutOptions = _HackerNewsRequestService.AddBeforeAndAfter(searchOptionsNoDates, startDate);
         //         var videoHttpClient = new HttpClient();
         //         var videoClient = new VideoClient(videoHttpClient);
         //         foreach (var searchOption in filledOutOptions)
         //         {
         //             var redditComments =
-        //                 await _pushshiftRequestService.GetUniqueRedditComments(searchOption, client, CancellationToken.None);
+        //                 await _HackerNewsRequestService.GetUniqueRedditComments(searchOption, client, CancellationToken.None);
         //
         //             foreach (var redditComment in redditComments)
         //             {
         //                 var result =  await videoClient.GetAsync(redditComment.YoutubeLinkId);
         //             }
-        //             // if (redditComments.Count > 0) await _pushshiftRepository.SaveRedditComments(redditComments);
+        //             // if (redditComments.Count > 0) await _HackerNewsRepository.SaveRedditComments(redditComments);
         //         }
         //
         //         startDate++;
@@ -233,7 +194,7 @@ namespace LukeTube.Tests.ServiceTests
         //         //         try
         //         //         {
         //         //             // tasks.Add(GetPushshiftQueryResults<CommentResponse>("comment", searchOption));
-        //         //             tasks.Add(_pushshiftRequestService.GetUniqueRedditComments(searchOption, client));
+        //         //             tasks.Add(_HackerNewsRequestService.GetUniqueRedditComments(searchOption, client));
         //         //         }
         //         //         finally
         //         //         {

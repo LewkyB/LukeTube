@@ -3,8 +3,8 @@
 export let options = {
     insecureSkipTLSVerify: true,
     noConnectionReuse: false,
-    vus: 100,
-    duration: '10s'
+    vus: 10,
+    duration: '2000s'
 };
 
 export default () => {

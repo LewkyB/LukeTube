@@ -8,20 +8,28 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 
-// TODO: with more data from the above youtube library, this might get enough extra data to use a recommendation engine for users (how to keep track of users? cookies or?)
-// TODO: can i use something like elastic search to index stuff any get rid of long duration queries?
-// TODO: add front end to containers to run in container tests
-// TODO: add playwright tests
 // TODO: https://www.reddit.com/r/dotnet/comments/yrq8g7/net6_webapi_environment_variables_how_to_publish/
 // TODO: https://www.reddit.com/r/dotnet/comments/yrf54w/net6_how_to_allow_origins_for_cors_correctly_for/ (might not need to worry about cors stuff with k8 ingress?)
+// TODO: how to fix the DI errors that occur when you disable caching in the .env file? possible with constructor DI?
+// TODO: entities saving to database that use c#'s DateTimeOffset are storing only a value of infinite
+// TODO: how to use dockerfiles with library dependencies from within their project folder, it's messy having them outside, should i somehow use the solution file?
+// TODO:
+
+// APIs to add
+// TODO: https://github.com/4chan/4chan-API
+// TODO: https://hn.algolia.com/api
+// TODO: get submissions from pushshift
+// TODO:
+
+// TODO: add front end to containers to run in container tests
+// TODO: add playwright tests
+// TODO:
+
+// features
+// TODO: with more data from the above youtube library, this might get enough extra data to use a recommendation engine for users (how to keep track of users? cookies or?)
+// TODO: can i use something like elastic search to index stuff any get rid of long duration queries?
 // TODO: is there a way to use benchmarkdotnet for tracking and alerting to performance changes? (use EnvironmentAnalyser from benchmarkdotnet if using it in containers)
 // TODO: look through these https://github.com/search?q=youtube+language%3AC%23&type=repositories&l=C%23&s=stars&o=desc
-// TODO: how to use dockerfiles with library dependencies from within their project folder, it's messy having them outside, should i somehow use the solution file?
-// TODO: https://github.com/4chan/4chan-API
-// TODO: how to fix the DI errors that occur when you disable caching in the .env file?
-// TODO:
-// TODO:
-// TODO:
 // TODO:
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,14 +38,11 @@ const string allowSpecificOrigins = "_allowSpecificOrigins";
 
 builder.Services.AddControllers();
 
-if (Environment.GetEnvironmentVariable("ENABLE_CACHING").Equals("true"))
+builder.Services.AddStackExchangeRedisCache(options =>
 {
-    builder.Services.AddStackExchangeRedisCache(options =>
-    {
-        options.Configuration = Environment.GetEnvironmentVariable("CONNECTION_STRINGS__REDIS");
-        options.InstanceName = "LukeTube_";
-    });
-}
+    options.Configuration = Environment.GetEnvironmentVariable("CONNECTION_STRINGS__REDIS");
+    options.InstanceName = "LukeTube_";
+});
 
 builder.Services.AddScoped<IPushshiftRepository, PushshiftRepository>();
 builder.Services.AddDbContextPool<PushshiftContext>(options =>
@@ -87,17 +92,14 @@ builder.Logging.AddDebug();
 
 var app = builder.Build();
 
-if (Environment.GetEnvironmentVariable("ENABLE_CACHING").Equals("true"))
+app.Lifetime.ApplicationStarted.Register(() =>
 {
-    app.Lifetime.ApplicationStarted.Register(() =>
-    {
-        var currentTimeUtc = DateTime.UtcNow.ToString();
-        var encodedCurrentTimeUtc = Encoding.UTF8.GetBytes(currentTimeUtc);
-        var options = new DistributedCacheEntryOptions()
-            .SetSlidingExpiration(TimeSpan.FromSeconds(30));
-        app.Services.GetService<IDistributedCache>()?.Set("cachedTimeUTC", encodedCurrentTimeUtc, options);
-    });
-}
+    var currentTimeUtc = DateTime.UtcNow.ToString();
+    var encodedCurrentTimeUtc = Encoding.UTF8.GetBytes(currentTimeUtc);
+    var options = new DistributedCacheEntryOptions()
+        .SetSlidingExpiration(TimeSpan.FromSeconds(30));
+    app.Services.GetService<IDistributedCache>()?.Set("cachedTimeUTC", encodedCurrentTimeUtc, options);
+});
 
 if (app.Environment.IsDevelopment())
 {

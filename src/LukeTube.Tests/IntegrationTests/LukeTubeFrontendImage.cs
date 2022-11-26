@@ -11,32 +11,32 @@ namespace LukeTube.Tests.IntegrationTests;
 [UsedImplicitly]
 public sealed class LukeTubeFrontendImage : IDockerImage, IAsyncLifetime
 {
-    static LukeTubeFrontendImage()
-    {
-        // TestcontainersSettings.Logger = new MyLogger();
-    }
-
-    public sealed class MyLogger : ILogger, IDisposable
-    {
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-        {
-            File.AppendAllText("diagnosticFrontend.log", formatter.Invoke(state, exception));
-        }
-
-        public bool IsEnabled(LogLevel logLevel)
-        {
-            return true;
-        }
-
-        public IDisposable BeginScope<TState>(TState state)
-        {
-            return this;
-        }
-
-        public void Dispose()
-        {
-        }
-    }
+    // static LukeTubeFrontendImage()
+    // {
+    //     TestcontainersSettings.Logger = new MyLogger();
+    // }
+    //
+    // public sealed class MyLogger : ILogger, IDisposable
+    // {
+    //     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+    //     {
+    //         File.AppendAllText("diagnosticFrontend.log", formatter.Invoke(state, exception));
+    //     }
+    //
+    //     public bool IsEnabled(LogLevel logLevel)
+    //     {
+    //         return true;
+    //     }
+    //
+    //     public IDisposable BeginScope<TState>(TState state)
+    //     {
+    //         return this;
+    //     }
+    //
+    //     public void Dispose()
+    //     {
+    //     }
+    // }
     // TODO: set this up with HTTPS
     public const ushort HttpPort = 81;
 
