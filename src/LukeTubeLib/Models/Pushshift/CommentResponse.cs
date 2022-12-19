@@ -6,7 +6,7 @@ namespace LukeTubeLib.Models.Pushshift
     public class CommentResponse
     {
         [JsonPropertyName("data")]
-        public IReadOnlyList<PushshiftCommentResponse> Data { get; set; }
+        public IReadOnlyList<PushshiftCommentResponse>? Data { get; set; }
     }
 
     public class PushshiftCommentResponse
@@ -81,8 +81,8 @@ namespace LukeTubeLib.Models.Pushshift
         [JsonPropertyName("no_follow")]
         public bool NoFollow { get; set; }
 
-        [JsonPropertyName("parent_id")]
-        public string ParentId { get; set; }
+        // [JsonPropertyName("parent_id")]
+        // public double ParentId { get; set; }
 
         [JsonPropertyName("permalink")]
         public string Permalink { get; set; }
@@ -123,8 +123,9 @@ namespace LukeTubeLib.Models.Pushshift
         // TODO: should this be seconds or milliseconds, figure out how to test
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
         {
-            var epocMilliseconds = (long)Math.Round((value - Epoc).TotalSeconds, 0);
-            writer.WriteNumberValue(epocMilliseconds);
+            // var epocMilliseconds = (long)Math.Round((value - Epoc).TotalSeconds, 0);
+            // writer.WriteNumberValue(epocMilliseconds);
+            throw new NotImplementedException();
         }
     }
 }

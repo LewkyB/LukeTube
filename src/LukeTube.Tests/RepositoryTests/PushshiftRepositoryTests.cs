@@ -2,15 +2,12 @@
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using JetBrains.Annotations;
-using LukeTubeLib.Models.Pushshift;
-using LukeTubeLib.PollyPolicies;
+using LukeTubeLib.Models.Pushshift.Entities;
 using LukeTubeLib.Repositories;
 using LukeTubeLib.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NLog;
 using Xunit;
 using YoutubeExplode.Videos;
 
@@ -61,7 +58,7 @@ public sealed class PushshiftRepositoryTests : IAsyncLifetime
 
         // options.EnableDetailedErrors();
         // options.EnableSensitiveDataLogging();
-        // options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRINGS__POSTGRESQL"));
+        // options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRINGS__POSTGRESQL_PUSHSHIFT"));
         private readonly Mock<ILogger<PushshiftRepository>> _loggerMock = new Mock<ILogger<PushshiftRepository>>();
 
         public RepoTests()
@@ -76,7 +73,7 @@ public sealed class PushshiftRepositoryTests : IAsyncLifetime
             {
                 new()
                 {
-                    YoutubeLinkId = "fdssdferrtf",
+                    YoutubeId = "fdssdferrtf",
                     Subreddit = "movies",
                     Score = 5,
                     Permalink = "",
@@ -85,7 +82,7 @@ public sealed class PushshiftRepositoryTests : IAsyncLifetime
                 },
                 new()
                 {
-                    YoutubeLinkId = "fdssdferrtf",
+                    YoutubeId = "fdssdferrtf",
                     Subreddit = "movies",
                     Score = 5,
                     Permalink = "",
@@ -107,21 +104,12 @@ public sealed class PushshiftRepositoryTests : IAsyncLifetime
         {
             var loggerMock = new Mock<ILogger<PushshiftRequestService>>();
 
-            IServiceCollection services = new ServiceCollection();
+            const string pushshiftBaseAddress = "https://api.pushshift.io/";
+            var httpClient = new HttpClient();
+            httpClient.BaseAddress = new Uri(pushshiftBaseAddress);
+            var _pushshiftRequestService = new PushshiftRequestService(loggerMock.Object, httpClient);
 
-            services.AddHttpClient<IPushshiftRequestService, PushshiftRequestService>("PushshiftRequestServiceClient",
-                    client => { client.BaseAddress = new Uri("https://api.pushshift.io/"); })
-                .SetHandlerLifetime(TimeSpan.FromMinutes(2))
-                .AddPolicyHandler(PushshiftPolicies.GetWaitAndRetryPolicy())
-                .AddPolicyHandler(PushshiftPolicies.GetRateLimitPolicy());
-
-            services.AddHttpClient<IPushshiftRequestService, PushshiftRequestService>("YoutubeExplodeClient");
-
-            var httpClientFactory = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
-            var _pushshiftRequestService = new PushshiftRequestService(loggerMock.Object, _pushshiftRepository, httpClientFactory);
-
-            var videoHttpClient = httpClientFactory.CreateClient("YoutubeExplodeClient");
-            var videoClient = new VideoClient(videoHttpClient);
+            var videoClient = new VideoClient(httpClient);
 
             var startDate = 0;
             var searchOptionsNoDates = _pushshiftRequestService.BuildSearchOptionsNoDates("www.youtube.com", 500);
@@ -134,8 +122,20 @@ public sealed class PushshiftRepositoryTests : IAsyncLifetime
             foreach (var searchOption in filledOutOptions)
             {
                 var redditComments =
-                    (await _pushshiftRequestService.GetUniqueRedditComments(searchOption, null, CancellationToken.None)).ToList();
-                await _pushshiftRepository.SaveRedditComments(redditComments);
+                    (await _pushshiftRequestService.GetRedditComments(searchOption, CancellationToken.None)).ToList();
+
+                var redditCommentsYoutubeIds = redditComments.Select(x => x.YoutubeId);
+
+                var videoModels = new List<VideoModel>();
+                foreach (var youtubeId in redditCommentsYoutubeIds)
+                {
+                    try
+                    {
+                        var result = await videoClient.GetAsync(youtubeId);
+                        videoModels.Add(PushshiftVideoModelHelper.MapVideoEntity(result));
+                    }
+                    catch { }
+                }
             }
 
             var pushshiftContext = new PushshiftContext(dbOption.Options);

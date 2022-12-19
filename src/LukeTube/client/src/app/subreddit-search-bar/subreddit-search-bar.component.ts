@@ -22,9 +22,12 @@ export class SubredditSearchBar implements OnInit {
     // TODO: how can I select this by pressing the hotkey '/'
     this.myControl = new UntypedFormControl("");
 
-    this.subreddit.loadSubreddits().then((result: string[]) => {
-      this.subreddits = result;
-    });
+    // this.subreddit.loadSubreddits().then((result: string[]) => {
+    //   this.subreddits = result;
+    // });
+    this.subreddit.loadSubreddits().subscribe(result => {
+      this.subreddits = result
+    })
 
     this.filteredSubreddits = this.myControl.valueChanges.pipe(
       startWith(""),

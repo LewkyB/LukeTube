@@ -23,9 +23,9 @@
         /// </summary>
         public string[] Fields { get; set; }
 
-        public Sort Sort { get; set; }
-
-        public SortType SortType { get; set; }
+        // public Sort Sort { get; set; }
+        //
+        // public SortType SortType { get; set; }
 
         public Aggs[] Aggs { get; set; }
 
@@ -61,8 +61,8 @@
             if (Fields?.Length > 0)
                 args.Add($"fields={string.Join(",", Fields)}");
 
-            args.Add($"sort={Sort.ToString().ToLower()}");
-            args.Add($"sort_type={SortType.ToString().ToLower()}");
+            // args.Add($"sort={Sort.ToString().ToLower()}");
+            // args.Add($"sort_type={SortType.ToString().ToLower()}");
 
             if (Aggs?.Length > 0)
                 args.Add($"aggs={string.Join(",", Aggs.Select(agg => agg.ToString().ToLower()))}");

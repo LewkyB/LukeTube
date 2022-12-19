@@ -1,7 +1,4 @@
-﻿using System.Threading.RateLimiting;
-using LukeTube.Services;
-using LukeTubeLib;
-using Moq;
+﻿using Moq;
 using LukeTubeLib.Models.Pushshift;
 using LukeTubeLib.PollyPolicies;
 using LukeTubeLib.Repositories;
@@ -9,7 +6,6 @@ using LukeTubeLib.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
-using YoutubeExplode.Videos;
 
 namespace LukeTube.Tests.ServiceTests
 {
@@ -29,85 +25,21 @@ namespace LukeTube.Tests.ServiceTests
                 .AddPolicyHandler(PushshiftPolicies.GetRateLimitPolicy());
 
             var httpClientFactory = services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
+            const string pushshiftBaseAddress = "https://api.pushshift.io/";
+            var httpClient = new HttpClient();
+            httpClient.BaseAddress = new Uri(pushshiftBaseAddress);
 
             _pushshiftRequestService = new PushshiftRequestService(
                 _loggerMock.Object,
-                _pushshiftRepositoryMock.Object,
-                httpClientFactory);
+                httpClient);
         }
 
-        [Theory]
-        [InlineData(@"https://www.youtube.com/watch?v=fe4Yf-0Wm4U", 11)]
-        public void FindYoutubeIdTest_ShouldReturnCorrectSizeId(string youtubeLink, int expectedLength)
-        {
-            var result = _pushshiftRequestService.FindYoutubeId(youtubeLink);
-            Assert.True(result.Count is 1);
-            Assert.Equal(expectedLength, result[0].Length);
-        }
-
-        [Theory]
-        [InlineData(@"https://www.youtube.com/watch?v=fe4Yf-0Wm4U https://www.youtube.com/watch?v=fg6pf-0Wm4U", 2, 11)]
-        public void FindYoutubeIdTest_ShouldReturnMultipleIds(string body, int expectedCount, int expectedLength)
-        {
-            var result = _pushshiftRequestService.FindYoutubeId(body);
-            Assert.Equal(expectedCount, result.Count);
-
-            foreach (var res in result)
-            {
-                Assert.Equal(expectedLength, res.Length);
-            }
-        }
-
-        [Fact]
-        public void FindYoutubeIdTest_EmptyString()
-        {
-            var result = _pushshiftRequestService.FindYoutubeId(string.Empty);
-            Assert.Empty(result);
-        }
-
-        [Theory]
-        [InlineData("youtube.com/watch?v=yIVRs6YSbOM", "yIVRs6YSbOM")]
-        [InlineData("youtu.be/yIVRs6YSbOM", "yIVRs6YSbOM")]
-        [InlineData("youtube.com/embed/yIVRs6YSbOM", "yIVRs6YSbOM")]
-        [InlineData("youtube.com/shorts/sKL1vjP0tIo", "sKL1vjP0tIo")]
-        public void Video_ID_can_be_parsed_from_a_URL_string(string videoUrl, string expectedVideoId)
-        {
-            var result = _pushshiftRequestService.FindYoutubeId(videoUrl);
-            Assert.True(result.Count is 1);
-            Assert.Equal(expectedVideoId, result[0]);
-        }
-
-        [Theory]
-        [InlineData("9bZkp7q19f0")]
-        [InlineData("_kmeFXjjGfk")]
-        [InlineData("AI7ULzgf8RU")]
-        public void Video_ID_can_be_parsed_from_an_ID_string(string videoId)
-        {
-            var result = _pushshiftRequestService.FindYoutubeId(videoId);
-            Assert.True(result.Count is 1);
-            Assert.Equal(videoId, result[0]);
-        }
-
-        [Theory]
-        [InlineData("")]
-        [InlineData("pI2I2zqzeK")]
-        [InlineData("pI2I2z zeKg")]
-        [InlineData("youtube.com/xxx?v=pI2I2zqzeKg")]
-        [InlineData("youtu.be/watch?v=xxx")]
-        [InlineData("youtube.com/embed/")]
-        public void Video_ID_cannot_be_parsed_from_an_invalid_string(string videoId)
-        {
-            var result = _pushshiftRequestService.FindYoutubeId(videoId);
-
-            Assert.True(result.Count is 0);
-        }
 
         [Fact]
         public async Task GetMeta()
         {
             var meta = await _pushshiftRequestService.GetPushshiftQueryResults<MetaResponse>(
                 "meta",
-                null,
                 null,
                 CancellationToken.None);
 
@@ -129,7 +61,6 @@ namespace LukeTube.Tests.ServiceTests
                     After = "10000h",
                     Size = 100
                 },
-                null,
                 CancellationToken.None);
 
             Assert.True(rawComments.Data.Count > 0);
@@ -150,7 +81,6 @@ namespace LukeTube.Tests.ServiceTests
                     After = "10000h",
                     Size = 100
                 },
-                null,
                 CancellationToken.None);
 
             Assert.True(rawComments.Data.Count > 0);
@@ -161,14 +91,6 @@ namespace LukeTube.Tests.ServiceTests
         public void BuildSearchOptions(string query, int numEntriesPerDay, string before, string after)
         {
             var results = _pushshiftRequestService.BuildSearchOptions(query, numEntriesPerDay, before, after);
-            Assert.True(results.Count > 0);
-        }
-
-        [Theory]
-        [InlineData("youtube.com", 365, 100)]
-        public void GetSearchOptions(string query, int numOfDays, int maxNumComments)
-        {
-            var results = _pushshiftRequestService.GetSearchOptions(query, numOfDays, maxNumComments);
             Assert.True(results.Count > 0);
         }
 
@@ -215,7 +137,7 @@ namespace LukeTube.Tests.ServiceTests
         //
         //             foreach (var redditComment in redditComments)
         //             {
-        //                 var result =  await videoClient.GetAsync(redditComment.YoutubeLinkId);
+        //                 var result =  await videoClient.GetAsync(redditComment.YoutubeId);
         //             }
         //             // if (redditComments.Count > 0) await _pushshiftRepository.SaveRedditComments(redditComments);
         //         }

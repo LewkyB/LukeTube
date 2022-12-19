@@ -1,114 +1,60 @@
 ﻿using System.Net;
-using System.Net.Http.Json;
+using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
+using LukeTubeLib.Diagnostics;
 using LukeTubeLib.Models.Pushshift;
-using LukeTubeLib.Repositories;
 using Microsoft.Extensions.Logging;
-using YoutubeExplode.Videos;
+using Polly.RateLimit;
+using YoutubeExplode.Exceptions;
 
 namespace LukeTubeLib.Services
 {
     public interface IPushshiftRequestService
     {
-        IReadOnlyList<PushshiftSearchOptions> GetSearchOptions(string query, int daysToGet, int maxNumComments);
-        Task<IReadOnlyList<RedditComment>> GetUniqueRedditComments(PushshiftSearchOptions pushshiftSearchOption, HttpClient? rateLimitedClient, CancellationToken cancellationToken);
-        // Task<IReadOnlyList<RedditComment>> GetRedditComments(IReadOnlyList<SearchOptions> searchOptions);
         List<PushshiftSearchOptions> BuildSearchOptionsNoDates(string query, int maxNumComments);
         IList<PushshiftSearchOptions> AddBeforeAndAfter(IList<PushshiftSearchOptions> searchOptions, int dayToGet);
+        Task<IReadOnlyList<PushshiftMessage>> GetRedditComments(PushshiftSearchOptions pushshiftSearchOption, CancellationToken cancellationToken);
     }
     public sealed class PushshiftRequestService : IPushshiftRequestService
     {
         private readonly ILogger<PushshiftRequestService> _logger;
-        private readonly IPushshiftRepository _pushshiftRepository;
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly HttpClient _httpClient;
 
         public PushshiftRequestService(
             ILogger<PushshiftRequestService> logger,
-            IPushshiftRepository pushshiftRepository,
-            IHttpClientFactory httpClientFactory)
+            HttpClient httpClient)
         {
             _logger = logger;
-            _pushshiftRepository = pushshiftRepository;
-            _httpClientFactory = httpClientFactory;
+            _httpClient = httpClient;
         }
 
-        // TODO: when this runs with 365 days to get and 100 max comments, it allocates about 280mb, how to prevent an allocation that big but still get the results
-        public IReadOnlyList<PushshiftSearchOptions> GetSearchOptions(string query, int daysToGet, int maxNumComments)
-        {
-            if (string.IsNullOrEmpty(query)) throw new ArgumentNullException(nameof(query));
-
-            var searchOptions = new List<PushshiftSearchOptions>();
-            // going by hour gets more detailed results
-            var daysToGetInHours = daysToGet * 24;
-            for (var i = 0; i < daysToGetInHours; i++)
-            {
-                var before = daysToGetInHours - i + "h";
-                var after = daysToGetInHours + 1 - i + "h";
-
-                searchOptions.AddRange(BuildSearchOptions(query, maxNumComments, before, after));
-            }
-
-            return searchOptions;
-        }
-
-        public async Task<IReadOnlyList<RedditComment>> GetUniqueRedditComments(
+        public async Task<IReadOnlyList<PushshiftMessage>> GetRedditComments(
             PushshiftSearchOptions pushshiftSearchOption,
-            HttpClient? rateLimitedClient,
             CancellationToken cancellationToken)
         {
-            var redditComments = new List<RedditComment>();
-            var videoClient = new VideoClient(_httpClientFactory.CreateClient("YoutubeExplodeClient"));
+            var pushshiftMessages = new List<PushshiftMessage>();
 
-            // List<HttpClient> clients = new List<HttpClient>();
-            // for (int i = 0; i < 10; i++)
+            IReadOnlyList<PushshiftCommentResponse> rawComments = null;
+            // try
             // {
-            //     clients.Add(_httpClientFactory.CreateClient("PushshiftRequestServiceClient"));
+            rawComments = (await GetPushshiftQueryResults<CommentResponse>(
+                "comment", pushshiftSearchOption, cancellationToken).ConfigureAwait(false) ).Data;
             // }
-            //
-            // var tasks = new List<Task>();
-            // var semaphore = new SemaphoreSlim(10);
-            // foreach (HttpClient client in clients)
+            // catch (Exception ex)
             // {
-            //     await semaphore.WaitAsync();
-            //     try
-            //     {
-            //         tasks.Add(GetPushshiftQueryResults<CommentResponse>("comment", searchOption));
-            //     }
-            //     finally
-            //     {
-            //         semaphore.Release();
-            //     }
+            //     _logger.LogError(ex, ex.Message);
             // }
-            // await Task.WhenAll(tasks);
 
-            var rawComments =
-                (await GetPushshiftQueryResults<CommentResponse>(
-                    "comment",
-                    pushshiftSearchOption,
-                    rateLimitedClient,
-                    cancellationToken)).Data.Distinct();
+            if (!(rawComments?.Count > 0)) return pushshiftMessages;
 
-            // if (rawComments is null) return redditComments;
-
-            foreach (var comment in rawComments)
+            foreach (var comment in rawComments.Distinct())
             {
-                var youtubeIds = FindYoutubeId(comment.Body);
-                redditComments.AddRange( CreateRedditComments(youtubeIds, comment));
+                var youtubeIds = YoutubeUtilities.FindYoutubeId(comment.Body);
+                pushshiftMessages.AddRange( CreatePushshiftMessages(youtubeIds, comment));
             }
 
-            var uniqueRedditComments = redditComments.DistinctBy(x => x.YoutubeLinkId).ToList();
-            foreach (var uniqueRedditComment in uniqueRedditComments)
-            {
-                try
-                {
-                    var result = await videoClient.GetAsync(uniqueRedditComment.YoutubeLinkId, cancellationToken);
-                    if (result is not null) uniqueRedditComment.VideoModel = VideoModelHelper.MapVideoEntity(result);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, ex.Message);
-                }
-            }
+            var uniqueRedditComments = pushshiftMessages.DistinctBy(x => x.YoutubeId).ToList();
 
             return uniqueRedditComments;
         }
@@ -154,15 +100,11 @@ namespace LukeTubeLib.Services
 
         public IList<PushshiftSearchOptions> AddBeforeAndAfter(IList<PushshiftSearchOptions> searchOptions, int dayToGet)
         {
-            // 0 days ago
-            //initial before
-            // 24 * 0(day to get) = 0
-            // initial after
-            // (24 * 0(day to get)) + 2 = 2
-            // add 2 to both 12 times
             var newSearchOptions = new List<PushshiftSearchOptions>();
+
             int initialBefore = 24 * dayToGet;
             int initialAfter = 24 * dayToGet + 2;
+
             for (int i = 0; i < 24; i += 2)
             {
                 initialBefore += i;
@@ -170,20 +112,14 @@ namespace LukeTubeLib.Services
                 string before = initialBefore + "h";
                 string after = initialAfter + "h";
 
-
-                for (int j = 0; j < searchOptions.Count; j++)
+                newSearchOptions.AddRange(searchOptions.Select(t => new PushshiftSearchOptions
                 {
-                    var newSearchOption = new PushshiftSearchOptions
-                    {
-                        Subreddit = searchOptions[j].Subreddit,
-                        After = after,
-                        Size = searchOptions[j].Size,
-                        Before = before,
-                        Query = searchOptions[j].Query,
-                    };
-
-                    newSearchOptions.Add(newSearchOption);
-                }
+                    Subreddit = t.Subreddit,
+                    After = after,
+                    Size = t.Size,
+                    Before = before,
+                    Query = t.Query,
+                }));
             }
 
             return newSearchOptions;
@@ -228,97 +164,73 @@ namespace LukeTubeLib.Services
             return searchOptions;
         }
 
-        internal static IReadOnlyList<RedditComment> CreateRedditComments(IReadOnlyList<string> youtubeIds, PushshiftCommentResponse comment)
+        internal static IReadOnlyList<PushshiftMessage> CreatePushshiftMessages(IReadOnlyList<string> youtubeIds, PushshiftCommentResponse comment)
         {
-            if (youtubeIds.Count <= 0){ return new List<RedditComment>();}
+            if (youtubeIds.Count <= 0) return new List<PushshiftMessage>();
 
-            var redditComments = new List<RedditComment>();
-
-            foreach (var youtubeId in youtubeIds)
+            return youtubeIds.Select(youtubeId => new PushshiftMessage
             {
-                var redditComment = new RedditComment
-                {
-                    Subreddit = comment.Subreddit,
-                    YoutubeLinkId = youtubeId,
-                    CreatedUTC = comment.CreatedUtc,
-                    Score = comment.Score,
-                    RetrievedUTC = comment.RetrievedOn,
-                    Permalink = comment.Permalink
-                };
-
-                redditComments.Add(redditComment);
-            }
-
-            return redditComments;
+                Subreddit = comment.Subreddit,
+                YoutubeId = youtubeId,
+                CreatedUTC = comment.CreatedUtc,
+                Score = comment.Score,
+                RetrievedUTC = comment.RetrievedOn,
+                Permalink = comment.Permalink
+            }).ToList();
         }
 
         internal async Task<T> GetPushshiftQueryResults<T>(
             string requestType,
             PushshiftSearchOptions? searchOptions,
-            HttpClient? rateLimtedClient,
             CancellationToken cancellationToken) where T : new()
         {
             var pushshiftUrl = requestType switch
             {
-                "comment" => $"reddit/comment/search?{ArgsToString(searchOptions.ToArgs())}",
-                "submission" => $"reddit/submission/search?{ArgsToString(searchOptions.ToArgs())}",
+                "comment" => $"reddit/comment/search?{YoutubeUtilities.ArgsToString(searchOptions.ToArgs())}",
+                "submission" => $"reddit/submission/search?{YoutubeUtilities.ArgsToString(searchOptions.ToArgs())}",
                 "meta" => "meta",
                 _ => ""
             };
 
-            // var httpClient = _httpClientFactory.CreateClient("PushshiftRequestServiceClient");
-            var httpClient = rateLimtedClient ?? _httpClientFactory.CreateClient("PushshiftRequestServiceClient");
-
             var result = new T();
+
+            PushshiftRequestCounterSource.Log.AddStartedRequest(1);
 
             try
             {
-                result = await httpClient.GetFromJsonAsync<T>(pushshiftUrl, cancellationToken);
+                var response = await _httpClient.GetAsync(pushshiftUrl, cancellationToken).ConfigureAwait(false);
+
+                // if (response.StatusCode is not HttpStatusCode.OK) return result;
+
+                response.EnsureSuccessStatusCode();
+
+                var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+                result = await JsonSerializer.DeserializeAsync<T>(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+                PushshiftRequestCounterSource.Log.AddFinishedRequest(1);
+            }
+            catch (RateLimitRejectedException)
+            {
+            }
+            catch (TaskCanceledException ex)
+            {
+                string timeoutMessage = $"The request was canceled due to the configured HttpClient.Timeout of {_httpClient.Timeout.TotalSeconds} seconds elapsing.";
+                if (ex.CancellationToken.IsCancellationRequested && ex.Message.Equals(timeoutMessage))
+                {
+                    PushshiftRequestCounterSource.Log.AddHttpClientTimeout(1);
+                    _logger.LogTrace(ex, ex.Message);
+                }
+                else { throw ex; }
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogInformation(ex, "An unhandled exception occurred.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogInformation(ex, "An unhandled exception occurred.");
             }
 
             return result;
         }
-
-        // should this return multiples? do i need to change youtube linkid to be an array
-        internal IReadOnlyList<string> FindYoutubeId(string commentBody)
-        {
-            if (string.IsNullOrEmpty(commentBody)) return new List<string>();
-
-            if (IsValidYoutubeId(commentBody)) return new []{ commentBody };
-
-            // TODO: this is definitely in the hot path, is LINQ the best choice?
-            // TODO: wow there has got to be another way to combine all this regex?
-            // TODO: is it overkill to combine all of these or should I add some conditional logic?
-            var shortsMatches = ShortsYoutubeRegex.FindYoutubeIdMatches(commentBody);
-            var fullMatches = FullYoutubeRegex.FindYoutubeIdMatches(commentBody);
-            var normalMatches = NormalYoutubeRegex.FindYoutubeIdMatches(commentBody);
-            var minimalMatches = MinimalYoutubeRegex.FindYoutubeIdMatches(commentBody);
-            var embeddedMatches = EmbeddedYoutubeRegex.FindYoutubeIdMatches(commentBody);
-            var linkMatches = shortsMatches
-                .Union(fullMatches)
-                .Union(normalMatches)
-                .Union(minimalMatches)
-                .Union(minimalMatches)
-                .Union(embeddedMatches);
-
-            var youtubeIds = new List<string>();
-            foreach (var match in linkMatches.DistinctBy(x => x.Groups[1].Value))
-            {
-                if (IsValidYoutubeId(match.Groups[1].Value)) youtubeIds.Add(match.Groups[1].Value);
-            }
-
-            return youtubeIds;
-        }
-
-        private static bool IsValidYoutubeId(string videoId) =>
-            videoId.Length == 11 &&
-            videoId.All(c => char.IsLetterOrDigit(c) || c is '_' or '-');
-
-        private static string ArgsToString(IEnumerable<string> args)
-            => args.Aggregate((x, y) => $"{x}&{y}");
     }
 }

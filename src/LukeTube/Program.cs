@@ -49,7 +49,7 @@ builder.Services.AddDbContextPool<PushshiftContext>(options =>
 {
     options.EnableDetailedErrors();
     options.EnableSensitiveDataLogging();
-    options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRINGS__POSTGRESQL"));
+    options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRINGS__POSTGRESQL_PUSHSHIFT"));
 });
 
 builder.Services.AddScoped<IPushshiftService, PushshiftService>();

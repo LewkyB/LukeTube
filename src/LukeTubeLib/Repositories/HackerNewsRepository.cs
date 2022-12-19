@@ -1,8 +1,6 @@
-﻿using AngleSharp.Dom;
-using LukeTubeLib.Models.HackerNews;
+﻿using LukeTubeLib.Models.HackerNews.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using YoutubeExplode.Videos;
 
 namespace LukeTubeLib.Repositories
 {
@@ -21,10 +19,12 @@ namespace LukeTubeLib.Repositories
     public sealed class HackerNewsRepository : IHackerNewsRepository
     {
         private readonly HackerNewsContext _hackerNewsContext;
+        private readonly ILogger<HackerNewsRepository> _logger;
 
-        public HackerNewsRepository(HackerNewsContext hackerNewsContext)
+        public HackerNewsRepository(HackerNewsContext hackerNewsContext, ILogger<HackerNewsRepository> logger)
         {
             _hackerNewsContext = hackerNewsContext;
+            _logger = logger;
         }
 
         // public async Task<IReadOnlyList<RedditComment>> GetAllRedditComments()
@@ -47,7 +47,7 @@ namespace LukeTubeLib.Repositories
         // {
         //     return await _pushshiftContext.RedditComments
         //         .Where(comment => comment.Subreddit == subredditName)
-        //         .Select(comment => comment.YoutubeLinkId)
+        //         .Select(comment => comment.YoutubeId)
         //         .AsNoTracking()
         //         .ToListAsync();
         // }
@@ -78,13 +78,14 @@ namespace LukeTubeLib.Repositories
             foreach (var hackerNewsHit in hackerNewsHits)
             {
                 var isInDatabase = await _hackerNewsContext.HackerNewsHits
-                    .AnyAsync(x => x.YoutubeId == hackerNewsHit.YoutubeId);
+                    .AnyAsync(x => x.YoutubeId == hackerNewsHit.YoutubeId).ConfigureAwait(false);
 
                 // TODO: ew nested if
-                if (!isInDatabase) await _hackerNewsContext.HackerNewsHits.AddAsync(hackerNewsHit);
+                if (!isInDatabase) await _hackerNewsContext.HackerNewsHits.AddAsync(hackerNewsHit).ConfigureAwait(false);
             }
 
-            await _hackerNewsContext.SaveChangesAsync();
+            var totalWrites = await _hackerNewsContext.SaveChangesAsync().ConfigureAwait(false);
+            _logger.LogInformation($"Total number of writes: {totalWrites}");
         }
 
         // public async Task<int> GetTotalRedditComments()

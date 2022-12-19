@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace LukeTubeLib.Models.Pushshift
+namespace LukeTubeLib.Models.Pushshift.Entities
 {
     [PrimaryKey(nameof(RedditCommentId))]
     public class RedditComment
@@ -13,7 +13,7 @@ namespace LukeTubeLib.Models.Pushshift
         public string Subreddit { get; init; }
 
         [Required]
-        public string YoutubeLinkId { get; set; }
+        public string YoutubeId { get; set; }
 
         public int Score { get; set; }
 

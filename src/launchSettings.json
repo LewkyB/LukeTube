@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "composeLaunchAction": "None",
+      "composeLaunchServiceName": "LukeTubeBackend",
+      "serviceActions": {
+        "angular": "StartWithoutDebugging",
+        "db": "StartWithoutDebugging",
+        "LukeTubeBackend": "StartDebugging",
+        "redis": "StartWithoutDebugging"
+      }
+    }
+  }
+}

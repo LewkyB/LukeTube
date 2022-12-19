@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using YoutubeExplode.Videos;
 
-namespace LukeTubeLib.Models.HackerNews;
+namespace LukeTubeLib.Models.HackerNews.Entities;
 
 [PrimaryKey(nameof(VideoId))]
 public class VideoModel
@@ -137,7 +137,7 @@ public class EngagementModel
     public virtual VideoModel VideoModel { get; set; }
 }
 
-public static class VideoModelHelper
+public static class HackerNewsVideoModelHelper
 {
     public static VideoModel MapVideoEntity(Video video)
     {

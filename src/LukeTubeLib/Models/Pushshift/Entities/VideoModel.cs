@@ -1,13 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using YoutubeExplode.Videos;
 
-namespace LukeTubeLib.Models.Pushshift;
+namespace LukeTubeLib.Models.Pushshift.Entities;
 
 [PrimaryKey(nameof(VideoId))]
 public class VideoModel
 {
+    [JsonIgnore]
     public int VideoId { get; set; }
     public string YoutubeId { get; set; }
 
@@ -42,14 +43,18 @@ public class VideoModel
     public EngagementModel EngagementModel { get; set; }
 
     // navigational properties
+    [JsonIgnore]
     public int RedditCommentId { get; set; }
+
     [ForeignKey(nameof(RedditCommentId))]
+    [JsonIgnore]
     public RedditComment RedditComment { get; set; }
 }
 
 [PrimaryKey(nameof(AuthorId))]
 public class Author
 {
+    [JsonIgnore]
     public int AuthorId { get; set; }
 
     /// <summary>
@@ -138,7 +143,7 @@ public class EngagementModel
     public virtual VideoModel VideoModel { get; set; }
 }
 
-public static class VideoModelHelper
+public static class PushshiftVideoModelHelper
 {
     public static VideoModel MapVideoEntity(Video video)
     {

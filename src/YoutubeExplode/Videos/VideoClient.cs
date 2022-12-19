@@ -40,7 +40,7 @@ public class VideoClient
     /// <summary>
     /// Gets the metadata associated with the specified video.
     /// </summary>
-    public async ValueTask<Video> GetAsync(
+    public async Task<Video> GetAsync(
         VideoId videoId,
         CancellationToken cancellationToken = default)
     {

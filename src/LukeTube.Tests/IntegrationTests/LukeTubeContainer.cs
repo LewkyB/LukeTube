@@ -3,6 +3,7 @@ using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Networks;
 using JetBrains.Annotations;
+using LukeTube.Tests.IntegrationTests.Images;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -30,15 +31,11 @@ public sealed class LukeTubeContainer : HttpClient, IAsyncLifetime
 
     public LukeTubeContainer()
     {
-        // TestcontainersSettings.Logger = new MyLogger();
-
         const string lukeTubeDb = "lukeTubeDb";
         var postgreSqlConfiguration = new PostgreSqlTestcontainerConfiguration();
         postgreSqlConfiguration.Username = "postgres";
         postgreSqlConfiguration.Password = "postgres";
-        postgreSqlConfiguration.Database = "SubredditDb";
-        var postgreSqlConnectionString =
-            $"host={lukeTubeDb};database={postgreSqlConfiguration.Database};username={postgreSqlConfiguration.Username};password={postgreSqlConfiguration.Password}";
+        postgreSqlConfiguration.Database = "";
 
         // redis container setup
         const string lukeTubeCache = "lukeTubeCache";
@@ -67,7 +64,7 @@ public sealed class LukeTubeContainer : HttpClient, IAsyncLifetime
             .WithPortBinding(82, 82)
             .WithExposedPort(82)
             .WithEnvironment("ASPNETCORE_URLS", "http://+:82")
-            .WithEnvironment("CONNECTION_STRINGS__POSTGRESQL", postgreSqlConnectionString)
+            .WithEnvironment("CONNECTION_STRINGS__POSTGRESQL_PUSHSHIFT", "host=lukeTubeDb;database=SubredditDb;username=postgres;password=postgres")
             .WithEnvironment("CONNECTION_STRINGS__REDIS", redisConnectionString)
             .WithEnvironment("ENABLE_CACHING", "true")
             // .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
@@ -79,7 +76,8 @@ public sealed class LukeTubeContainer : HttpClient, IAsyncLifetime
             .WithImage(LukeTubeWorkerImage)
             .WithNetwork(_lukeTubeNetwork)
             .WithNetworkAliases(lukeTubeWorker)
-            .WithEnvironment("CONNECTION_STRINGS__POSTGRESQL", postgreSqlConnectionString)
+            .WithEnvironment("CONNECTION_STRINGS__POSTGRESQL_PUSHSHIFT", "host=lukeTubeDb;database=SubredditDb;username=postgres;password=postgres")
+            .WithEnvironment("CONNECTION_STRINGS__POSTGRESQL_HACKERNEWS", "host=lukeTubeDb;database=HackerNewsDb;username=postgres;password=postgres")
             .Build();
 
         if (_frontendEnabled)
@@ -93,11 +91,7 @@ public sealed class LukeTubeContainer : HttpClient, IAsyncLifetime
                 .Build();
         }
     }
-    // static LukeTubeBackendImage()
-    // {
-    //     TestcontainersSettings.Logger = new MyLogger();
-    // }
-    //
+
     public sealed class MyLogger : ILogger, IDisposable
     {
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)

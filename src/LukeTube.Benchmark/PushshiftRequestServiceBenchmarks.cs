@@ -37,24 +37,20 @@ public class PushshiftRequestServiceBenchmarks
         _pushshiftRequestService = new PushshiftRequestService(
             NullLogger<PushshiftRequestService>.Instance,
             pushshiftRepository,
-            httpClientFactory);
+            new HttpClient());
     }
 
     [Benchmark]
-    public IReadOnlyList<PushshiftSearchOptions> GetSearchOptions_Small()
+    public IList<PushshiftSearchOptions> AddBeforeAndAfter_100()
     {
-        return _pushshiftRequestService.GetSearchOptions("www.youtube.com", 0, 500);
+        var searchOptions = _pushshiftRequestService.BuildSearchOptionsNoDates("www.youtube.com", 500);
+        return _pushshiftRequestService.AddBeforeAndAfter(searchOptions, 100);
     }
 
     [Benchmark]
-    public IReadOnlyList<PushshiftSearchOptions> GetSearchOptions_Medium()
+    public IList<PushshiftSearchOptions> AddBeforeAndAfter_1000()
     {
-        return _pushshiftRequestService.GetSearchOptions("www.youtube.com", 10, 500);
-    }
-
-    [Benchmark]
-    public IReadOnlyList<PushshiftSearchOptions> GetSearchOptions_Large()
-    {
-        return _pushshiftRequestService.GetSearchOptions("www.youtube.com", 100, 500);
+        var searchOptions = _pushshiftRequestService.BuildSearchOptionsNoDates("www.youtube.com", 500);
+        return _pushshiftRequestService.AddBeforeAndAfter(searchOptions, 1000);
     }
 }

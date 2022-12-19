@@ -1,5 +1,5 @@
 ﻿using System.Net.Http.Json;
-using LukeTubeLib.Models.Pushshift;
+using LukeTubeLib.Models.Pushshift.Entities;
 using Xunit;
 
 // using OpenQA.Selenium;
@@ -28,7 +28,7 @@ public static class LukeTubeTest
 
             // TODO: anyway to get rid of this delay
             // PushshiftBackgroundService needs time to gather data
-            await Task.Delay(TimeSpan.FromSeconds(20));
+            await Task.Delay(TimeSpan.FromSeconds(120));
 
             var response = await _lukeTubeContainer.GetFromJsonAsync<IReadOnlyList<string>>(path)
                 .ConfigureAwait(false);
@@ -44,7 +44,7 @@ public static class LukeTubeTest
 
             // TODO: anyway to get rid of this delay
             // PushshiftBackgroundService needs time to gather data
-            await Task.Delay(TimeSpan.FromSeconds(20));
+            await Task.Delay(TimeSpan.FromSeconds(120));
 
             var response = await _lukeTubeContainer.GetFromJsonAsync<IReadOnlyList<RedditComment>>(path)
                 .ConfigureAwait(false);

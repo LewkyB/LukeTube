@@ -9,7 +9,6 @@ services:
     depends_on:
       - db
       - redis
-#    restart: always
     restart: "no"
     expose:
       - "82"
@@ -18,15 +17,15 @@ services:
     ports:
       - 82:82
 
-  angular:
-    restart: always
-    build:
-      context: ./LukeTube/client
-      dockerfile: Dockerfile
-    depends_on:
-      - LukeTubeBackend
-    ports:
-      - 81:80
+#  angular:
+#    restart: always
+#    build:
+#      context: ./LukeTube/client
+#      dockerfile: Dockerfile
+#    depends_on:
+#      - LukeTubeBackend
+#    ports:
+#      - 81:80
 
   LukeTubeWorker:
     image: ${DOCKER_REGISTRY-}luketube-worker
@@ -44,7 +43,6 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: SubredditDb
     restart: always
 #    volumes:
 #      - ./postgres-data:/var/lib/postgresql/data

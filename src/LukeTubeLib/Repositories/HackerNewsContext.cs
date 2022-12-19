@@ -1,4 +1,4 @@
-﻿using LukeTubeLib.Models.HackerNews;
+﻿using LukeTubeLib.Models.HackerNews.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace LukeTubeLib.Repositories
@@ -22,8 +22,8 @@ namespace LukeTubeLib.Repositories
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // modelBuilder.Entity<RedditComment>()
-            //     .HasAlternateKey(x => x.YoutubeLinkId);
-            // .HasIndex(c => new { c.Subreddit, c.YoutubeLinkId })
+            //     .HasAlternateKey(x => x.YoutubeId);
+            // .HasIndex(c => new { c.Subreddit, c.YoutubeId })
             // .IsUnique();
 
             // modelBuilder.Entity<Author>()

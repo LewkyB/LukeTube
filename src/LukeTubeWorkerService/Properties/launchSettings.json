@@ -3,7 +3,10 @@
     "LukeTubeWorkerService": {
       "commandName": "Project",
       "environmentVariables": {
-        "DOTNET_ENVIRONMENT": "Development"
+        "DOTNET_ENVIRONMENT": "Development",
+        "CONNECTION_STRINGS__POSTGRESQL_PUSHSHIFT": "host=localhost;port=5432;database=SubredditDb;username=postgres;password=postgres",
+        "CONNECTION_STRINGS__POSTGRESQL_HACKERNEWS": "host=localhost;port=5432;database=HackerNewsDb;username=postgres;password=postgres",
+        "ENABLE_CACHING": "true"
       },
       "dotnetRunMessages": true
     },

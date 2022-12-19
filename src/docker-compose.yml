@@ -9,28 +9,13 @@ services:
     depends_on:
       - db
       - redis
-#    restart: always
     restart: "no"
     expose:
       - "82"
-    #environment:
-    #  WEB_PORTS: "80"
-    #  VIRTUAL_HOST: "www.luketube.net"
-    #  VIRTUAL_PATH: "/api/"
-    #  VIRTUAL_DEST: "/"
-    #   - CONNECTION_STRINGS__POSTGRESQL="host=db;database=SubredditDb;username=postgres;password=postgres"
-    #  - CONNECTION_STRINGS__REDIS="redis,abortConnect=False"
-    #  - LETSENCRYPT_HOST=luketube.net, www.luketube.net
-    #  - VIRTUAL_HOST=luketube.net
-    #  - VIRTUAL_PORT=80
-    #  - ASPNETCORE_ENVIRONMENT=Development
-    #  - ASPNETCORE_URLS=http://+:80
     env_file:
       - ./.env
     ports:
       - 82:82
-    #ports:
-    #  - "${PORT}"  disable for production?
 
   angular:
     restart: always
@@ -39,25 +24,14 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - LukeTubeBackend
-    #volumes:
-      #- ./.nginx/html/:/usr/src/app/dist/*  # store built files here so nginx-proxy can grab them
-    #expose:
-    #  - "8080"
     ports:
       - 81:80
-    #environment:
-    #  WEB_PORTS: "81"
-    #  VIRTUAL_HOST: "luketube.local"
-    #  VIRTUAL_PORT: 81
-    #env_file:
-    #  - ./.env.angular
 
   db:
     image: postgres:14.1
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: SubredditDb
     restart: always
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
@@ -65,39 +39,3 @@ services:
   redis:
     image: redis:6.2.6
     restart: always
-
-  #nginx-proxy:
-  #  image: nginxproxy/nginx-proxy:1.0.0
-  #  container_name: nginx-proxy
-  #  restart: always
-  #  volumes:
-  #    - /var/run/docker.sock:/tmp/docker.sock:ro
-  #    - ./.nginx/html/:/usr/share/nginx/html
-  #    - ./.nginx/certs/:/etc/nginx/certs
-  #    - ./.nginx/vhost/:/etc/nginx/vhost.d
-  #  environment:
-  #    - DEFAULT_HOST=luketube.local
-
-  #  ports:
-  #    - 80:80
-  #    - 443:443
-  #  depends_on:
-  #    - LukeTube
-  #    - angular
-  #  labels:
-  #    - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy"
-
-  #acme-companion:
-  #  image: nginxproxy/acme-companion:2.1.2
-  #  container_name: acme-companion
-  #  restart: always
-  #  volumes:
-  #    - /var/run/docker.sock:/var/run/docker.sock:ro
-  #    - ./.nginx/html/:/usr/share/nginx/html
-  #    - ./.nginx/certs/:/etc/nginx/certs
-  #    - ./.nginx/vhost/:/etc/nginx/vhost.d
-  #    - ./.nginx/acme/:/etc/acme.sh
-  #  env_file:
-  #    - ./.env.acme-companion
-  #  depends_on:
-  #    - nginx-proxy

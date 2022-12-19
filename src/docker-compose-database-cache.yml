@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:14.1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    restart: always
+    ports:
+      - 5432:5432
+#    volumes:
+#      - ./postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6.2.6
+    restart: always
+    ports:
+      - 6379:6379
+
+  elastic:
+    image: elasticsearch:8.5.1
+    restart: always
+    ports:
+      - 9200:9200
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+#      - xpack.monitoring.collection.enabled=false
+
+  kibana:
+    image: kibana:8.5.1
+    restart: always
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elastic:9200
+    depends_on:
+      - elastic
+    ports:
+      - 5601:5601

@@ -1,7 +1,10 @@
 ﻿using System.Text.Json;
+using LukeTubeLib.Models.HackerNews.Entities;
 using LukeTubeLib.Models.Pushshift;
+using LukeTubeLib.Models.Pushshift.Entities;
 using LukeTubeLib.Repositories;
 using Microsoft.Extensions.Caching.Distributed;
+using Nest;
 
 namespace LukeTube.Services
 {
@@ -11,9 +14,9 @@ namespace LukeTube.Services
         Task<IReadOnlyList<RedditComment>> GetAllRedditComments();
         Task<int> GetSubredditLinkCount(string subredditName);
         Task<int> GetTotalRedditComments();
-        Task<IReadOnlyList<string>> GetYoutubeLinkIdsBySubreddit(string subredditName);
+        Task<IReadOnlyList<string>> GetYoutubeIdsBySubreddit(string subredditName);
         Task<IReadOnlyList<RedditComment>> GetCommentsBySubreddit(string subreddit);
-        Task<IReadOnlyList<RedditComment>> GetPagedRedditCommentsBySubreddit(string subredditName, int pageNumber);
+        Task<IReadOnlyList<CommentViewModel>> GetPagedRedditCommentsBySubreddit(string subredditName, int pageNumber);
         Task<IReadOnlyList<SubredditWithCount>> GetSubredditsWithLinkCounts();
     }
 
@@ -22,7 +25,7 @@ namespace LukeTube.Services
         private readonly IPushshiftRepository _pushshiftRepository;
         private readonly IDistributedCache _distributedCache;
 
-        private static string? CachingEnabled => Environment.GetEnvironmentVariable("ENABLE_CACHING");
+        private static string? s_cachingEnabled => Environment.GetEnvironmentVariable("ENABLE_CACHING");
 
         public PushshiftService(
             IPushshiftRepository pushshiftRepository,
@@ -36,7 +39,7 @@ namespace LukeTube.Services
         {
             var cachedSubredditNames = await _distributedCache.GetAsync($"{nameof(GetAllSubredditNames)}");
 
-            if (cachedSubredditNames is not null && CachingEnabled.Equals("true"))
+            if (cachedSubredditNames is not null && s_cachingEnabled.Equals("true"))
             {
                 using var stream = new MemoryStream(cachedSubredditNames);
                 var deserializedSubredditNames = await JsonSerializer.DeserializeAsync<IReadOnlyList<string>>(stream) ?? new List<string>();
@@ -55,7 +58,7 @@ namespace LukeTube.Services
         {
             var allCachedYoutubeIds = await _distributedCache.GetAsync($"{nameof(GetAllRedditComments)}");
 
-            if (allCachedYoutubeIds is not null && CachingEnabled.Equals("true"))
+            if (allCachedYoutubeIds is not null && s_cachingEnabled.Equals("true"))
             {
                 using var stream = new MemoryStream(allCachedYoutubeIds);
                 var deserializedRedditComments = await JsonSerializer.DeserializeAsync<IReadOnlyList<RedditComment>>(stream) ?? new List<RedditComment>();
@@ -73,9 +76,9 @@ namespace LukeTube.Services
         {
             if (string.IsNullOrEmpty(subreddit)) return new List<RedditComment>();
 
-            var cachedComments = await _distributedCache.GetAsync($"{subreddit}_{nameof(GetYoutubeLinkIdsBySubreddit)}");
+            var cachedComments = await _distributedCache.GetAsync($"{subreddit}_{nameof(GetYoutubeIdsBySubreddit)}");
 
-            if (cachedComments is not null && CachingEnabled.Equals("true"))
+            if (cachedComments is not null && s_cachingEnabled.Equals("true"))
             {
                 using var stream = new MemoryStream(cachedComments);
                 var deserializedCachedComments = await JsonSerializer.DeserializeAsync<IReadOnlyList<RedditComment>>(stream) ?? new List<RedditComment>();
@@ -85,44 +88,64 @@ namespace LukeTube.Services
 
             var comments = await _pushshiftRepository.GetCommentsBySubreddit(subreddit);
             var json = JsonSerializer.SerializeToUtf8Bytes(comments);
-            await _distributedCache.SetAsync($"{subreddit}_{nameof(GetYoutubeLinkIdsBySubreddit)}", json);
+            await _distributedCache.SetAsync($"{subreddit}_{nameof(GetYoutubeIdsBySubreddit)}", json);
 
             return comments;
         }
 
-        public async Task<IReadOnlyList<RedditComment>> GetPagedRedditCommentsBySubreddit(string subredditName, int pageNumber)
+        public async Task<IReadOnlyList<CommentViewModel>> GetPagedRedditCommentsBySubreddit(string subredditName, int pageNumber)
         {
-            // return _pushshiftRepository.GetPagedRedditCommentsBySubreddit(subreddit, pageNumber);
-            if (string.IsNullOrEmpty(subredditName)) throw new NullReferenceException(nameof(subredditName));
-            var cachedComments = await _distributedCache.GetAsync($"{subredditName}_{nameof(GetYoutubeLinkIdsBySubreddit)}");
+            // if (string.IsNullOrEmpty(subredditName)) throw new NullReferenceException(nameof(subredditName));
+            //
+            // var cachedComments = await _distributedCache.GetAsync($"{subredditName}_{nameof(GetYoutubeIdsBySubreddit)}");
+            //
+            // if (cachedComments is not null && s_cachingEnabled.Equals("true"))
+            // {
+            //     using var stream = new MemoryStream(cachedComments);
+            //     var deserializedCachedComments =
+            //         await JsonSerializer.DeserializeAsync<IReadOnlyList<CommentViewModel>>(stream) ?? new List<CommentViewModel>();
+            //
+            //     return deserializedCachedComments.Skip(pageNumber * 8).Take(8).ToList();
+            // }
+            //
+            // var comments = (await _pushshiftRepository.GetCommentsBySubreddit(subredditName))
+            //     .DistinctBy(x => x.YoutubeId).ToList();
+            //
+            // var commentViewModels = CommentViewModelHelper.MapEntityToViewModel(comments);
+            //
+            // var json = JsonSerializer.SerializeToUtf8Bytes(commentViewModels);
+            // await _distributedCache.SetAsync($"{subredditName}_{nameof(GetYoutubeIdsBySubreddit)}", json);
+            //
+            // return commentViewModels
+            //     .OrderByDescending(x => x.Score)
+            //     .Skip(pageNumber * 8)
+            //     .Take(8)
+            //     .ToList();
+            //
 
-            if (cachedComments is not null && CachingEnabled.Equals("true"))
-            {
-                using var stream = new MemoryStream(cachedComments);
-                var deserializedCachedComments = await JsonSerializer.DeserializeAsync<IReadOnlyList<RedditComment>>(stream) ?? new List<RedditComment>();
+            var elasticSettings = new ConnectionSettings(new Uri("http://localhost:9200"));
 
-                return deserializedCachedComments.Skip(pageNumber * 8).Take(8).ToList();
-            }
+            var elasticClient = new ElasticClient(elasticSettings);
 
-            var comments = (await _pushshiftRepository.GetCommentsBySubreddit(subredditName))
-                .DistinctBy(x => x.YoutubeLinkId);
-            var json = JsonSerializer.SerializeToUtf8Bytes(comments);
-            await _distributedCache.SetAsync($"{subredditName}_{nameof(GetYoutubeLinkIdsBySubreddit)}", json);
+            var result = await elasticClient.SearchAsync<CommentViewModel>(s => s
+                .Index("pushshift-reddit-comment-index")
+                .From(8 * pageNumber)
+                .Size(8)
+                .Sort(so => so
+                    .Descending(p => p.Score))
+                .Query(q => q.Term(t => t.Subreddit, subredditName.ToLowerInvariant()))
+            );
 
-            return comments
-                .OrderByDescending(x => x.Score)
-                .Skip(pageNumber * 8)
-                .Take(8)
-                .ToList();
+            return result.Documents.DistinctBy(x => x.YoutubeId).ToList();
         }
 
-        public async Task<IReadOnlyList<string>> GetYoutubeLinkIdsBySubreddit(string subredditName)
+        public async Task<IReadOnlyList<string>> GetYoutubeIdsBySubreddit(string subredditName)
         {
             if (string.IsNullOrEmpty(subredditName)) return new List<string>();
 
-            var cachedValue = await _distributedCache.GetAsync($"{subredditName}_{nameof(GetYoutubeLinkIdsBySubreddit)}");
+            var cachedValue = await _distributedCache.GetAsync($"{subredditName}_{nameof(GetYoutubeIdsBySubreddit)}");
 
-            if (cachedValue is not null && CachingEnabled.Equals(true))
+            if (cachedValue is not null && s_cachingEnabled.Equals(true))
             {
                 using var stream = new MemoryStream(cachedValue);
                 var cachedYoutubeIds = await JsonSerializer.DeserializeAsync<IReadOnlyList<string>>(stream) ?? new List<string>();
@@ -132,7 +155,7 @@ namespace LukeTube.Services
 
             var youtubeIds = await _pushshiftRepository.GetYoutubeIdsBySubreddit(subredditName);
             var json = JsonSerializer.SerializeToUtf8Bytes(youtubeIds);
-            await _distributedCache.SetAsync($"{subredditName}_{nameof(GetYoutubeLinkIdsBySubreddit)}", json);
+            await _distributedCache.SetAsync($"{subredditName}_{nameof(GetYoutubeIdsBySubreddit)}", json);
 
             return youtubeIds;
         }
@@ -142,17 +165,17 @@ namespace LukeTube.Services
         /// </summary>
         public async Task<IReadOnlyList<SubredditWithCount>> GetSubredditsWithLinkCounts()
         {
-            var cachedSubredditNames = await _distributedCache.GetAsync($"{nameof(GetSubredditsWithLinkCounts)}");
-
-            if (cachedSubredditNames is not null && CachingEnabled.Equals("true"))
-            {
-                using var stream = new MemoryStream(cachedSubredditNames);
-                var deserializedSubredditNames =
-                    await JsonSerializer.DeserializeAsync<IReadOnlyList<SubredditWithCount>>(stream)
-                    ?? throw new Exception($"Error deserializing cached value in {nameof(GetSubredditsWithLinkCounts)}.");
-
-                return deserializedSubredditNames;
-            }
+            // var cachedSubredditNames = await _distributedCache.GetAsync($"{nameof(GetSubredditsWithLinkCounts)}");
+            //
+            // if (cachedSubredditNames is not null && s_cachingEnabled.Equals("true"))
+            // {
+            //     using var stream = new MemoryStream(cachedSubredditNames);
+            //     var deserializedSubredditNames =
+            //         await JsonSerializer.DeserializeAsync<IReadOnlyList<SubredditWithCount>>(stream)
+            //         ?? throw new Exception($"Error deserializing cached value in {nameof(GetSubredditsWithLinkCounts)}.");
+            //
+            //     return deserializedSubredditNames;
+            // }
 
             // var subredditsWithCount = new List<SubredditWithCount>();
             //
@@ -164,12 +187,35 @@ namespace LukeTube.Services
             // }
             //
             // var distinctSubredditsWithCounts = subredditsWithCount.DistinctBy(x => x.Subreddit).ToList();
-            var subredditsWithCount = await _pushshiftRepository.GetSubredditsWithCount();
+            var elasticSettings = new ConnectionSettings(new Uri("http://localhost:9200"));
 
-            var json = JsonSerializer.SerializeToUtf8Bytes(subredditsWithCount);
-            await _distributedCache.SetAsync($"{nameof(GetSubredditsWithLinkCounts)}", json);
+            var elasticClient = new ElasticClient(elasticSettings);
 
-            return subredditsWithCount;
+            var result = await elasticClient.SearchAsync<CommentViewModel>(s => s
+                .Index("pushshift-reddit-comment-index")
+                .Aggregations(a => a
+                            .Terms("subreddits", sr => sr
+                                .Field("subreddit.keyword")
+                                .Size(10000))));
+            var items = result.Aggregations.Terms("subreddits").Buckets.Select(x => new SubredditWithCount
+            {
+                Subreddit = x.Key,
+                Count = (int)x.DocCount
+            }).ToList();
+
+            var result2 = await elasticClient.SearchAsync<CommentViewModel>(s => s
+                .Index("pushshift-reddit-comment-index")
+                .Aggregations(a => a
+                    .Cardinality("subreddit_count", sr => sr
+                        .Field("subreddit.keyword"))));
+
+            return items;
+            // var subredditsWithCount = await _pushshiftRepository.GetSubredditsWithCount();
+            //
+            // var json = JsonSerializer.SerializeToUtf8Bytes(subredditsWithCount);
+            // await _distributedCache.SetAsync($"{nameof(GetSubredditsWithLinkCounts)}", json);
+            //
+            // return subredditsWithCount;
         }
 
 

@@ -20,6 +20,7 @@ internal abstract class YoutubeControllerBase
         HttpRequestMessage request,
         CancellationToken cancellationToken = default)
     {
+        YoutubeRequestCounterSource.Log.AddStartedRequest(1);
         // User-agent
         if (!request.Headers.Contains("User-Agent"))
         {
@@ -51,10 +52,10 @@ internal abstract class YoutubeControllerBase
         if (!response.IsSuccessStatusCode)
         {
             var message = $"Response status code does not indicate success: {(int)response.StatusCode} ({response.StatusCode})." +
-                Environment.NewLine +
-                "Request:" +
-                Environment.NewLine +
-                request;
+                          Environment.NewLine +
+                          "Request:" +
+                          Environment.NewLine +
+                          request;
 
 #if NET5_0_OR_GREATER
             throw new HttpRequestException(message, null, response.StatusCode);
@@ -63,6 +64,7 @@ internal abstract class YoutubeControllerBase
 #endif
         }
 
+        YoutubeRequestCounterSource.Log.AddFinishedRequest(1);
         return await response.Content.ReadAsStringAsync(cancellationToken);
     }
 

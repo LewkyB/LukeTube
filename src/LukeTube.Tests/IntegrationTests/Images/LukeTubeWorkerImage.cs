@@ -1,42 +1,14 @@
 ﻿using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Images;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
 using Xunit;
 
-namespace LukeTube.Tests.IntegrationTests;
+namespace LukeTube.Tests.IntegrationTests.Images;
 
 [UsedImplicitly]
 public sealed class LukeTubeWorkerImage : IDockerImage, IAsyncLifetime
 {
-    // static LukeTubeWorkerImage()
-    // {
-    //     TestcontainersSettings.Logger = new MyLogger();
-    // }
-    //
-    // public sealed class MyLogger : ILogger, IDisposable
-    // {
-    //     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-    //     {
-    //         File.AppendAllText("diagnosticWorker.log", formatter.Invoke(state, exception));
-    //     }
-    //
-    //     public bool IsEnabled(LogLevel logLevel)
-    //     {
-    //         return true;
-    //     }
-    //
-    //     public IDisposable BeginScope<TState>(TState state)
-    //     {
-    //         return this;
-    //     }
-    //
-    //     public void Dispose()
-    //     {
-    //     }
-    // }
     // TODO: set this up with HTTPS
     // public const ushort HttpPort = 82;
 

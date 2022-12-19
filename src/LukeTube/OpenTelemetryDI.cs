@@ -88,6 +88,18 @@ public static class OpenTelemetryDI
                 .AddProcessInstrumentation()
                 .AddRuntimeInstrumentation()
                 .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(Telemetry.ServiceName, Telemetry.ServiceVersion).AddTelemetrySdk())
+                .AddEventCountersInstrumentation(options =>
+                {
+                    options.RefreshIntervalSecs = 1;
+                    // TODO: anymore event sources I could add/remove here?
+                    options.AddEventSources(
+                        "System.Net.Http",
+                        "System.Net.Sockets",
+                        "System.Net.NameResolution",
+                        "System.Net.Security",
+                        "Microsoft.EntityFrameworkCore"
+                    );
+                })
                 .AddOtlpExporter(o =>
                 {
                     o.Endpoint = new Uri("http://otel_collector:4317");

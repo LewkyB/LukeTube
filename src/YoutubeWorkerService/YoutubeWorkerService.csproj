@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-YoutubeWorkerService-96047344-DB2F-4A12-8876-98A42586846D</UserSecretsId>
+        <DockerDefaultTargetOS>Windows</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.0.2" />
+        <PackageReference Include="Elasticsearch.Net" Version="7.17.5" />
+        <PackageReference Include="MassTransit.RabbitMQ" Version="8.0.9-develop.674" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
+        <PackageReference Include="Npgsql.OpenTelemetry" Version="7.0.0" />
+        <PackageReference Include="OpenTelemetry" Version="1.4.0-beta.3" />
+        <PackageReference Include="OpenTelemetry.Contrib.Instrumentation.MassTransit" Version="1.0.0-beta2" />
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-beta.3" />
+        <PackageReference Include="OpenTelemetry.Extensions" Version="1.0.0-beta.3" />
+        <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.0.0-rc9.9" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.0.0-beta.3" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.EventCounters" Version="1.0.0-alpha.2" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.0.0-rc9.9" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.MassTransit" Version="1.0.0-beta.3" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.Process" Version="1.0.0-alpha.2" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.1.0-beta.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\LukeTubeLib\LukeTubeLib.csproj" />
+    </ItemGroup>
+</Project>

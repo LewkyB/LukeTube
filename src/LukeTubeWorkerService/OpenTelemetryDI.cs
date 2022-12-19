@@ -55,6 +55,22 @@ public static class OpenTelemetryDI
                 .AddHttpClientInstrumentation()
                 .AddProcessInstrumentation()
                 .AddRuntimeInstrumentation()
+                .AddEventCountersInstrumentation(options =>
+                {
+                    options.RefreshIntervalSecs = 1;
+                    options.AddEventSources(
+                        "System.Net.Http",
+                        "System.Net.Sockets",
+                        "System.Net.NameResolution",
+                        "System.Net.Security",
+                        "HackerNewsRequestCounter",
+                        "PushshiftRequestCounter",
+                        "PushshiftChannelCounter",
+                        "HackerNewsChannelCounter",
+                        "Microsoft.EntityFrameworkCore", // https://learn.microsoft.com/en-us/ef/core/logging-events-diagnostics/event-counters
+                        "YoutubeRequestCounter"
+                    );
+                })
                 .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(Telemetry.ServiceName, Telemetry.ServiceVersion).AddTelemetrySdk())
                 .AddOtlpExporter(o =>
                 {

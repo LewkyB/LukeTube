@@ -1,5 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
-using LukeTubeLib.Models.Pushshift;
+using LukeTubeLib.Models.Pushshift.Entities;
 using LukeTubeLib.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -9,8 +9,8 @@ namespace LukeTube.Benchmark;
 [MemoryDiagnoser]
 public class PushshiftRepositoryBenchmarks
 {
-
     private PushshiftRepository _pushshiftRepository;
+
     [GlobalSetup]
     public void GlobalSetup()
     {
@@ -29,7 +29,7 @@ public class PushshiftRepositoryBenchmarks
         //     VideoModel = null,
         //     Permalink = "",
         //     Score = 1,
-        //     YoutubeLinkId = "lfkd56gyke4",
+        //     YoutubeId = "lfkd56gyke4",
         //     CreatedUTC = DateTime.UtcNow,
         //     RetrievedUTC = DateTime.UtcNow,
         //     RedditCommentId = 0,
@@ -41,7 +41,7 @@ public class PushshiftRepositoryBenchmarks
         //     VideoModel = null,
         //     Permalink = "",
         //     Score = 1,
-        //     YoutubeLinkId = "lfkd56gyke4",
+        //     YoutubeId = "lfkd56gyke4",
         //     CreatedUTC = DateTime.UtcNow,
         //     RetrievedUTC = DateTime.UtcNow,
         //     RedditCommentId = 0,

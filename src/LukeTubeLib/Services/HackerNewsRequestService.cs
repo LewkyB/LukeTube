@@ -1,93 +1,92 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Text.Json;
+using LukeTubeLib.Diagnostics;
 using LukeTubeLib.Models.HackerNews;
 using Microsoft.Extensions.Logging;
-using YoutubeExplode.Videos;
+using Polly.RateLimit;
+using YoutubeExplode.Exceptions;
 
 namespace LukeTubeLib.Services;
 
 public interface IHackerNewsRequestService
 {
-    Task<IReadOnlyList<HackerNewsHit>> GetUniqueHackerNewsHits(HackerNewsSearchOptions hackerNewsSearchOption, CancellationToken cancellationToken);
     IList<HackerNewsSearchOptions> AddBeforeAndAfter(HackerNewsSearchOptions searchOption, int dayToGet);
+    Task<IReadOnlyList<HackerNewsMessage>> GetHackerNewsHits(HackerNewsSearchOptions hackerNewsSearchOption, CancellationToken cancellationToken);
 }
 
-// TODO: hn.algolia.com/api is rate limited to 10000/hr or 166/min, need to rework polly policy for it
 public class HackerNewsRequestService : IHackerNewsRequestService
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly HttpClient _httpClient;
     private readonly ILogger<HackerNewsRequestService> _logger;
 
-    public HackerNewsRequestService(IHttpClientFactory httpClientFactory, ILogger<HackerNewsRequestService> logger)
+    public HackerNewsRequestService(ILogger<HackerNewsRequestService> logger, HttpClient httpClient)
     {
-        _httpClientFactory = httpClientFactory;
         _logger = logger;
+        _httpClient = httpClient;
     }
 
-    public async Task<IReadOnlyList<HackerNewsHit>> GetUniqueHackerNewsHits(
+    public async Task<IReadOnlyList<HackerNewsMessage>> GetHackerNewsHits(
         HackerNewsSearchOptions hackerNewsSearchOption,
         CancellationToken cancellationToken)
     {
-        var hackerNewsHits = new List<HackerNewsHit>();
-        var videoClient = new VideoClient(_httpClientFactory.CreateClient("YoutubeExplodeClient"));
+        var hackerNewsMessages = new List<HackerNewsMessage>();
 
-        var rawHackerNewsHits =
-            (await GetHackerNewsQueryResults<HackerNewsResponse>(
-                "search",
-                hackerNewsSearchOption,
-                cancellationToken)).Hits.Distinct();
+        var hackerNewsHits = new List<Hit>();
+        // try
+        // {
+            var result  = await GetHackerNewsQueryResults("search", hackerNewsSearchOption, cancellationToken)
+                .ConfigureAwait(false);
 
-        // if (rawComments is null) return redditComments;
+            if (!(result.Hits.Count > 0)) return hackerNewsMessages;
 
-        foreach (var hit in rawHackerNewsHits)
+            hackerNewsHits.AddRange(result.Hits);
+
+            if (result.NbPages > 0)
+            {
+                for (int i = 1; i < result.NbPages; i++)
+                {
+                    hackerNewsSearchOption.Page = i;
+                    var results = await GetHackerNewsQueryResults("search", hackerNewsSearchOption, cancellationToken).ConfigureAwait(false);
+                    hackerNewsHits.AddRange(results.Hits);
+                }
+            }
+        // }
+        // catch (Exception ex)
+        // {
+        //     _logger.LogError(ex, ex.Message);
+        // }
+
+
+        foreach (var hit in hackerNewsHits)
         {
-            var youtubeIds = YoutubeUtilities.FindYoutubeId(hit.story_text);
-            hackerNewsHits.AddRange( CreateHackerNewsHits(youtubeIds, hit));
+            var youtubeIds = YoutubeUtilities.FindYoutubeId(hit.CommentText);
+            hackerNewsMessages.AddRange( CreateHackerNewsHits(youtubeIds, hit));
         }
 
-        var uniqueHackerNewsHits = hackerNewsHits.DistinctBy(x => x.YoutubeId).ToList();
-        foreach (var hackerNewsHit in uniqueHackerNewsHits)
-        {
-            try
-            {
-                var result = await videoClient.GetAsync(hackerNewsHit.YoutubeId, cancellationToken);
-                if (result is not null) hackerNewsHit.VideoModel = VideoModelHelper.MapVideoEntity(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-            }
-        }
-
-        return uniqueHackerNewsHits;
+        return hackerNewsMessages.DistinctBy(x => x.YoutubeId).ToList();
     }
 
     public IList<HackerNewsSearchOptions> AddBeforeAndAfter(HackerNewsSearchOptions searchOption, int dayToGet)
     {
-        // 0 days ago
-        //initial before
-        // 24 * 0(day to get) = 0
-        // initial after
-        // (24 * 0(day to get)) + 2 = 2
-        // add 2 to both 12 times
-
-        // 86400 seconds in a day
         var newSearchOptions = new List<HackerNewsSearchOptions>();
-        int initialBefore = 24 * 60 * 60 * dayToGet;
-        int initialAfter = 24 * 60 * 60 * dayToGet + 3600;
-        for (int i = 0; i < 86400; i += 3600)
-        {
-            initialBefore += i;
-            initialAfter += i;
-            string before = initialBefore + "h";
-            string after = initialAfter + "h";
 
+        var initialBefore = DateTimeOffset.Now.ToUnixTimeSeconds() - 86400;
+        var initialAfter = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+        for (int i = 0; i < 604800; i += 86400)
+        {
+            initialBefore -= i;
+            initialAfter -= i;
+            var before = initialBefore;
+            var after = initialAfter;
 
             var newSearchOption = new HackerNewsSearchOptions
             {
-                After = after,
+                After = after.ToString(),
                 HitsPerPage = searchOption.HitsPerPage,
-                Before = before,
+                Before = before.ToString(),
                 Query = searchOption.Query,
+                Tags = searchOption.Tags,
             };
 
             newSearchOptions.Add(newSearchOption);
@@ -96,54 +95,49 @@ public class HackerNewsRequestService : IHackerNewsRequestService
         return newSearchOptions;
     }
 
-    internal static IReadOnlyList<HackerNewsHit> CreateHackerNewsHits(IReadOnlyList<string> youtubeIds, Hit hit)
+    internal static IReadOnlyList<HackerNewsMessage> CreateHackerNewsHits(IReadOnlyList<string> youtubeIds, Hit hit)
     {
-        if (youtubeIds.Count <= 0){ return new List<HackerNewsHit>();}
+        if (youtubeIds.Count <= 0) return new List<HackerNewsMessage>();
 
-        var hackerNewsHits = new List<HackerNewsHit>();
-
-        foreach (var youtubeId in youtubeIds)
+        return youtubeIds.Select(youtubeId => new HackerNewsMessage
         {
-            var redditComment = new HackerNewsHit
-            {
-                YoutubeId = youtubeId,
-                Author = hit.author,
-                Points = hit.points,
-                Url = hit.url.ToString(),
-            };
-
-            hackerNewsHits.Add(redditComment);
-        }
-
-        return hackerNewsHits;
+            YoutubeId = youtubeId,
+            Author = hit.Author,
+            Points = hit.Points,
+            Url = $"https://news.ycombinator.com/item?id={hit.ParentId}",
+        }).ToList();
     }
 
-    internal async Task<T> GetHackerNewsQueryResults<T>(
+    internal async Task<HackerNewsResponse> GetHackerNewsQueryResults(
         string requestType,
         HackerNewsSearchOptions? searchOptions,
-        CancellationToken cancellationToken) where T : new()
+        CancellationToken cancellationToken)
     {
         var hackerNewsUrl = requestType switch
         {
-            "search" => $"search?{YoutubeUtilities.ArgsToString(searchOptions.ToArgs())}",
+            "search" => $"search_by_date?{YoutubeUtilities.ArgsToString(searchOptions.ToArgs())}",
+            // "search" => $"search?{YoutubeUtilities.ArgsToString(searchOptions.ToArgs())}",
             _ => ""
         };
 
-        // TODO: why isnt the base address changing from push shift here?
-        const string hackerNewsBaseAddress = "https://hn.algolia.com/api/v1/";
-        var httpClient = _httpClientFactory.CreateClient("HackerNewsRequestServiceClient");
-        httpClient.BaseAddress = new Uri(hackerNewsBaseAddress);
+        var result = new HackerNewsResponse();
 
-        var result = new T();
-
-            try
+        HackerNewsRequestCounterSource.Log.AddStartedRequest(1);
+        try
         {
-            result = await httpClient.GetFromJsonAsync<T>(hackerNewsUrl, cancellationToken);
+            var response = await _httpClient.GetAsync(hackerNewsUrl, cancellationToken).ConfigureAwait(false);
+            if (response.StatusCode is not HttpStatusCode.OK) return result;
+
+            var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            result = await JsonSerializer.DeserializeAsync<HackerNewsResponse>(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+            HackerNewsRequestCounterSource.Log.AddFinishedRequest(1);
         }
+        catch (RateLimitRejectedException) { }
         catch (Exception ex)
         {
-            _logger.LogError(ex, ex.Message);
+            _logger.LogInformation(ex, ex.Message);
         }
+
 
         return result;
     }

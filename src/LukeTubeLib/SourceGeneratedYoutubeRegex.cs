@@ -6,7 +6,7 @@ public static partial class FullYoutubeRegex
 {
     // TODO: is the HTTP and WWW necessary?
     [GeneratedRegex(@"http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\]*)(&(amp;)?[\w\?‌​=]*)?",
-        RegexOptions.IgnoreCase,
+        RegexOptions.CultureInvariant,
         1000)]
     private static partial Regex YoutubeIdRegex();
     public static MatchCollection FindYoutubeIdMatches(string comment) => YoutubeIdRegex().Matches(comment);

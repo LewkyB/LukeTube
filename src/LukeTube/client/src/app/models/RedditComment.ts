@@ -1,9 +1,11 @@
-﻿export class RedditComment {
-  id: number;
+﻿import { VideoModel } from "./VideoModel";
+
+export class RedditComment {
   subreddit: string;
-  youtubeLinkId: string;
+  YoutubeId: string;
   score: number;
   createdUTC: Date;
   retrievedUTC: Date;
   permalink: string;
+  videoModel: VideoModel;
 }

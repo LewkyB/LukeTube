@@ -4,7 +4,8 @@ using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Networks;
 using JetBrains.Annotations;
-using LukeTubeLib.Models.Pushshift;
+using LukeTube.Tests.IntegrationTests.Images;
+using LukeTubeLib.Models.Pushshift.Entities;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -17,8 +18,6 @@ public sealed class LukeTubeTestWebApplication : IAsyncLifetime
     private readonly IDockerContainer _postgreSqlContainer;
     private readonly IDockerContainer _redisContainer;
     private readonly IDockerNetwork _lukeTubeNetwork;
-    private static string _postgreSqlConnectionString;
-    private static string _redisConnectionString;
 
     private static readonly LukeTubeWorkerImage LukeTubeWorkerImage = new();
     private readonly IDockerContainer _lukeTubeWorkerContainer;
@@ -33,8 +32,7 @@ public sealed class LukeTubeTestWebApplication : IAsyncLifetime
         var postgreSqlConfiguration = new PostgreSqlTestcontainerConfiguration();
         postgreSqlConfiguration.Username = "postgres";
         postgreSqlConfiguration.Password = "postgres";
-        postgreSqlConfiguration.Database = "SubredditDb";
-        _postgreSqlConnectionString = $"host={lukeTubeDb};database={postgreSqlConfiguration.Database};username={postgreSqlConfiguration.Username};password={postgreSqlConfiguration.Password};";
+        postgreSqlConfiguration.Database = ""; // will break without this
 
         _postgreSqlContainer = new TestcontainersBuilder<PostgreSqlTestcontainer>()
             .WithHostname("db")
@@ -52,12 +50,12 @@ public sealed class LukeTubeTestWebApplication : IAsyncLifetime
             .WithPortBinding(6379, 6379)
             .WithExposedPort(6379)
             .Build();
-        _redisConnectionString = $"{_redisContainer.Hostname},abortConnect=False";
 
         _lukeTubeWorkerContainer = new TestcontainersBuilder<TestcontainersContainer>()
             .WithImage(LukeTubeWorkerImage)
             .WithNetwork(_lukeTubeNetwork)
-            .WithEnvironment("CONNECTION_STRINGS__POSTGRESQL", _postgreSqlConnectionString)
+            .WithEnvironment("CONNECTION_STRINGS__POSTGRESQL_PUSHSHIFT", "host=lukeTubeDb;database=SubredditDb;username=postgres;password=postgres")
+            .WithEnvironment("CONNECTION_STRINGS__POSTGRESQL_HACKERNEWS", "host=lukeTubeDb;database=HackerNewsDb;username=postgres;password=postgres")
             // .WithOutputConsumer(Consume.RedirectStdoutAndStderrToConsole()) // enable to send logs to console
             .Build();
     }
@@ -105,12 +103,11 @@ public sealed class LukeTubeTestWebApplication : IAsyncLifetime
         private readonly IServiceScope _serviceScope;
 
         private readonly HttpClient _httpClient;
-        private string postgreSqlConnectionString = $"host=localhost;database=SubredditDb;username=postgres;password=postgres";
 
         public Api(LukeTubeTestWebApplication lukeTubeTestWebApplication)
         {
             Environment.SetEnvironmentVariable("ASPNETCORE_URLS", "http://+:82");
-            Environment.SetEnvironmentVariable("CONNECTION_STRINGS__POSTGRESQL", postgreSqlConnectionString);
+            Environment.SetEnvironmentVariable("CONNECTION_STRINGS__POSTGRESQL_PUSHSHIFT", "host=localhost;database=SubredditDb;username=postgres;password=postgres");
             Environment.SetEnvironmentVariable("CONNECTION_STRINGS__REDIS", "localhost,abortConnect=False");
             Environment.SetEnvironmentVariable("ENABLE_CACHING", "true");
             // Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
@@ -134,7 +131,7 @@ public sealed class LukeTubeTestWebApplication : IAsyncLifetime
 
             // TODO: anyway to get rid of this delay
             // PushshiftBackgroundService needs time to gather data
-            await Task.Delay(TimeSpan.FromSeconds(30));
+            await Task.Delay(TimeSpan.FromSeconds(120));
 
             var response = await _httpClient.GetFromJsonAsync<IReadOnlyList<string>>(endpoint)
                 .ConfigureAwait(false);
@@ -150,7 +147,7 @@ public sealed class LukeTubeTestWebApplication : IAsyncLifetime
 
             // TODO: anyway to get rid of this delay
             // PushshiftBackgroundService needs time to gather data
-            await Task.Delay(TimeSpan.FromSeconds(30));
+            await Task.Delay(TimeSpan.FromSeconds(120));
 
             var response = await _httpClient.GetFromJsonAsync<IReadOnlyList<RedditComment>>(path)
                 .ConfigureAwait(false);

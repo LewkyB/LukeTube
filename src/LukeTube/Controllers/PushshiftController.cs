@@ -1,5 +1,6 @@
 ﻿using LukeTube.Services;
 using LukeTubeLib.Models.Pushshift;
+using LukeTubeLib.Models.Pushshift.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 
@@ -26,9 +27,9 @@ namespace LukeTube.Controllers
 
         [HttpGet]
         [Route("subreddit/link-ids/{subredditName}")]
-        public Task<IReadOnlyList<string>> GetYoutubeLinkIdsBySubreddit(string subredditName)
+        public Task<IReadOnlyList<string>> GetYoutubeIdsBySubreddit(string subredditName)
         {
-            return _pushshiftService.GetYoutubeLinkIdsBySubreddit(subredditName);
+            return _pushshiftService.GetYoutubeIdsBySubreddit(subredditName);
         }
 
         [HttpGet]
@@ -55,7 +56,7 @@ namespace LukeTube.Controllers
 
         [HttpGet]
         [Route("{subredditName}/paged-comments/{pageNumber}")]
-        public Task<IReadOnlyList<RedditComment>> GetPagedRedditCommentsBySubreddit(string subredditName,int pageNumber)
+        public Task<IReadOnlyList<CommentViewModel>> GetPagedRedditCommentsBySubreddit(string subredditName, int pageNumber)
         {
             return _pushshiftService.GetPagedRedditCommentsBySubreddit(subredditName, pageNumber);
         }

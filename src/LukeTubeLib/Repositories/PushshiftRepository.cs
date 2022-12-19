@@ -1,7 +1,7 @@
 ﻿using LukeTubeLib.Models.Pushshift;
+using LukeTubeLib.Models.Pushshift.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using YoutubeExplode.Videos;
 
 namespace LukeTubeLib.Repositories
 {
@@ -50,7 +50,7 @@ namespace LukeTubeLib.Repositories
         {
             return await _pushshiftContext.RedditComments
                 .Where(comment => comment.Subreddit == subredditName)
-                .Select(comment => comment.YoutubeLinkId)
+                .Select(comment => comment.YoutubeId)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -80,25 +80,16 @@ namespace LukeTubeLib.Repositories
         {
             foreach (var comment in redditComments)
             {
-                // TODO: this is synchronous, probably causing some blocking behavior since everything else is async
-                // var exists = _pushshiftContext.RedditComments.Local.FirstOrDefault(x => x.YoutubeLinkId == comment.YoutubeLinkId);
-                //
-                // // perform identity resolution to prevent tracking duplicate key exception
-                // if (exists is not null)
-                // {
-                //     exists.YoutubeLinkId = comment.YoutubeLinkId;
-                // }
-                // else
-                // {
-                    var isInDatabase = await _pushshiftContext.RedditComments
-                        .AnyAsync(x => x.YoutubeLinkId == comment.YoutubeLinkId && x.Subreddit == comment.Subreddit);
+                var isInDatabase = await _pushshiftContext.RedditComments
+                    .AnyAsync(x => x.YoutubeId == comment.YoutubeId && x.Subreddit == comment.Subreddit)
+                    .ConfigureAwait(false);
 
-                    // TODO: ew nested if
-                    if (!isInDatabase) await _pushshiftContext.RedditComments.AddAsync(comment);
-                // }
+                // TODO: ew nested if
+                if (!isInDatabase) await _pushshiftContext.RedditComments.AddAsync(comment).ConfigureAwait(false);
             }
 
-            await _pushshiftContext.SaveChangesAsync();
+            var totalWrites = await _pushshiftContext.SaveChangesAsync().ConfigureAwait(false);
+            _logger.LogInformation($"Total number of writes: {totalWrites}");
         }
 
         public async Task<int> GetTotalRedditComments()

@@ -3,7 +3,7 @@
   <mat-button-toggle (click)="sortScore()">Score</mat-button-toggle>
 </div>
 
-<div
+<!-- <div
   infinite-scroll
   [infiniteScrollDistance]="distance"
   [infiniteScrollThrottle]="throttle"
@@ -14,11 +14,47 @@
     <div class="card">
       <mat-card>
         <youtube-player
-          videoId="{{ redditComment.youtubeLinkId }}"
+          videoId="{{ redditComment.YoutubeId }}"
           [height]="300"
           [width]="400"
         >
         </youtube-player>
+        <mat-card-actions>
+          <a
+            mat-raised-button
+            color="green"
+            href="https://www.reddit.com{{ redditComment.permalink }}"
+            target="_blank"
+            >PERMALINK</a
+          >
+          <button mat-stroked-button>
+            {{ redditComment.createdUTC.toString().substring(0, 10) }} |
+            {{ redditComment.createdUTC.toString().substring(11, 19) }}
+          </button>
+          <button mat-stroked-button>Score: {{ redditComment.score }}</button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div> -->
+<div
+  infinite-scroll
+  [infiniteScrollDistance]="distance"
+  [infiniteScrollThrottle]="throttle"
+  (scrolled)="onScroll()"
+  class="videos"
+>
+  <div *ngFor="let redditComment of redditComments">
+    <div class="card">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-subtitle>{{ redditComment.videoModel.title }}</mat-card-subtitle>
+        </mat-card-header>
+        <img mat-card-image src="{{ redditComment.videoModel.thumbnails[1].url }}">
+        <mat-card-content>
+          <p><b>Views:</b> {{redditComment.videoModel.engagement.viewCount}}</p>
+          <p>Likes: {{redditComment.videoModel.engagement.likeCount}}</p>
+        </mat-card-content>
         <mat-card-actions>
           <a
             mat-raised-button

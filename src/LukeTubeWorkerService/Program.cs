@@ -1,44 +1,47 @@
-using System.Threading.RateLimiting;
 using LukeTubeLib;
+using LukeTubeLib.Models.HackerNews;
+using LukeTubeLib.Models.HackerNews.Entities;
+using LukeTubeLib.Models.Pushshift;
+using LukeTubeLib.Models.Pushshift.Entities;
 using LukeTubeWorkerService;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Http;
 
-var todoName = "todoPolicy";
-var completeName = "completePolicy";
-var helloName = "helloPolicy";
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(logging =>
     {
         logging.AddOpenTelemetryLogging();
+        logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+        logging.SetMinimumLevel(LogLevel.Error);
     })
     .ConfigureServices(services =>
     {
-        services.AddHostedService<Worker>();
+        // Pushshift
         services.AddPushshiftServicesForWorker();
+        services.AddHostedService<PushshiftWorker>();
+
+        services.AddHostedService<PushshiftYoutubeWorker>();
+        services.AddHttpClient<PushshiftYoutubeWorker>();
+
+        services.AddHostedService<PushshiftStorageWorker>();
+        services.AddUnboundedChannel<RedditComment>();
+        services.AddUnboundedChannel<IReadOnlyList<PushshiftMessage>>();
+
+        // Hacker News
+        services.AddHackerNewsServicesForWorker();
+        services.AddHostedService<HackerNewsWorker>();
+
+        services.AddHostedService<HackerNewsYoutubeWorker>();
+        services.AddHttpClient<HackerNewsYoutubeWorker>();
+
+        services.AddHostedService<HackerNewsStorageWorker>();
+        services.AddUnboundedChannel<HackerNewsHit>();
+        services.AddUnboundedChannel<IReadOnlyList<HackerNewsMessage>>();
+
         services.AddOpenTelemetry();
-        // services.AddRateLimiter(options =>
-        // {
-        //     options.AddTokenBucketLimiter(todoName, options =>
-        //         {
-        //             options.TokenLimit = 1;
-        //             options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        //             options.QueueLimit = 1;
-        //             options.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
-        //             options.TokensPerPeriod = 1;
-        //         })
-        //         .AddPolicy<string>(completeName, new RateLimitingPolicy(NullLogger<RateLimitingPolicy>.Instance))
-        //         .AddPolicy<string, RateLimitingPolicy>(helloName);
-        //
-        //     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-        //     {
-        //         return RateLimitPartition.GetConcurrencyLimiter<string>("globalLimiter", key => new ConcurrencyLimiterOptions
-        //         {
-        //             PermitLimit = 10,
-        //             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-        //             QueueLimit = 5
-        //         });
-        //     });
-        // });
+
+        // TODO: better way to reduce the amount of logs from http client factory?
+        services.RemoveAll<IHttpMessageHandlerBuilderFilter>();
     })
     .Build();
 
